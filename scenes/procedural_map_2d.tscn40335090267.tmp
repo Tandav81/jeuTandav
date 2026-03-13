@@ -1,0 +1,98 @@
+[gd_scene format=3 uid="uid://b8bdjobkmqei"]
+
+[ext_resource type="Script" uid="uid://d17xhj43twbj5" path="res://scripts/procedural_map_2d.gd" id="1_lpiio"]
+[ext_resource type="Texture2D" uid="uid://ba2m1ft0hwk45" path="res://assets/Tiles/Water_Middle.png" id="2_nnf6k"]
+[ext_resource type="Texture2D" uid="uid://cb5sw4tcphv3f" path="res://assets/Tiles/Beach_Tile.png" id="3_1xaqc"]
+[ext_resource type="Texture2D" uid="uid://b2ydvbu06g4ia" path="res://assets/Tiles/Grass_Middle.png" id="4_6sa6q"]
+[ext_resource type="Texture2D" uid="uid://bxybxym0wged2" path="res://assets/Tiles/Cliff_Tile.png" id="5_mwxcg"]
+[ext_resource type="Texture2D" uid="uid://ilr67k85kv6x" path="res://assets/Tiles/FarmLand_Tile.png" id="6_tpqnq"]
+[ext_resource type="Texture2D" uid="uid://b43q0g4u13wor" path="res://assets/Tiles/Path_Tile.png" id="7_wjlje"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8grx6"]
+texture = ExtResource("2_nnf6k")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_hsddc"]
+texture = ExtResource("3_1xaqc")
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+4:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+4:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_likla"]
+texture = ExtResource("4_6sa6q")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fi8af"]
+texture = ExtResource("5_mwxcg")
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_lxxrw"]
+texture = ExtResource("6_tpqnq")
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_hawdl"]
+texture = ExtResource("7_wjlje")
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_y83yb"]
+sources/0 = SubResource("TileSetAtlasSource_8grx6")
+sources/1 = SubResource("TileSetAtlasSource_hsddc")
+sources/2 = SubResource("TileSetAtlasSource_likla")
+sources/3 = SubResource("TileSetAtlasSource_fi8af")
+sources/4 = SubResource("TileSetAtlasSource_lxxrw")
+sources/5 = SubResource("TileSetAtlasSource_hawdl")
+
+[node name="ProceduralMap2D" type="Node2D" unique_id=1630267833]
+script = ExtResource("1_lpiio")
+
+[node name="TileMap" type="TileMap" parent="." unique_id=1449564402]
+tile_set = SubResource("TileSet_y83yb")
+format = 2
