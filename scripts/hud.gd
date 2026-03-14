@@ -5,4 +5,5 @@ func _ready():
 	player.health_changed.connect(_on_health_changed)
 
 func _on_health_changed(new_health):
-	$HUD/HealthBar.value = new_health
+	print("HUD reçoit health_changed ! valeur=", new_health)
+	$HealthBar.value = new_health

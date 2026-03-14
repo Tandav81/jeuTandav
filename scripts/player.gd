@@ -3,13 +3,18 @@ extends CharacterBody2D
 const SPEED = 150.0
 
 @onready var anim = $AnimatedSprite2D
+@onready var attack_zone = $AttackZone
 
 var max_health = 100
 var health = 100
+var is_attacking = false
+var attack_direction = Vector2.DOWN
 
 signal health_changed(new_health)
-
+	
 func take_damage(amount):
+	if is_attacking:
+		return  # invincible pendant l'attaque (optionnel)
 	health -= amount
 	emit_signal("health_changed", health)
 	if health <= 0:
@@ -18,25 +23,84 @@ func take_damage(amount):
 func die():
 	get_tree().reload_current_scene()
 
-func _physics_process(delta):
+func _physics_process(_delta):
+	if is_attacking:
+		velocity = Vector2.ZERO
+		move_and_slide()
+		return
+		
 	var direction = Vector2.ZERO
 
 	if Input.is_action_pressed("ui_right"):
 		direction.x += 1
 		anim.flip_h = false
+		attack_direction = Vector2.RIGHT
 		anim.play("walk_right")
 	elif Input.is_action_pressed("ui_left"):
 		direction.x -= 1
 		anim.flip_h = true
+		attack_direction = Vector2.LEFT
 		anim.play("walk_left")
 	elif Input.is_action_pressed("ui_down"):
 		direction.y += 1
+		attack_direction = Vector2.DOWN
 		anim.play("walk_down")
 	elif Input.is_action_pressed("ui_up"):
 		direction.y -= 1
+		attack_direction = Vector2.UP
 		anim.play("walk_up")
 	else:
 		anim.play("idle_down")
 
+	# Attaque avec espace
+	if Input.is_action_just_pressed("ui_accept"):
+		_attaquer()
+		
 	velocity = direction.normalized() * SPEED
 	move_and_slide()
+
+func _attaquer():
+	is_attacking = true
+	attack_zone.monitoring = true
+
+	# Place la zone d'attaque devant le joueur
+	attack_zone.position = attack_direction * 20
+
+	# Joue la bonne animation selon la direction
+	if attack_direction == Vector2.DOWN:
+		anim.play("attack_down")
+	elif attack_direction == Vector2.UP:
+		anim.play("attack_up")
+	elif attack_direction == Vector2.RIGHT:
+		anim.flip_h = false
+		anim.play("attack_right")
+	elif attack_direction == Vector2.LEFT:
+		anim.flip_h = true  # on retourne attack_right pour aller à gauche
+		anim.play("attack_right")
+
+	# Attend la fin de l'animation avant de désactiver
+	#await anim.animation_finished
+	await get_tree().create_timer(0.2).timeout
+
+	attack_zone.monitoring = false
+	is_attacking = false
+	anim.play("idle_down")
+	is_attacking = true
+	attack_zone.monitoring = true
+	# Place la zone d'attaque devant le joueur
+	attack_zone.position = attack_direction * 20
+	# Joue l'animation d'attaque si elle existe
+	anim.play("attack_down")  # adapte selon ta direction
+
+	# Désactive la zone après 0.3 secondes
+	await get_tree().create_timer(0.3).timeout
+	attack_zone.monitoring = false
+	is_attacking = false
+
+func _on_attack_zone_body_entered(body):
+	if body.is_in_group("enemy"):
+		body.take_damage(25)
+
+func heal(amount):
+	health = min(health + amount, max_health)
+	emit_signal("health_changed", health)
