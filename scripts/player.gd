@@ -9,6 +9,7 @@ var max_health = 100
 var health = 100
 var is_attacking = false
 var attack_direction = Vector2.DOWN
+var equipped_tool = ""  # "", "hache", "pioche"s
 
 signal health_changed(new_health)
 	
@@ -56,9 +57,35 @@ func _physics_process(_delta):
 	if Input.is_action_just_pressed("ui_accept"):
 		_attaquer()
 		
+	# Interaction avec outil
+	if Input.is_action_just_pressed("interact"):
+		_utiliser_outil()
+
 	velocity = direction.normalized() * SPEED
 	move_and_slide()
-
+func _utiliser_outil():
+	if equipped_tool == "":
+		return
+	
+	is_attacking = true  # bloque le mouvement pendant l'animation
+	
+	# Joue l'animation selon l'outil et la direction
+	var anim_name = equipped_tool + "_"
+	if attack_direction == Vector2.DOWN:
+		anim.play(anim_name + "down")
+	elif attack_direction == Vector2.UP:
+		anim.play(anim_name + "up")
+	elif attack_direction == Vector2.RIGHT:
+		anim.flip_h = false
+		anim.play(anim_name + "right")
+	elif attack_direction == Vector2.LEFT:
+		anim.flip_h = true
+		anim.play(anim_name + "right")
+	
+	await get_tree().create_timer(0.2).timeout
+	is_attacking = false
+	anim.play("idle_down")
+	
 func _attaquer():
 	is_attacking = true
 	attack_zone.monitoring = true
@@ -104,3 +131,14 @@ func _on_attack_zone_body_entered(body):
 func heal(amount):
 	health = min(health + amount, max_health)
 	emit_signal("health_changed", health)
+
+func _input(event):
+	if Input.is_action_just_pressed("tool_next"):
+		match equipped_tool:
+			"":
+				equipped_tool = "hache"
+			"hache":
+				equipped_tool = "pioche"
+			"pioche":
+				equipped_tool = ""
+		print("Outil équipé : ", equipped_tool)

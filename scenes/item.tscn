@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://x75oamxrxdxw"]
+
+[ext_resource type="Script" uid="uid://dneykwjsbkfcf" path="res://scripts/item.gd" id="1_tnite"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_tnite"]
+load_path = "res://.godot/imported/rpgItems.png-aac6be952af8a55028e97c2ae05093b4.ctex"
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_tnite"]
+radius = 8.0
+
+[node name="Item" type="Area2D" unique_id=170223919]
+monitoring = false
+script = ExtResource("1_tnite")
+heal_amount = 50
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1222668509]
+texture = SubResource("CompressedTexture2D_tnite")
+region_enabled = true
+region_rect = Rect2(0, 0, 16, 16)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=373425854]
+shape = SubResource("CircleShape2D_tnite")
