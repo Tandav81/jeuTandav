@@ -6,15 +6,17 @@
 load_path = "res://.godot/imported/Oak_Tree.png-ad6a0618ec3556d4f30940a0acadda37.ctex"
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_avsvi"]
-size = Vector2(16, 16)
+size = Vector2(12, 16)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_vplca"]
 radius = 30.0
 
 [node name="Tree" type="StaticBody2D" unique_id=63815640]
+collision_mask = 0
 script = ExtResource("1_avsvi")
 quantity = 2
 respawn_time = 30.0
+required_tool = "hache"
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=116873263]
 position = Vector2(1, -25)
@@ -25,6 +27,7 @@ position = Vector2(1, -8)
 shape = SubResource("RectangleShape2D_avsvi")
 
 [node name="InteractionZone" type="Area2D" parent="." unique_id=695751866]
+collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionZone" unique_id=819852014]
 position = Vector2(-1, -28)

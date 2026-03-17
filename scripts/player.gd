@@ -63,14 +63,12 @@ func _physics_process(_delta):
 
 	velocity = direction.normalized() * SPEED
 	move_and_slide()
+
 func _utiliser_outil():
-	if equipped_tool == "":
+	if Inventory.equipped_tool == "":
 		return
-	
-	is_attacking = true  # bloque le mouvement pendant l'animation
-	
-	# Joue l'animation selon l'outil et la direction
-	var anim_name = equipped_tool + "_"
+	is_attacking = true
+	var anim_name = Inventory.equipped_tool + "_"
 	if attack_direction == Vector2.DOWN:
 		anim.play(anim_name + "down")
 	elif attack_direction == Vector2.UP:
@@ -81,7 +79,6 @@ func _utiliser_outil():
 	elif attack_direction == Vector2.LEFT:
 		anim.flip_h = true
 		anim.play(anim_name + "right")
-	
 	await get_tree().create_timer(0.2).timeout
 	is_attacking = false
 	anim.play("idle_down")
@@ -134,11 +131,10 @@ func heal(amount):
 
 func _input(event):
 	if Input.is_action_just_pressed("tool_next"):
-		match equipped_tool:
+		match Inventory.equipped_tool:
 			"":
-				equipped_tool = "hache"
+				Inventory.equip_tool("hache")
 			"hache":
-				equipped_tool = "pioche"
+				Inventory.equip_tool("pioche")
 			"pioche":
-				equipped_tool = ""
-		print("Outil équipé : ", equipped_tool)
+				Inventory.equip_tool("")

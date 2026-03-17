@@ -45,9 +45,10 @@ func _interact():
 	current_health -= 1
 
 	# Petite animation de "hit"
+	var original_pos = global_position
 	var tween = create_tween()
-	tween.tween_property(sprite, "position", Vector2(2, 0), 0.05)
-	tween.tween_property(sprite, "position", Vector2.ZERO, 0.05)
+	tween.tween_property(self, "global_position", global_position + Vector2(2, 0), 0.05)
+	tween.tween_property(self, "global_position", original_pos, 0.05)
 
 	if current_health <= 0:
 		_harvest()

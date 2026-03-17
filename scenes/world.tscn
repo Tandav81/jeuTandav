@@ -575,7 +575,7 @@ tile_map_data = PackedByteArray("AAAXAPz/AwAAAAAAAAAXAP3/AwAAAAEAAAAXAP7/AwAAAAI
 tile_set = SubResource("TileSet_0nbtd")
 
 [node name="Player" parent="." unique_id=158458081 instance=ExtResource("10_pm21f")]
-position = Vector2(1452, 644)
+position = Vector2(676.2846, 109.83388)
 scale = Vector2(2, 2)
 motion_mode = 1
 
