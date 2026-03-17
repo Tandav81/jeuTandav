@@ -3,7 +3,7 @@ extends Node2D
 @export var width: int = 100
 @export var height: int = 100
 @export var noise_scale: float = 0.05
-@export var seed: int = 12345
+@export var seed: int = 12389
 
 var noise := FastNoiseLite.new()
 var tilemap : TileMapLayer

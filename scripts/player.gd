@@ -54,7 +54,7 @@ func _physics_process(_delta):
 		anim.play("idle_down")
 
 	# Attaque avec espace
-	if Input.is_action_just_pressed("ui_accept"):
+	if Input.is_action_just_pressed("attack"):
 		_attaquer()
 		
 	# Interaction avec outil
@@ -79,6 +79,7 @@ func _utiliser_outil():
 	elif attack_direction == Vector2.LEFT:
 		anim.flip_h = true
 		anim.play(anim_name + "right")
+		
 	await get_tree().create_timer(0.2).timeout
 	is_attacking = false
 	anim.play("idle_down")

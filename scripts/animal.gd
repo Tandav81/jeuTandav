@@ -76,6 +76,7 @@ func die():
 	# Donne la ressource à l'inventaire
 	emit_signal("resource_collected", "animal", resource_name, quantity)
 	#Inventory.add_item(resource_name, quantity)
+	Inventory.add_item(resource_name, quantity)
 	print("Ressource obtenue : ", resource_name, " x", quantity)
 
 	# Animation de mort si elle existe, sinon fondu simple

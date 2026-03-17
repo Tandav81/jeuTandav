@@ -9,6 +9,7 @@ load_path = "res://.godot/imported/Outdoor_Decor_Free.png-422da1e550dadb0c4b0882
 size = Vector2(11, 9)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_t8sxr"]
+radius = 11.0
 
 [node name="Rock" type="StaticBody2D" unique_id=1212851096]
 collision_mask = 0

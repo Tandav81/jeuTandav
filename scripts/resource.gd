@@ -21,15 +21,19 @@ func _ready():
 	current_health = health
 	interaction_zone.body_entered.connect(_on_player_enter)
 	interaction_zone.body_exited.connect(_on_player_exit)
+	print("Resource prête : ", resource_name)
 
 func _process(_delta):
 	if player_nearby and not is_depleted:
 		if Input.is_action_just_pressed("interact"):
+			print("E appuyé sur : ", resource_name)
 			_interact()
 
 func _on_player_enter(body):
+	print("Quelque chose entre dans l'InteractionZone : ", body.name)
 	if body.is_in_group("player"):
 		player_nearby = true
+		print("Joueur détecté près de : ", resource_name)
 
 func _on_player_exit(body):
 	if body.is_in_group("player"):
@@ -38,7 +42,7 @@ func _on_player_exit(body):
 func _interact():
 	 # Vérifie l'outil requis
 	var player = get_tree().get_first_node_in_group("player")
-	if required_tool != "" and player.equipped_tool != required_tool:
+	if required_tool != "" and Inventory.equipped_tool != required_tool:
 		print("Il vous faut une ", required_tool, " !")
 		return
 		
@@ -59,6 +63,7 @@ func _harvest():
 
 	# Émet le signal pour donner l'item à l'inventaire
 	emit_signal("resource_collected", resource_type, resource_name, quantity)
+	Inventory.add_item(resource_name, quantity)
 	print("Ressource obtenue : ", resource_name, " x", quantity)
 	
 	if respawn_time > 0:
