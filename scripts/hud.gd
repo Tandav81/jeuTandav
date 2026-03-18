@@ -21,16 +21,16 @@ var item_spritesheets = {
 	"Potion": "res://assets/rpgItems.png",
 }
 
+var inventaire_ouvert = false
+
 func _ready():
-	print("HUD _ready démarre...")
+	
 	var player = get_tree().get_first_node_in_group("player")
-	print("Player trouvé : ", player)
 	player.health_changed.connect(_on_health_changed)
-	print("health_changed connecté")
 	Inventory.inventory_changed.connect(_on_inventory_changed)
-	print("inventory_changed connecté")
 	panneau.visible = false
-	print("HUD _ready terminé !")
+	# Empêche les boutons de capturer le focus clavier
+	$BtnInventaire.focus_mode = Control.FOCUS_NONE
 
 func _process(_delta):
 	if Input.is_action_just_pressed("ui_cancel") and panneau.visible:
@@ -44,11 +44,14 @@ func _on_inventory_changed():
 
 func _on_btn_inventaire_pressed():
 	panneau.visible = !panneau.visible
+	inventaire_ouvert = panneau.visible	
 	if panneau.visible:
 		_refresh_inventaire()
+		$BtnInventaire.release_focus()
 
 func _on_btn_fermer_pressed():
 	panneau.visible = false
+	$BtnFermer.release_focus()
 
 func _refresh_inventaire():
 	label_or.text = "Or : " + str(Inventory.gold)

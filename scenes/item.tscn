@@ -6,7 +6,7 @@
 load_path = "res://.godot/imported/rpgItems.png-aac6be952af8a55028e97c2ae05093b4.ctex"
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_tnite"]
-radius = 8.0
+radius = 12.0
 
 [node name="Item" type="Area2D" unique_id=170223919]
 monitoring = false
@@ -20,3 +20,5 @@ region_rect = Rect2(0, 0, 16, 16)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=373425854]
 shape = SubResource("CircleShape2D_tnite")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]

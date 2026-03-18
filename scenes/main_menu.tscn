@@ -1,0 +1,97 @@
+[gd_scene format=3 uid="uid://dpdrhnn7sjjx8"]
+
+[ext_resource type="Script" uid="uid://byix3j3hf80nx" path="res://scripts/main_menu.gd" id="1_l6cm7"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_l6cm7"]
+load_path = "res://.godot/imported/menu_background.png-db72826fab3386aacb134bd9cfee5e23.ctex"
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_ekxnf"]
+load_path = "res://.godot/imported/freefantasy.png-b524764537f90878c86fb1e12b6e6450.ctex"
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_bqqt6"]
+texture = SubResource("CompressedTexture2D_ekxnf")
+texture_margin_left = 2.4042077
+region_rect = Rect2(83, 45, 73, 119)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_l6cm7"]
+bg_color = Color(0.54509807, 0.36862746, 0.23529412, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.23921569, 0.12156863, 0, 1)
+corner_detail = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ekxnf"]
+bg_color = Color(0.627451, 0.4392157, 0.2509804, 1)
+
+[node name="MainMenu" type="Control" unique_id=2139907583]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_l6cm7")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1521619851]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("CompressedTexture2D_l6cm7")
+expand_mode = 3
+
+[node name="Panel" type="Panel" parent="." unique_id=1739500005]
+layout_mode = 0
+offset_left = 423.0
+offset_top = 63.0
+offset_right = 751.0
+offset_bottom = 488.0
+theme_override_styles/panel = SubResource("StyleBoxTexture_bqqt6")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel" unique_id=1995975005]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -108.5
+offset_top = -118.5
+offset_right = 91.5
+offset_bottom = 114.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="Panel/VBoxContainer" unique_id=1890615776]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 8
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+
+[node name="BtnNouvellePartie" type="Button" parent="Panel/VBoxContainer" unique_id=736809183]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9607843, 0.8784314, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_l6cm7")
+theme_override_styles/hover = SubResource("StyleBoxFlat_ekxnf")
+text = "⚔️ Nouvelle Partie"
+
+[node name="BtnContinuer" type="Button" parent="Panel/VBoxContainer" unique_id=1314514151]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+text = "📖 Continuer"
+
+[node name="BtnQuitter" type="Button" parent="Panel/VBoxContainer" unique_id=872584216]
+custom_minimum_size = Vector2(180, 48)
+layout_mode = 2
+text = "🚪 Quitter"
+
+[connection signal="pressed" from="Panel/VBoxContainer/BtnNouvellePartie" to="." method="_on_btn_nouvelle_partie_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/BtnContinuer" to="." method="_on_btn_continuer_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/BtnQuitter" to="." method="_on_btn_quitter_pressed"]

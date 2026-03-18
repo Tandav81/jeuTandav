@@ -3,11 +3,10 @@ extends Area2D
 @export var item_type = "potion"
 @export var heal_amount = 30
 
-func _ready():
-	body_entered.connect(_on_body_entered)
-
 func _on_body_entered(body):
+	print("Item détecté : ", body.name)
 	if body.is_in_group("player"):
+		print("C'est le joueur !")
 		match item_type:
 			"potion":
 				body.heal(heal_amount)

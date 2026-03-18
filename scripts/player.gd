@@ -1,10 +1,8 @@
 extends CharacterBody2D
 
 const SPEED = 150.0
-
 @onready var anim = $AnimatedSprite2D
 @onready var attack_zone = $AttackZone
-
 var max_health = 100
 var health = 100
 var is_attacking = false
@@ -12,7 +10,15 @@ var attack_direction = Vector2.DOWN
 var equipped_tool = ""  # "", "hache", "pioche"s
 
 signal health_changed(new_health)
-	
+
+func _ready():
+	if GameManager.spawn_position != Vector2.ZERO:
+		global_position = GameManager.spawn_position
+	if GameManager.player_health > 0:
+		health = GameManager.player_health
+		emit_signal("health_changed", health)
+	Inventory.emit_signal("inventory_changed")
+		
 func take_damage(amount):
 	if is_attacking:
 		return  # invincible pendant l'attaque (optionnel)
@@ -55,7 +61,9 @@ func _physics_process(_delta):
 
 	# Attaque avec espace
 	if Input.is_action_just_pressed("attack"):
-		_attaquer()
+		var hud = get_tree().get_first_node_in_group("hud")
+		if hud == null or not hud.inventaire_ouvert:
+			_attaquer()
 		
 	# Interaction avec outil
 	if Input.is_action_just_pressed("interact"):
@@ -139,3 +147,7 @@ func _input(event):
 				Inventory.equip_tool("pioche")
 			"pioche":
 				Inventory.equip_tool("")
+	
+	if Input.is_action_just_pressed("save"):
+		GameManager.save_game()
+		print("💾 Sauvegarde effectuée !")

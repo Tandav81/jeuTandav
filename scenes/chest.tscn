@@ -1,0 +1,93 @@
+[gd_scene format=3 uid="uid://dxd05iqr1cp8n"]
+
+[ext_resource type="Script" uid="uid://csvqn6ffg06q1" path="res://scripts/chest.gd" id="1_oii8l"]
+[ext_resource type="Texture2D" uid="uid://bgnchyfmjpu38" path="res://assets/Outdoor decoration/objects/chest_01.png" id="2_sy5e1"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gqd3d"]
+atlas = ExtResource("2_sy5e1")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yue2o"]
+atlas = ExtResource("2_sy5e1")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yhylo"]
+atlas = ExtResource("2_sy5e1")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w02o5"]
+atlas = ExtResource("2_sy5e1")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ilhio"]
+atlas = ExtResource("2_sy5e1")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kg5gm"]
+atlas = ExtResource("2_sy5e1")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_8me8i"]
+animations = [{
+"frames": [],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gqd3d")
+}],
+"loop": false,
+"name": &"ferme",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yue2o")
+}],
+"loop": false,
+"name": &"ouvert",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yhylo")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w02o5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ilhio")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kg5gm")
+}],
+"loop": false,
+"name": &"ouverture",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gqd3d"]
+size = Vector2(16, 9)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_yue2o"]
+radius = 12.0
+
+[node name="Chest" type="StaticBody2D" unique_id=781992566]
+script = ExtResource("1_oii8l")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=782152187]
+position = Vector2(0, -8)
+sprite_frames = SubResource("SpriteFrames_8me8i")
+animation = &"ferme"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2037467175]
+position = Vector2(0, -4.5)
+shape = SubResource("RectangleShape2D_gqd3d")
+
+[node name="InteractionZone" type="Area2D" parent="." unique_id=632925473]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionZone" unique_id=828461077]
+position = Vector2(0, -8)
+shape = SubResource("CircleShape2D_yue2o")
