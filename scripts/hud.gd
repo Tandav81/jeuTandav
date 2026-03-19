@@ -114,16 +114,22 @@ func _refresh_inventaire():
 		grid.add_child(container)
 
 func _on_item_pressed(item_name: String):
-	if item_name == "Potion":
-		var player = get_tree().get_first_node_in_group("player")
-		if Inventory.remove_item(item_name, 1):
-			player.heal(30)
-	elif item_name == "Hache":
-		Inventory.equip_tool("hache")
-		_refresh_inventaire()
-	elif item_name == "Pioche":
-		Inventory.equip_tool("pioche")
-		_refresh_inventaire()
+	var player = get_tree().get_first_node_in_group("player")
+	match item_name:
+		"Potion":
+			if Inventory.remove_item(item_name, 1):
+				player.heal(30)
+				_refresh_inventaire()
+		"Viande":
+			if Inventory.remove_item(item_name, 1):
+				player.heal(15)  # soigne moins qu'une potion
+				_refresh_inventaire()
+		"Hache":
+			Inventory.equip_tool("hache")
+			_refresh_inventaire()
+		"Pioche":
+			Inventory.equip_tool("pioche")
+			_refresh_inventaire()
 
 func get_item_texture(item_name: String) -> Texture2D:
 	if item_images.has(item_name):

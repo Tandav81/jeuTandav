@@ -23,6 +23,7 @@
 [ext_resource type="PackedScene" uid="uid://1oa8b1bin2pd" path="res://scenes/rock.tscn" id="21_oo54l"]
 [ext_resource type="PackedScene" uid="uid://d2y4e0mkmkk8i" path="res://scenes/vache.tscn" id="22_oo54l"]
 [ext_resource type="PackedScene" uid="uid://dxd05iqr1cp8n" path="res://scenes/chest.tscn" id="24_ctatt"]
+[ext_resource type="PackedScene" uid="uid://hd57sfo2qs16" path="res://scenes/mouton.tscn" id="24_xgqkh"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_pm21f"]
 texture = ExtResource("1_xo05s")
@@ -751,5 +752,14 @@ position = Vector2(678, 231)
 contenu = "or"
 quantite = 0
 gold_amount = 100
+
+[node name="Mouton3" parent="." unique_id=647016654 instance=ExtResource("24_xgqkh")]
+position = Vector2(362, 267)
+
+[node name="Mouton" parent="." unique_id=433856896 instance=ExtResource("24_xgqkh")]
+position = Vector2(25, 338)
+
+[node name="Mouton2" parent="." unique_id=1598523569 instance=ExtResource("24_xgqkh")]
+position = Vector2(-74, 300)
 
 [connection signal="pressed" from="HUD/BtnInventaire" to="HUD" method="_on_btn_inventaire_pressed"]

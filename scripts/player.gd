@@ -137,6 +137,7 @@ func _on_attack_zone_body_entered(body):
 func heal(amount):
 	health = min(health + amount, max_health)
 	emit_signal("health_changed", health)
+	print("❤️ +", amount, " PV ! Vie actuelle : ", health)
 
 func _input(event):
 	if Input.is_action_just_pressed("tool_next"):
