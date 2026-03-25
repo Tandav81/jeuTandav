@@ -14,6 +14,10 @@ extends CanvasLayer
 @onready var quest_list = $QuestPanel/QuestList
 @onready var dialogue_box = $DialogueBox
 @onready var dialogue_text = $DialogueBox/DialogueText
+@onready var quest_journal = $QuestJournal
+@onready var quest_liste = $QuestJournal/QuestList
+
+var journal_open = false
 
 var item_images = {
 	"Bois": "res://assets/sprites/wood/wood.png",
@@ -42,7 +46,9 @@ func _ready():
 	panneau_perso.visible = false
 	$BtnInventaire.focus_mode = Control.FOCUS_NONE
 	$BtnPersonnage.focus_mode = Control.FOCUS_NONE
+	$BtnQuetes.focus_mode = Control.FOCUS_NONE
 	QuestManager.quest_updated.connect(update_quests_display)
+	QuestManager.quest_updated.connect(update_quest_journal)
 	update_quests_display()
 
 func _process(_delta):
@@ -56,7 +62,9 @@ func _process(_delta):
 			
 	if dialogue_box.visible and Input.is_action_just_pressed("ui_accept"):
 		hide_dialogue()
-# ===== SANTÉ =====
+	
+	if Input.is_action_just_pressed("personnage"): # ou une nouvelle touche
+		toggle_journal()
 
 func _on_health_changed(new_health):
 	health_bar.value = new_health
@@ -361,3 +369,33 @@ func show_dialogue(text):
 	
 func hide_dialogue():
 	dialogue_box.visible = false
+
+func toggle_journal():
+	journal_open = !journal_open
+	quest_journal.visible = journal_open
+
+	if journal_open:
+		update_quest_journal()
+
+func update_quest_journal():
+	for child in quest_liste.get_children():
+		child.queue_free()
+
+	for quest in QuestManager.active_quests:
+		var label = Label.new()
+
+		var text = quest.name + "\n"
+		text += quest.description + "\n"
+		text += "Progression : %d / %d" % [quest.progress, quest.required]
+
+		if quest.completed:
+			text += "\n✅ Terminé - Retourner voir le PNJ"
+
+		label.text = text
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD
+
+		quest_liste.add_child(label)
+
+func _on_btn_quetes_pressed() -> void:
+	toggle_journal()
+	$BtnQuetes.release_focus()

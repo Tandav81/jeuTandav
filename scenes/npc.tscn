@@ -78,6 +78,9 @@ size = Vector2(14, 10)
 [sub_resource type="CircleShape2D" id="CircleShape2D_sptji"]
 radius = 13.0
 
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_abqhh"]
+load_path = "res://.godot/imported/expression_alerted.png-378f3124821442354c5f51a936571403.ctex"
+
 [node name="NPC" type="CharacterBody2D" unique_id=1126593173 groups=["player"]]
 script = ExtResource("1_nh2m4")
 
@@ -95,3 +98,7 @@ shape = SubResource("RectangleShape2D_0tygy")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionZone" unique_id=1871533145 groups=["player"]]
 position = Vector2(0, -5)
 shape = SubResource("CircleShape2D_sptji")
+
+[node name="QuestIcon" type="Sprite2D" parent="." unique_id=950680362 groups=["player"]]
+texture = SubResource("CompressedTexture2D_abqhh")
+offset = Vector2(0, -20)

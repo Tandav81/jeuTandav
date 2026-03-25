@@ -30,7 +30,6 @@ func _process(_delta):
 			_interact()
 
 func _on_player_enter(body):
-	print("Quelque chose entre dans l'InteractionZone : ", body.name)
 	if body.is_in_group("player"):
 		player_nearby = true
 		print("Joueur détecté près de : ", resource_name)

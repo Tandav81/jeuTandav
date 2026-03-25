@@ -2,14 +2,19 @@ extends CharacterBody2D
 
 @export var quest_id = "slime_hunter"
 @onready var anim = $AnimatedSprite2D
+@onready var quest_icon = $QuestIcon
+
 var player_in_range = false
 var can_interact = true
 
 func _ready():
+	print("NPC quest_id =", quest_id)
 	anim.play("idle")
 	# Connexion manuelle uniquement — supprimer les connexions dans l'éditeur
 	$InteractionZone.body_entered.connect(_on_body_entered)
 	$InteractionZone.body_exited.connect(_on_body_exited)
+	QuestManager.quest_updated.connect(update_quest_icon)
+	update_quest_icon()
 
 func _process(_delta):
 	if player_in_range and Input.is_action_just_pressed("interact"):
@@ -33,7 +38,7 @@ func interact() -> void:
 	var hud = get_tree().get_first_node_in_group("hud")
 	if quest == null:
 		QuestManager.start_quest(quest_id)
-		hud.show_dialogue("Peux-tu tuer 5 slimes pour moi ?")
+		hud.show_dialogue("Peux tu compléter ma quête ?")
 	elif quest.completed and not quest.reward_claimed:
 		QuestManager.claim_reward(quest_id)
 		hud.show_dialogue("Merci ! Voici ta récompense.")
@@ -50,3 +55,28 @@ func get_quest():
 		if quest.id == quest_id:
 			return quest
 	return null
+
+func update_quest_icon():
+	var quest = get_quest()
+	print("update quest icon")
+	if quest == null:
+		# Quête disponible
+		print("Quête disponible")
+		quest_icon.visible = true
+		quest_icon.modulate = Color.YELLOW   # ❗
+
+	elif quest.completed and not quest.reward_claimed:
+		# Récompense dispo
+		print("Récompense dispo")
+		quest_icon.visible = true
+		quest_icon.modulate = Color.GREEN    # ✅
+
+	elif not quest.completed:
+		# En cours
+		print("En cours")
+		quest_icon.visible = true
+		quest_icon.modulate = Color.WHITE    # ❓
+
+	else:
+		# Tout fini
+		quest_icon.visible = false
