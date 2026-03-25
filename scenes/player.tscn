@@ -901,7 +901,7 @@ position = Vector2(-0.5, -12)
 shape = SubResource("CapsuleShape2D_g2els")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1448229246 groups=["player"]]
-zoom = Vector2(2.5, 2.5)
+zoom = Vector2(1.5, 1.5)
 position_smoothing_enabled = true
 
 [node name="AttackZone" type="Area2D" parent="." unique_id=1048789650 groups=["player"]]

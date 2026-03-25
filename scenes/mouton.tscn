@@ -104,22 +104,22 @@ animations = [{
 size = Vector2(20, 10)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_tnugy"]
-radius = 13.0
+radius = 16.0
 
-[node name="Mouton" type="CharacterBody2D" unique_id=433856896]
+[node name="Mouton" type="CharacterBody2D" unique_id=433856896 groups=["enemy"]]
 script = ExtResource("1_rwvbi")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=788398037]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=788398037 groups=["enemy"]]
 position = Vector2(0, -8)
 sprite_frames = SubResource("SpriteFrames_8iy0n")
 animation = &"idle_down"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=639254283]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=639254283 groups=["enemy"]]
 position = Vector2(0, -5)
 shape = SubResource("RectangleShape2D_06qkg")
 
-[node name="Area2D" type="Area2D" parent="." unique_id=1923186306]
+[node name="InteractionZone" type="Area2D" parent="." unique_id=1923186306 groups=["enemy"]]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=987945629]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionZone" unique_id=987945629 groups=["enemy"]]
 position = Vector2(-1, -8)
 shape = SubResource("CircleShape2D_tnugy")

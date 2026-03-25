@@ -22,7 +22,9 @@ func _ready():
 func take_damage(amount):
 	if is_attacking:
 		return  # invincible pendant l'attaque (optionnel)
-	health -= amount
+	# Réduit les dégâts selon la défense
+	var damage_reduit = max(1, amount - Stats.get_defense())
+	health -= damage_reduit
 	emit_signal("health_changed", health)
 	if health <= 0:
 		die()
@@ -31,6 +33,8 @@ func die():
 	get_tree().reload_current_scene()
 
 func _physics_process(_delta):
+	var current_speed = Stats.get_speed()
+	
 	if is_attacking:
 		velocity = Vector2.ZERO
 		move_and_slide()
@@ -69,7 +73,7 @@ func _physics_process(_delta):
 	if Input.is_action_just_pressed("interact"):
 		_utiliser_outil()
 
-	velocity = direction.normalized() * SPEED
+	velocity = direction.normalized() * current_speed
 	move_and_slide()
 
 func _utiliser_outil():
@@ -132,7 +136,7 @@ func _attaquer():
 
 func _on_attack_zone_body_entered(body):
 	if body.is_in_group("enemy"):
-		body.take_damage(25)
+		body.take_damage(Stats.get_damage())
 
 func heal(amount):
 	health = min(health + amount, max_health)

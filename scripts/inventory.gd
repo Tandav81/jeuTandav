@@ -4,6 +4,16 @@ var items = {}
 var gold = 0
 var equipped_tool = ""
 
+# Équipements équipés
+var equipped = {
+	"arme": null,
+	"casque": null,
+	"plastron": null,
+	"bottes": null,
+	"anneau": null,
+	"amulette": null
+}
+
 signal inventory_changed
 
 func add_item(item_name: String, quantity: int):
@@ -31,4 +41,12 @@ func equip_tool(tool_name: String):
 
 func add_gold(amount: int):
 	gold += amount
+	emit_signal("inventory_changed")
+
+func equip_item(slot: String, item_name: String):
+	equipped[slot] = item_name
+	emit_signal("inventory_changed")
+
+func unequip_item(slot: String):
+	equipped[slot] = null
 	emit_signal("inventory_changed")

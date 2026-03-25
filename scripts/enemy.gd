@@ -5,6 +5,8 @@ extends CharacterBody2D
 @export var patrol_range = 50.0
 @export var damage_per_second = 10.0
 @export var max_health = 50
+@export var xp_reward = 20
+@export var respawn_time = 5.0  # secondes avant respawn
 
 @onready var anim = $AnimatedSprite2D
 
@@ -29,18 +31,57 @@ func take_damage(amount):
 	if health <= 0:
 		die()
 
-func die():
-	# Empêche l'ennemi de bouger et d'infliger des dégâts
-	is_dying = true
-	velocity = Vector2.ZERO
-	$CollisionShape2D.set_deferred("disabled", true)
-	$Area2D/CollisionShape2D.set_deferred("disabled", true)
-	
-	# Joue l'animation de mort
-	anim.play("die")
-	await anim.animation_finished
-	queue_free()
+#func die():
+	## Empêche l'ennemi de bouger et d'infliger des dégâts
+	#is_dying = true
+	#velocity = Vector2.ZERO
+	#$CollisionShape2D.set_deferred("disabled", true)
+	#$Area2D/CollisionShape2D.set_deferred("disabled", true)
+	#
+	#Stats.add_xp(xp_reward)
+	#
+	## Joue l'animation de mort
+	#anim.play("die")
+	#await anim.animation_finished
+	#queue_free()
 
+func die():
+	if is_dying:
+		return
+		
+	is_dying = true
+
+	Stats.add_xp(xp_reward)
+	# jouer animation de mort
+	$AnimatedSprite2D.play("die")
+	
+	# attendre la fin de l'animation
+	await $AnimatedSprite2D.animation_finished
+	
+	# désactive l'ennemi
+	visible = false
+	$CollisionShape2D.disabled = true
+	set_physics_process(false)
+
+	# attendre avant respawn
+	await get_tree().create_timer(respawn_time).timeout
+
+	respawn()
+	
+func respawn():
+	health = max_health
+	is_dying = false
+
+	$CollisionShape2D.disabled = false
+	set_physics_process(true)
+
+	# effet de réapparition
+	modulate = Color(1, 1, 1, 0)
+	visible = true
+
+	var tween = create_tween()
+	tween.tween_property(self, "modulate:a", 1.0, 0.5)
+	
 func _physics_process(delta):
 	if is_dying:
 		return
