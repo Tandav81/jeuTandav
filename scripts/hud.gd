@@ -11,6 +11,9 @@ extends CanvasLayer
 @onready var label_points = $PanneauPersonnage/HBoxContainer/PanneauStats/VBoxContainer/LabelPoints
 @onready var grid_stats = $PanneauPersonnage/HBoxContainer/PanneauStats/VBoxContainer/GridStats
 @onready var grid_equip = $PanneauPersonnage/HBoxContainer/PanneauEquipement/VBoxContainer/GridEquipement
+@onready var quest_list = $QuestPanel/QuestList
+@onready var dialogue_box = $DialogueBox
+@onready var dialogue_text = $DialogueBox/DialogueText
 
 var item_images = {
 	"Bois": "res://assets/sprites/wood/wood.png",
@@ -29,6 +32,7 @@ var inventaire_ouvert = false
 var perso_ouvert = false
 
 func _ready():
+	add_to_group("hud")
 	var player = get_tree().get_first_node_in_group("player")
 	player.health_changed.connect(_on_health_changed)
 	Inventory.inventory_changed.connect(_on_inventory_changed)
@@ -38,6 +42,8 @@ func _ready():
 	panneau_perso.visible = false
 	$BtnInventaire.focus_mode = Control.FOCUS_NONE
 	$BtnPersonnage.focus_mode = Control.FOCUS_NONE
+	QuestManager.quest_updated.connect(update_quests_display)
+	update_quests_display()
 
 func _process(_delta):
 	if Input.is_action_just_pressed("ui_cancel"):
@@ -47,7 +53,9 @@ func _process(_delta):
 		if panneau_perso.visible:
 			panneau_perso.visible = false
 			perso_ouvert = false
-
+			
+	if dialogue_box.visible and Input.is_action_just_pressed("ui_accept"):
+		hide_dialogue()
 # ===== SANTÉ =====
 
 func _on_health_changed(new_health):
@@ -329,3 +337,27 @@ func get_item_texture(item_name: String) -> Texture2D:
 			print("Spritesheet non trouvé : ", path)
 			return null
 	return null
+
+func update_quests_display():
+	# Nettoyer
+	for child in quest_list.get_children():
+		child.queue_free()
+
+	# Ajouter chaque quête
+	for quest in QuestManager.active_quests:
+		var label = Label.new()
+		label.text = "%s : %d / %d" % [
+			quest.name,
+			quest.progress,
+			quest.required
+		]
+		if quest.completed:
+			label.text += " (Terminé !)"
+		quest_list.add_child(label)
+
+func show_dialogue(text):
+	dialogue_box.visible = true
+	dialogue_text.text = text
+	
+func hide_dialogue():
+	dialogue_box.visible = false

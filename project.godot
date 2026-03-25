@@ -19,6 +19,7 @@ config/features=PackedStringArray("4.6", "Forward Plus")
 Inventory="*uid://c8ldmel2jnraj"
 GameManager="*uid://b2dvukctorj6g"
 Stats="*uid://boffexw3fcbqt"
+QuestManager="*uid://cyc4qcuwfvvgo"
 
 [global_group]
 

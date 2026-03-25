@@ -12,6 +12,7 @@ var equipped_tool = ""  # "", "hache", "pioche"s
 signal health_changed(new_health)
 
 func _ready():
+	add_to_group("player")
 	if GameManager.spawn_position != Vector2.ZERO:
 		global_position = GameManager.spawn_position
 	if GameManager.player_health > 0:
@@ -143,7 +144,7 @@ func heal(amount):
 	emit_signal("health_changed", health)
 	print("❤️ +", amount, " PV ! Vie actuelle : ", health)
 
-func _input(event):
+func _input(_event):
 	if Input.is_action_just_pressed("tool_next"):
 		match Inventory.equipped_tool:
 			"":

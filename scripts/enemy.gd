@@ -7,6 +7,7 @@ extends CharacterBody2D
 @export var max_health = 50
 @export var xp_reward = 20
 @export var respawn_time = 5.0  # secondes avant respawn
+@export var enemy_type = "slime"
 
 @onready var anim = $AnimatedSprite2D
 
@@ -52,6 +53,7 @@ func die():
 	is_dying = true
 
 	Stats.add_xp(xp_reward)
+	QuestManager.update_kill(enemy_type)
 	# jouer animation de mort
 	$AnimatedSprite2D.play("die")
 	

@@ -41,7 +41,6 @@ func _on_player_exit(body):
 
 func _interact():
 	 # Vérifie l'outil requis
-	var player = get_tree().get_first_node_in_group("player")
 	if required_tool != "" and Inventory.equipped_tool != required_tool:
 		print("Il vous faut une ", required_tool, " !")
 		return
@@ -65,7 +64,7 @@ func _harvest():
 	emit_signal("resource_collected", resource_type, resource_name, quantity)
 	Inventory.add_item(resource_name, quantity)
 	print("Ressource obtenue : ", resource_name, " x", quantity)
-	
+	QuestManager.update_collect(resource_name)
 	if respawn_time > 0:
 		# Cache la ressource et la fait repousser
 		var tween = create_tween()
@@ -86,7 +85,3 @@ func _respawn():
 	collision.set_deferred("disabled", false)
 	var tween = create_tween()
 	tween.tween_property(sprite, "modulate:a", 1.0, 0.5)
-
-
-func _on_interaction_zone_body_entered(body: Node2D) -> void:
-	pass # Replace with function body.
