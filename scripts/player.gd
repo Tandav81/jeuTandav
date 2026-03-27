@@ -116,24 +116,11 @@ func _attaquer():
 		anim.flip_h = true  # on retourne attack_right pour aller à gauche
 		anim.play("attack_right")
 
-	# Attend la fin de l'animation avant de désactiver
-	#await anim.animation_finished
-	await get_tree().create_timer(0.2).timeout
-
-	attack_zone.monitoring = false
-	is_attacking = false
-	anim.play("idle_down")
-	is_attacking = true
-	attack_zone.monitoring = true
-	# Place la zone d'attaque devant le joueur
-	attack_zone.position = attack_direction * 20
-	# Joue l'animation d'attaque si elle existe
-	anim.play("attack_down")  # adapte selon ta direction
-
 	# Désactive la zone après 0.3 secondes
 	await get_tree().create_timer(0.3).timeout
 	attack_zone.monitoring = false
 	is_attacking = false
+	anim.play("idle_down")
 
 func _on_attack_zone_body_entered(body):
 	if body.is_in_group("enemy"):

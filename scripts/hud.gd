@@ -11,7 +11,6 @@ extends CanvasLayer
 @onready var label_points = $PanneauPersonnage/HBoxContainer/PanneauStats/VBoxContainer/LabelPoints
 @onready var grid_stats = $PanneauPersonnage/HBoxContainer/PanneauStats/VBoxContainer/GridStats
 @onready var grid_equip = $PanneauPersonnage/HBoxContainer/PanneauEquipement/VBoxContainer/GridEquipement
-@onready var quest_list = $QuestPanel/QuestList
 @onready var dialogue_box = $DialogueBox
 @onready var dialogue_text = $DialogueBox/DialogueText
 @onready var quest_journal = $QuestJournal
@@ -348,7 +347,7 @@ func get_item_texture(item_name: String) -> Texture2D:
 
 func update_quests_display():
 	# Nettoyer
-	for child in quest_list.get_children():
+	for child in quest_liste.get_children():
 		child.queue_free()
 
 	# Ajouter chaque quête
@@ -361,7 +360,7 @@ func update_quests_display():
 		]
 		if quest.completed:
 			label.text += " (Terminé !)"
-		quest_list.add_child(label)
+		quest_liste.add_child(label)
 
 func show_dialogue(text):
 	dialogue_box.visible = true
