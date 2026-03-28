@@ -54,6 +54,9 @@ func get_quest():
 	for quest in QuestManager.active_quests:
 		if quest.id == quest_id:
 			return quest
+	for quest in QuestManager.completed_quests:
+		if quest.id == quest_id:
+			return quest
 	return null
 
 func update_quest_icon():

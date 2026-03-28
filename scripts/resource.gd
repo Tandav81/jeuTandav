@@ -21,7 +21,6 @@ func _ready():
 	current_health = health
 	interaction_zone.body_entered.connect(_on_player_enter)
 	interaction_zone.body_exited.connect(_on_player_exit)
-	print("Resource prête : ", resource_name)
 
 func _process(_delta):
 	if player_nearby and not is_depleted:

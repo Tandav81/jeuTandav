@@ -46,9 +46,7 @@ func _ready():
 	$BtnInventaire.focus_mode = Control.FOCUS_NONE
 	$BtnPersonnage.focus_mode = Control.FOCUS_NONE
 	$BtnQuetes.focus_mode = Control.FOCUS_NONE
-	QuestManager.quest_updated.connect(update_quests_display)
 	QuestManager.quest_updated.connect(update_quest_journal)
-	update_quests_display()
 
 func _process(_delta):
 	if Input.is_action_just_pressed("ui_cancel"):
@@ -344,8 +342,6 @@ func get_item_texture(item_name: String) -> Texture2D:
 			print("Spritesheet non trouvé : ", path)
 			return null
 	return null
-
-func update_quests_display():
 	# Nettoyer
 	for child in quest_liste.get_children():
 		child.queue_free()

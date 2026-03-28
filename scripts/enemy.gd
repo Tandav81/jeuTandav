@@ -137,7 +137,6 @@ func _jouer_animation():
 			anim.play("walk_up")
 
 func _on_area_2d_body_entered(body):
-	print("body_entered déclenché ! body=", body.name)
 	if body.is_in_group("player"):
 		print("C'est le joueur !")
 		player_in_range = true
