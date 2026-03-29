@@ -28,23 +28,9 @@ func _ready():
 
 func take_damage(amount):
 	health -= amount
-	print("Ennemi touché ! vie restante=", health)
+	$AnimatedSprite2D.play("hurt")
 	if health <= 0:
 		die()
-
-#func die():
-	## Empêche l'ennemi de bouger et d'infliger des dégâts
-	#is_dying = true
-	#velocity = Vector2.ZERO
-	#$CollisionShape2D.set_deferred("disabled", true)
-	#$Area2D/CollisionShape2D.set_deferred("disabled", true)
-	#
-	#Stats.add_xp(xp_reward)
-	#
-	## Joue l'animation de mort
-	#anim.play("die")
-	#await anim.animation_finished
-	#queue_free()
 
 func die():
 	if is_dying:
@@ -138,8 +124,8 @@ func _jouer_animation():
 
 func _on_area_2d_body_entered(body):
 	if body.is_in_group("player"):
-		print("C'est le joueur !")
 		player_in_range = true
+		$AnimatedSprite2D.play("attack")
 		damage_timer = 1.0  # dégâts immédiats au contact
 
 func _on_area_2d_body_exited(body):

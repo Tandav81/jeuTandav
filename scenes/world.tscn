@@ -17,13 +17,14 @@
 [ext_resource type="Texture2D" uid="uid://k0v57n3fw00d" path="res://assets/Outdoor decoration/Fences.png" id="13_lakw3"]
 [ext_resource type="Texture2D" uid="uid://delps5hd3ejx4" path="res://assets/Outdoor decoration/Oak_Tree_Small.png" id="15_lakw3"]
 [ext_resource type="Texture2D" uid="uid://b3h2i0n3gp78i" path="res://assets/menus/character_panel.png" id="16_munwf"]
-[ext_resource type="PackedScene" uid="uid://bq8my2d0nr4x1" path="res://scenes/enemySkeleton.tscn" id="17_7t5mc"]
-[ext_resource type="PackedScene" uid="uid://nwdvquapayba" path="res://scenes/enemySlime.tscn" id="18_lakw3"]
+[ext_resource type="PackedScene" uid="uid://bq8my2d0nr4x1" path="res://scenes/golem.tscn" id="17_7t5mc"]
+[ext_resource type="PackedScene" uid="uid://nwdvquapayba" path="res://scenes/slime.tscn" id="18_lakw3"]
 [ext_resource type="PackedScene" uid="uid://b7rpbyildycup" path="res://scenes/tree.tscn" id="20_7iits"]
 [ext_resource type="PackedScene" uid="uid://1oa8b1bin2pd" path="res://scenes/rock.tscn" id="21_oo54l"]
 [ext_resource type="PackedScene" uid="uid://d2y4e0mkmkk8i" path="res://scenes/vache.tscn" id="22_oo54l"]
 [ext_resource type="PackedScene" uid="uid://dxd05iqr1cp8n" path="res://scenes/chest.tscn" id="24_ctatt"]
 [ext_resource type="PackedScene" uid="uid://hd57sfo2qs16" path="res://scenes/mouton.tscn" id="24_xgqkh"]
+[ext_resource type="PackedScene" uid="uid://cg2erk14uqu3s" path="res://scenes/skeleton.tscn" id="25_munwf"]
 [ext_resource type="PackedScene" uid="uid://b7n27d3yv516k" path="res://scenes/npc.tscn" id="27_ts3gi"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_pm21f"]
@@ -1663,7 +1664,7 @@ offset_right = 346.0
 offset_bottom = 468.0
 
 [node name="Player" parent="." unique_id=158458081 instance=ExtResource("10_pm21f")]
-position = Vector2(676.2846, 109.83388)
+position = Vector2(460, 142)
 scale = Vector2(2, 2)
 motion_mode = 1
 
@@ -1869,20 +1870,14 @@ position = Vector2(160, 742)
 
 [node name="Ennemis" type="Node2D" parent="." unique_id=1341981110]
 
-[node name="Skeleton" parent="Ennemis" unique_id=1106417163 instance=ExtResource("17_7t5mc")]
-position = Vector2(1604, 711)
-
-[node name="Skeleton2" parent="Ennemis" unique_id=290815969 instance=ExtResource("17_7t5mc")]
-position = Vector2(1628, -27)
-
-[node name="Skeleton3" parent="Ennemis" unique_id=803019038 instance=ExtResource("17_7t5mc")]
-position = Vector2(908, 35)
-
 [node name="Slime" parent="Ennemis" unique_id=2145179066 instance=ExtResource("18_lakw3")]
 position = Vector2(1531, 292)
 
 [node name="Slime2" parent="Ennemis" unique_id=1724891382 instance=ExtResource("18_lakw3")]
 position = Vector2(1382, 56)
+
+[node name="Slime3" parent="Ennemis" unique_id=1642892159 instance=ExtResource("18_lakw3")]
+position = Vector2(1263, 609)
 
 [node name="Slime4" parent="Ennemis" unique_id=292115739 instance=ExtResource("18_lakw3")]
 position = Vector2(1307, -278)
@@ -1890,8 +1885,23 @@ position = Vector2(1307, -278)
 [node name="Slime5" parent="Ennemis" unique_id=1187662990 instance=ExtResource("18_lakw3")]
 position = Vector2(752, 767)
 
-[node name="Slime3" parent="Ennemis" unique_id=1642892159 instance=ExtResource("18_lakw3")]
-position = Vector2(1263, 609)
+[node name="Golem" parent="Ennemis" unique_id=1325374603 instance=ExtResource("17_7t5mc")]
+position = Vector2(-753, 123)
+
+[node name="Skeleton" parent="Ennemis" unique_id=1106417163 instance=ExtResource("25_munwf")]
+position = Vector2(84, -128)
+
+[node name="Skeleton2" parent="Ennemis" unique_id=1882173084 instance=ExtResource("25_munwf")]
+position = Vector2(-303, -227)
+
+[node name="Skeleton3" parent="Ennemis" unique_id=752504131 instance=ExtResource("25_munwf")]
+position = Vector2(-465, -528)
+
+[node name="Skeleton4" parent="Ennemis" unique_id=554127473 instance=ExtResource("25_munwf")]
+position = Vector2(-584, 369)
+
+[node name="Skeleton5" parent="Ennemis" unique_id=1452608380 instance=ExtResource("25_munwf")]
+position = Vector2(-100, 780)
 
 [node name="Coffres" type="Node2D" parent="." unique_id=544727082]
 

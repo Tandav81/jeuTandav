@@ -34,6 +34,7 @@ var item_spritesheets = {
 var inventaire_ouvert = false
 var perso_ouvert = false
 var crafting_panel_node = null   # instancié dans _ready()
+var mana_bar: TextureProgressBar = null
 
 func _ready():
 	add_to_group("hud")
@@ -52,6 +53,9 @@ func _ready():
 	# ── Panneau Crafting (construit par code) ──────────────────
 	crafting_panel_node = load("res://scripts/crafting_panel.gd").new()
 	add_child(crafting_panel_node)
+
+	# ── Barre de mana (construite après le layout) ──────────────
+	call_deferred("_build_mana_bar")
 
 func _input(event: InputEvent) -> void:
 	# Touche B (Bricoler) : ouvre/ferme le panneau de crafting
@@ -79,6 +83,48 @@ func _process(_delta):
 
 func _on_health_changed(new_health):
 	health_bar.value = new_health
+
+# Construit une ImageTexture (85×36) qui ne contient que les rangées
+# tex_row_start..tex_row_end de la zone progress de character_panel.png.
+# Coordonnée texture : tex_y = image_y + 2  (le Rect2 démarre à y=-2).
+#   Rouge  : image y=7..12  → tex_y=9..14
+#   Bleu   : image y=13..17 → tex_y=15..19
+#   Vert   : image y=18..22 → tex_y=20..24
+func _make_bar_texture(tex_row_start: int, tex_row_end: int) -> ImageTexture:
+	var src_img: Image = load("res://assets/menus/character_panel.png").get_image()
+	var bar_img = Image.create(85, 36, false, Image.FORMAT_RGBA8)
+	bar_img.fill(Color.TRANSPARENT)
+	for tex_y in range(tex_row_start, tex_row_end + 1):
+		var img_y: int = tex_y - 2  # texture → image coordinate
+		if img_y < 0 or img_y >= src_img.get_height():
+			continue
+		for x in range(85):
+			bar_img.set_pixel(x, tex_y, src_img.get_pixel(97 + x, img_y))
+	return ImageTexture.create_from_image(bar_img)
+
+func _build_mana_bar():
+	# Barre de vie : n'afficher que la rangée ROUGE
+	health_bar.texture_progress = _make_bar_texture(9, 14)
+
+	# Barre de mana : rangée BLEUE, même position/taille que health_bar
+	mana_bar = TextureProgressBar.new()
+	mana_bar.offset_left   = health_bar.offset_left
+	mana_bar.offset_top    = health_bar.offset_top
+	mana_bar.offset_right  = health_bar.offset_right
+	mana_bar.offset_bottom = health_bar.offset_bottom
+	mana_bar.scale         = health_bar.scale
+	mana_bar.min_value     = 0.0
+	mana_bar.max_value     = float(Stats.get_max_mana())
+	mana_bar.value         = Stats.current_mana
+	mana_bar.texture_under    = null  # fond déjà dessiné par health_bar
+	mana_bar.texture_progress = _make_bar_texture(15, 19)
+	Stats.mana_changed.connect(_on_mana_changed)
+	add_child(mana_bar)
+
+func _on_mana_changed(current: float, max_val: float):
+	if mana_bar:
+		mana_bar.max_value = max_val
+		mana_bar.value = current
 
 # ===== INVENTAIRE =====
 
@@ -184,6 +230,9 @@ func _on_item_pressed(item_name: String):
 func _on_stats_changed():
 	if panneau_perso.visible:
 		_refresh_stats()
+	# La magie affecte le mana max : mettre à jour la barre
+	if mana_bar:
+		mana_bar.max_value = float(Stats.get_max_mana())
 
 func _on_level_up(new_level):
 	print("🎉 Niveau ", new_level, " !")
@@ -392,6 +441,7 @@ func update_quest_journal():
 
 		label.text = text
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD
+		label.add_theme_color_override("font_color", Color("#3d1f00"))
 
 		quest_liste.add_child(label)
 

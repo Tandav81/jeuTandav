@@ -38,6 +38,7 @@ const ITEM_REGIONS = {
 	"Epee en bois":  Rect2(80,  64, 16, 16),  # ligne 4 col 5 ← CORRIGÉ (v1 avait ligne 3 = pioche)
 	"Epee en fer":   Rect2(96,  64, 16, 16),  # ligne 4 col 6
 	"Baton magique": Rect2(64,  48, 16, 16),  # ligne 3 col 4
+	"Arc":           Rect2(64,  96, 16, 16),  # ligne 6 col 4
 }
 
 # ---- Recettes ----------------------------------------------
@@ -50,6 +51,18 @@ const RECIPES = {
 			"result":      "Epee en bois",
 			"result_qty":  1,
 		},
+		{
+			"name":        "Arc",
+			"ingredients": {"Bois": 4},
+			"result":      "Arc",
+			"result_qty":  1,
+		},
+		{
+			"name":        "Baton magique",
+			"ingredients": {"Bois": 10, "Minerai": 6},
+			"result":      "Baton magique",
+			"result_qty":  1,
+		},
 	],
 	"potions": [
 		# Exemple : {"name": "Potion", "ingredients": {"Plante": 1}, "result": "Potion", "result_qty": 1}
@@ -58,9 +71,10 @@ const RECIPES = {
 
 # ---- Couleurs ----------------------------------------------
 const C_TEXT_WHITE  = Color("#ffffff")
+const C_TEXT_BROWN  = Color("#3d1f00")   # marron lisible sur fond beige clair
 const C_TEXT_GREY   = Color("#888888")
-const C_TEXT_GREEN  = Color("#44ff44")
-const C_TEXT_RED    = Color("#ff4444")
+const C_TEXT_GREEN  = Color("#1a6600")   # vert foncé lisible sur fond clair
+const C_TEXT_RED    = Color("#990000")   # rouge foncé lisible sur fond clair
 const C_TEXT_GOLD   = Color("#FFD700")
 const C_TEXT_NORMAL = Color("#ddccaa")
 
@@ -132,50 +146,64 @@ func _build_panel() -> void:
 	root_control.add_child(btn_potions)
 	tab_btns["potions"] = btn_potions
 
-	# ── Bouton FERMER (coin haut-droit du panneau) ──────────
+	# ── Bouton FERMER — sur la X du spritesheet ────────────
+	# X button pixel data : x=126–134, y=3–9 à 1× (avec bord à x=126/134)
+	# Zone cliquable élargie pour confort : x=124–136, y=1–11
 	var close_btn = _make_invisible_btn(
-		Vector2(192, 2) * S, Vector2(12, 10) * S,
+		Vector2(124, 1) * S, Vector2(12, 11) * S,
 		hide_panel
 	)
 	root_control.add_child(close_btn)
 
-	# ── Liste de recettes — zone GAUCHE (x=10–68 à 1×) ─────
+	# ── Liste de recettes — zone GAUCHE ────────────────────
+	# Cellules sprite : 14px larges, séparateurs 2px
+	# Grille commence à x=17, y=33 à 1× → x=51, y=99 à 3×
 	recipe_list_container = GridContainer.new()
 	recipe_list_container.columns = 3
-	recipe_list_container.position = Vector2(10, 28) * S
-	recipe_list_container.add_theme_constant_override("h_separation", 3)
-	recipe_list_container.add_theme_constant_override("v_separation", 3)
+	recipe_list_container.position = Vector2(17, 33) * S
+	recipe_list_container.add_theme_constant_override("h_separation", 2 * S)
+	recipe_list_container.add_theme_constant_override("v_separation", 2 * S)
 	root_control.add_child(recipe_list_container)
 
 	# ── Zone détail — zone DROITE (x=138–196, y=10–65 à 1×) ─
 	var detail_ctrl = Control.new()
 	detail_ctrl.position = Vector2(138, 10) * S
-	detail_ctrl.size     = Vector2(58, 56) * S
+	detail_ctrl.size     = Vector2(62, 60) * S
 	root_control.add_child(detail_ctrl)
 
 	var detail_vbox = VBoxContainer.new()
-	detail_vbox.add_theme_constant_override("separation", 3)
+	detail_vbox.add_theme_constant_override("separation", 4)
+	detail_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	detail_ctrl.add_child(detail_vbox)
 
+	# "Ingrédients" — grand, centré, marron lisible
 	var lbl_ingr = Label.new()
 	lbl_ingr.text = "Ingrédients"
-	lbl_ingr.add_theme_color_override("font_color", C_TEXT_NORMAL)
-	lbl_ingr.add_theme_font_size_override("font_size", 9)
+	lbl_ingr.horizontal_alignment  = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_ingr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_ingr.add_theme_color_override("font_color", C_TEXT_BROWN)
+	lbl_ingr.add_theme_font_size_override("font_size", 20)
 	detail_vbox.add_child(lbl_ingr)
 
 	ingredient_area = VBoxContainer.new()
-	ingredient_area.add_theme_constant_override("separation", 2)
+	ingredient_area.add_theme_constant_override("separation", 4)
+	ingredient_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail_vbox.add_child(ingredient_area)
 
+	# "Résultat" — grand, centré, marron lisible
 	var lbl_result = Label.new()
 	lbl_result.text = "Résultat"
-	lbl_result.add_theme_color_override("font_color", C_TEXT_NORMAL)
-	lbl_result.add_theme_font_size_override("font_size", 9)
+	lbl_result.horizontal_alignment  = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_result.size_flags_horizontal  = Control.SIZE_EXPAND_FILL
+	lbl_result.add_theme_color_override("font_color", C_TEXT_BROWN)
+	lbl_result.add_theme_font_size_override("font_size", 14)
 	detail_vbox.add_child(lbl_result)
 
 	result_display = HBoxContainer.new()
-	result_display.add_theme_constant_override("separation", 4)
+	result_display.alignment = BoxContainer.ALIGNMENT_CENTER
+	result_display.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	result_display.add_theme_constant_override("separation", 6)
 	detail_vbox.add_child(result_display)
 
 	# ── Bouton CRÉER (transparent, sur le bouton CREATE du spritesheet) ─
@@ -197,7 +225,7 @@ func _build_panel() -> void:
 	feedback_label.position           = Vector2(72, 84) * S
 	feedback_label.size               = Vector2(63, 32) * S
 	feedback_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	feedback_label.add_theme_font_size_override("font_size", 8)
+	feedback_label.add_theme_font_size_override("font_size", 11)
 	feedback_label.autowrap_mode      = TextServer.AUTOWRAP_WORD
 	root_control.add_child(feedback_label)
 
@@ -259,11 +287,13 @@ func _update_right_panel() -> void:
 		var qty_have:   int = Inventory.items.get(item_name, 0)
 
 		var row = HBoxContainer.new()
-		row.add_theme_constant_override("separation", 3)
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_theme_constant_override("separation", 5)
 		ingredient_area.add_child(row)
 
 		var icon = TextureRect.new()
-		icon.custom_minimum_size = Vector2(20, 20)
+		icon.custom_minimum_size = Vector2(28, 28)
 		icon.expand_mode         = TextureRect.EXPAND_FIT_WIDTH
 		icon.stretch_mode        = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.texture_filter      = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -273,16 +303,17 @@ func _update_right_panel() -> void:
 		row.add_child(icon)
 
 		var lbl = Label.new()
-		lbl.text = "%d/%d" % [qty_have, qty_needed]
-		lbl.add_theme_font_size_override("font_size", 9)
+		lbl.text = "%s  %d/%d" % [item_name, qty_have, qty_needed]
+		lbl.add_theme_font_size_override("font_size", 13)
 		lbl.add_theme_color_override("font_color",
 			C_TEXT_GREEN if qty_have >= qty_needed else C_TEXT_RED)
 		lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 		row.add_child(lbl)
 
 	# -- Résultat --
 	var res_icon = TextureRect.new()
-	res_icon.custom_minimum_size = Vector2(22, 22)
+	res_icon.custom_minimum_size = Vector2(28, 28)
 	res_icon.expand_mode         = TextureRect.EXPAND_FIT_WIDTH
 	res_icon.stretch_mode        = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	res_icon.texture_filter      = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -292,10 +323,11 @@ func _update_right_panel() -> void:
 	result_display.add_child(res_icon)
 
 	var res_lbl = Label.new()
-	res_lbl.text = "×%d" % recipe.get("result_qty", 1)
-	res_lbl.add_theme_font_size_override("font_size", 10)
-	res_lbl.add_theme_color_override("font_color", C_TEXT_GOLD)
+	res_lbl.text = "%s ×%d" % [recipe["result"], recipe.get("result_qty", 1)]
+	res_lbl.add_theme_font_size_override("font_size", 13)
+	res_lbl.add_theme_color_override("font_color", C_TEXT_BROWN)
 	res_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	res_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
 	result_display.add_child(res_lbl)
 
 	# -- Bouton CRÉER --
@@ -442,9 +474,9 @@ func _make_recipe_slot(recipe_index: int) -> Control:
 	var recipe: Dictionary = RECIPES[current_tab][recipe_index]
 	var can_craft = _can_craft(recipe)
 
-	# Conteneur principal 48×48 px
+	# Conteneur principal — 14px × 3 = 42px, aligné sur les cellules du sprite
 	var slot = Control.new()
-	slot.custom_minimum_size = Vector2(16, 16) * S   # 48×48 à l'écran
+	slot.custom_minimum_size = Vector2(14, 14) * S   # 42×42 à l'écran
 
 	# Fond coloré (fond normal = sombre, sélectionné = légèrement plus clair)
 	var bg = ColorRect.new()

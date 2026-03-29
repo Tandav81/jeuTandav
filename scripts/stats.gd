@@ -32,6 +32,11 @@ var equipment_data = {
 		"agilite": 0, "magie": 10, "defense": 0,
 		"description": "Amplifie les sorts magiques"
 	},
+	"Arc": {
+		"slot": "arme", "force": 2, "endurance": 0,
+		"agilite": 4, "magie": 0, "defense": 0,
+		"description": "Attaque à distance — portée : Force + Agilité"
+	},
 	# Armures
 	"Casque en cuir": {
 		"slot": "casque", "force": 0, "endurance": 2,
@@ -63,6 +68,41 @@ var equipment_data = {
 
 signal stats_changed
 signal level_up(new_level)
+signal mana_changed(current_mana, max_mana)
+
+# ---- Mana -------------------------------------------------------
+# La mana alimente les attaques magiques. Elle se régénère au fil du temps.
+# max_mana et regen dépendent de la stat Magie.
+var current_mana: float = 0.0   # initialisé dans _ready après calcul des stats
+
+func _ready() -> void:
+	current_mana = float(get_max_mana())
+
+func _process(delta: float) -> void:
+	_regen_mana(delta)
+
+func get_max_mana() -> int:
+	return 20 + get_magie() * 8             # ex. magie=5 → 60 mana
+
+func get_mana_regen() -> float:
+	return 1.0 + get_magie() * 0.4          # ex. magie=5 → 3 mana/s
+
+func get_mana_cost_sort() -> int:
+	# Coût par attaque magique ; diminue quand la magie augmente
+	return max(5, 20 - get_magie())         # ex. magie=5 → 15, magie=15 → 5
+
+func use_mana(amount: float) -> bool:
+	if current_mana < amount:
+		return false
+	current_mana -= amount
+	emit_signal("mana_changed", current_mana, float(get_max_mana()))
+	return true
+
+func _regen_mana(delta: float) -> void:
+	var new_mana = min(float(get_max_mana()), current_mana + get_mana_regen() * delta)
+	if new_mana != current_mana:
+		current_mana = new_mana
+		emit_signal("mana_changed", current_mana, float(get_max_mana()))
 
 # Stats totales (base + équipements)
 func get_force() -> int:
