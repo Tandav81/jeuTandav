@@ -16,10 +16,9 @@
 [ext_resource type="Texture2D" uid="uid://lnaw6w1cqhgo" path="res://assets/Outdoor decoration/Bridge_Wood.png" id="12_7t5mc"]
 [ext_resource type="Texture2D" uid="uid://k0v57n3fw00d" path="res://assets/Outdoor decoration/Fences.png" id="13_lakw3"]
 [ext_resource type="Texture2D" uid="uid://delps5hd3ejx4" path="res://assets/Outdoor decoration/Oak_Tree_Small.png" id="15_lakw3"]
+[ext_resource type="Texture2D" uid="uid://b3h2i0n3gp78i" path="res://assets/menus/character_panel.png" id="16_munwf"]
 [ext_resource type="PackedScene" uid="uid://bq8my2d0nr4x1" path="res://scenes/enemySkeleton.tscn" id="17_7t5mc"]
-[ext_resource type="Texture2D" uid="uid://d2i00hcjmgd2q" path="res://assets/freefantasy.png" id="17_kpybi"]
-[ext_resource type="Texture2D" uid="uid://b8vvkbnmjy2cf" path="res://assets/healthbar/healthbarUnder.png" id="17_ts3gi"]
-[ext_resource type="Texture2D" uid="uid://b5s0duot45cxc" path="res://assets/healthbar/healthbarProgress.png" id="18_0nbtd"]
+[ext_resource type="Texture2D" uid="uid://bbb1q7jxh36ov" path="res://assets/menus/Inventory.png" id="17_munwf"]
 [ext_resource type="PackedScene" uid="uid://nwdvquapayba" path="res://scenes/enemySlime.tscn" id="18_lakw3"]
 [ext_resource type="PackedScene" uid="uid://b7rpbyildycup" path="res://scenes/tree.tscn" id="20_7iits"]
 [ext_resource type="PackedScene" uid="uid://1oa8b1bin2pd" path="res://scenes/rock.tscn" id="21_oo54l"]
@@ -1317,6 +1316,17 @@ sources/5 = SubResource("TileSetAtlasSource_munwf")
 sources/6 = SubResource("TileSetAtlasSource_ts3gi")
 sources/7 = SubResource("TileSetAtlasSource_navra")
 
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_0nbtd"]
+load_path = "res://.godot/imported/character_panel.png-371978cbe9311e13829a68e25a3c88ce.ctex"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_37qwj"]
+atlas = SubResource("CompressedTexture2D_0nbtd")
+region = Rect2(1, -2, 89, 36)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_navra"]
+atlas = ExtResource("16_munwf")
+region = Rect2(97, -2, 85, 36)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oo54l"]
 bg_color = Color(0.78431374, 0.6627451, 0.43137255, 1)
 border_width_left = 2
@@ -1341,21 +1351,31 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ctatt"]
-texture = ExtResource("17_kpybi")
-region_rect = Rect2(84.000015, 45.600002, 71.44388, 115.999985)
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_navra"]
+load_path = "res://.godot/imported/Inventory.png-d516c816bd8099cd20e5df7647711743.ctex"
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xgqkh"]
-bg_color = Color(0.16470589, 0.12156863, 0.078431375, 1)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(0.54509807, 0.4117647, 0.078431375, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ctatt"]
+content_margin_left = 8.0
+content_margin_top = 12.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+texture = SubResource("CompressedTexture2D_navra")
+region_rect = Rect2(8, 0, 96, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_luhhm"]
+atlas = ExtResource("17_munwf")
+region = Rect2(56, 114.09725, 65, 9.704826)
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_munwf"]
+load_path = "res://.godot/imported/Inventory.png-d516c816bd8099cd20e5df7647711743.ctex"
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ts3gi"]
+content_margin_left = 8.0
+content_margin_top = 12.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+texture = SubResource("CompressedTexture2D_munwf")
+region_rect = Rect2(8, 0, 96, 100)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_munwf"]
 bg_color = Color(0.101960786, 0.07058824, 0.03137255, 1)
@@ -1400,13 +1420,14 @@ tile_set = SubResource("TileSet_0nbtd")
 script = ExtResource("11_e3hyu")
 
 [node name="HealthBar" type="TextureProgressBar" parent="HUD" unique_id=1034229996]
-offset_left = 491.0
-offset_right = 555.0
-offset_bottom = 10.0
-scale = Vector2(3, 3)
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 99.0
+offset_bottom = 46.0
+scale = Vector2(2, 2)
 value = 100.0
-texture_under = ExtResource("17_ts3gi")
-texture_progress = ExtResource("18_0nbtd")
+texture_under = SubResource("AtlasTexture_37qwj")
+texture_progress = SubResource("AtlasTexture_navra")
 
 [node name="BtnInventaire" type="Button" parent="HUD" unique_id=932422809]
 offset_left = 1089.0
@@ -1448,24 +1469,22 @@ grow_vertical = 2
 tooltip_text = "📜 Inventaire"
 theme_override_styles/panel = SubResource("StyleBoxTexture_ctatt")
 
-[node name="Label" type="Label" parent="HUD/PanneauInventaire" unique_id=1261024343]
+[node name="TextureRect" type="TextureRect" parent="HUD/PanneauInventaire" unique_id=1653407774]
 layout_mode = 0
-offset_left = 189.0
-offset_top = 132.0
-offset_right = 295.0
-offset_bottom = 155.0
-theme_override_colors/font_color = Color(0.23921569, 0.12156863, 0, 1)
-text = "📜"
-horizontal_alignment = 1
+offset_left = 86.0
+offset_top = 19.0
+offset_right = 416.0
+offset_bottom = 64.0
+texture = SubResource("AtlasTexture_luhhm")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="HUD/PanneauInventaire" unique_id=671987013]
 layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 70.0
-offset_top = 168.0
-offset_right = -76.0
+offset_left = 31.0
+offset_top = 96.0
+offset_right = -33.0
 offset_bottom = -47.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -1473,13 +1492,13 @@ theme_override_constants/separation = 8
 
 [node name="LabelOr" type="Label" parent="HUD/PanneauInventaire/VBoxContainer" unique_id=1915753472]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.8859728, 0.79172266, 1)
+theme_override_colors/font_color = Color(0.3764706, 0.22352941, 0.15686275, 1)
 theme_override_font_sizes/font_size = 18
 text = "Or : 0"
 
 [node name="LabelOutil" type="Label" parent="HUD/PanneauInventaire/VBoxContainer" unique_id=766272579]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.99999994, 0.9082614, 0.8328388, 1)
+theme_override_colors/font_color = Color(0.34509805, 0.19215687, 0.14901961, 1)
 theme_override_font_sizes/font_size = 18
 text = "Outil : Aucun"
 
@@ -1495,7 +1514,7 @@ offset_left = 3.0
 offset_top = 3.0
 offset_right = 529.0
 offset_bottom = 588.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_xgqkh")
+theme_override_styles/panel = SubResource("StyleBoxTexture_ts3gi")
 
 [node name="Label" type="Label" parent="HUD/PanneauPersonnage" unique_id=770399520]
 layout_mode = 0

@@ -94,17 +94,22 @@ func _refresh_inventaire():
 		var qty = Inventory.items[item_name]
 		var container = PanelContainer.new()
 		container.custom_minimum_size = Vector2(64, 64)
-		var style = StyleBoxFlat.new()
-		style.bg_color = Color("#a07850")
-		style.border_width_left = 2
-		style.border_width_right = 2
-		style.border_width_top = 2
-		style.border_width_bottom = 2
-		style.border_color = Color("#5c3a1e")
-		style.corner_radius_top_left = 4
-		style.corner_radius_top_right = 4
-		style.corner_radius_bottom_left = 4
-		style.corner_radius_bottom_right = 4
+		#style.border_width_left = 2
+		#style.border_width_right = 2
+		#style.border_width_top = 2
+		#style.border_width_bottom = 2
+		var style = StyleBoxTexture.new()
+		style.texture = load("res://assets/menus/Inventory.png")
+		style.region_rect = Rect2(272, 16, 16, 16)  # un slot individuel de la grille
+		style.texture_margin_left = 2
+		style.texture_margin_right = 2
+		style.texture_margin_top = 2
+		style.texture_margin_bottom = 2
+		#style.border_color = Color("#5c3a1e")
+		#style.corner_radius_top_left = 4
+		#style.corner_radius_top_right = 4
+		#style.corner_radius_bottom_left = 4
+		#style.corner_radius_bottom_right = 4
 		container.add_theme_stylebox_override("panel", style)
 		var vbox = VBoxContainer.new()
 		container.add_child(vbox)
