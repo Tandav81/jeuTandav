@@ -1351,6 +1351,18 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_37qwj"]
+bg_color = Color(0.78431374, 0.6627451, 0.43137255, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.36078432, 0.22745098, 0.11764706, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_navra"]
 load_path = "res://.godot/imported/Inventory.png-d516c816bd8099cd20e5df7647711743.ctex"
 
@@ -1371,7 +1383,7 @@ load_path = "res://.godot/imported/Inventory.png-d516c816bd8099cd20e5df764771174
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ts3gi"]
 content_margin_left = 8.0
-content_margin_top = 12.0
+content_margin_top = 16.0
 content_margin_right = 8.0
 content_margin_bottom = 8.0
 texture = SubResource("CompressedTexture2D_munwf")
@@ -1399,6 +1411,14 @@ corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_quest"]
+content_margin_left = 8.0
+content_margin_top = 16.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+texture = SubResource("CompressedTexture2D_munwf")
+region_rect = Rect2(8, 0, 96, 100)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_7t5mc"]
 size = Vector2(14, 5)
@@ -1430,10 +1450,10 @@ texture_under = SubResource("AtlasTexture_37qwj")
 texture_progress = SubResource("AtlasTexture_navra")
 
 [node name="BtnInventaire" type="Button" parent="HUD" unique_id=932422809]
-offset_left = 1089.0
-offset_top = 583.0
-offset_right = 1148.0
-offset_bottom = 638.0
+offset_left = 1090.0
+offset_top = 585.0
+offset_right = 1149.0
+offset_bottom = 640.0
 theme_override_colors/font_color = Color(0.23921569, 0.12156863, 0, 1)
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_oo54l")
@@ -1442,18 +1462,21 @@ text = "🎒"
 [node name="BtnPersonnage" type="Button" parent="HUD" unique_id=950408381]
 anchors_preset = -1
 anchor_bottom = 0.045
-offset_left = 1029.0
-offset_top = 586.0
-offset_right = 1077.0
-offset_bottom = 606.84
+offset_left = 1020.0
+offset_top = 585.0
+offset_right = 1079.0
+offset_bottom = 610.84
 theme_override_styles/normal = SubResource("StyleBoxFlat_ctatt")
 text = "⚔️"
 
 [node name="BtnQuetes" type="Button" parent="HUD" unique_id=1061778074]
-offset_left = 986.0
-offset_top = 597.0
-offset_right = 1016.0
-offset_bottom = 628.0
+offset_left = 950.0
+offset_top = 585.0
+offset_right = 1009.0
+offset_bottom = 640.0
+theme_override_colors/font_color = Color(0.23921569, 0.12156863, 0, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_37qwj")
 text = "📜"
 
 [node name="PanneauInventaire" type="Panel" parent="HUD" unique_id=1086811892]
@@ -1619,12 +1642,14 @@ theme_override_colors/font_color = Color(0.15370306, 0.402632, 0.37713718, 1)
 visible = false
 offset_right = 366.0
 offset_bottom = 490.0
+theme_override_styles/panel = SubResource("StyleBoxTexture_quest")
 
 [node name="QuestList" type="VBoxContainer" parent="HUD/QuestJournal" unique_id=392713464]
 layout_mode = 0
-offset_left = 4.0
-offset_right = 362.0
-offset_bottom = 486.0
+offset_left = 17.0
+offset_top = 82.0
+offset_right = 346.0
+offset_bottom = 468.0
 
 [node name="Player" parent="." unique_id=158458081 instance=ExtResource("10_pm21f")]
 position = Vector2(676.2846, 109.83388)
