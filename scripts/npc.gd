@@ -8,7 +8,6 @@ var player_in_range = false
 var can_interact = true
 
 func _ready():
-	print("NPC quest_id =", quest_id)
 	anim.play("idle")
 	# Connexion manuelle uniquement — supprimer les connexions dans l'éditeur
 	$InteractionZone.body_entered.connect(_on_body_entered)
@@ -61,22 +60,18 @@ func get_quest():
 
 func update_quest_icon():
 	var quest = get_quest()
-	print("update quest icon")
 	if quest == null:
 		# Quête disponible
-		print("Quête disponible")
 		quest_icon.visible = true
 		quest_icon.modulate = Color.YELLOW   # ❗
 
 	elif quest.completed and not quest.reward_claimed:
 		# Récompense dispo
-		print("Récompense dispo")
 		quest_icon.visible = true
 		quest_icon.modulate = Color.GREEN    # ✅
 
 	elif not quest.completed:
 		# En cours
-		print("En cours")
 		quest_icon.visible = true
 		quest_icon.modulate = Color.WHITE    # ❓
 

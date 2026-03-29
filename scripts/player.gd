@@ -13,6 +13,7 @@ signal health_changed(new_health)
 
 func _ready():
 	add_to_group("player")
+	max_health = Stats.get_max_health()
 	if GameManager.spawn_position != Vector2.ZERO:
 		global_position = GameManager.spawn_position
 	if GameManager.player_health > 0:

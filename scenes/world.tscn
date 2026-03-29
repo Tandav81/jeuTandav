@@ -18,7 +18,6 @@
 [ext_resource type="Texture2D" uid="uid://delps5hd3ejx4" path="res://assets/Outdoor decoration/Oak_Tree_Small.png" id="15_lakw3"]
 [ext_resource type="Texture2D" uid="uid://b3h2i0n3gp78i" path="res://assets/menus/character_panel.png" id="16_munwf"]
 [ext_resource type="PackedScene" uid="uid://bq8my2d0nr4x1" path="res://scenes/enemySkeleton.tscn" id="17_7t5mc"]
-[ext_resource type="Texture2D" uid="uid://bbb1q7jxh36ov" path="res://assets/menus/Inventory.png" id="17_munwf"]
 [ext_resource type="PackedScene" uid="uid://nwdvquapayba" path="res://scenes/enemySlime.tscn" id="18_lakw3"]
 [ext_resource type="PackedScene" uid="uid://b7rpbyildycup" path="res://scenes/tree.tscn" id="20_7iits"]
 [ext_resource type="PackedScene" uid="uid://1oa8b1bin2pd" path="res://scenes/rock.tscn" id="21_oo54l"]
@@ -1374,10 +1373,6 @@ content_margin_bottom = 8.0
 texture = SubResource("CompressedTexture2D_navra")
 region_rect = Rect2(8, 0, 96, 100)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_luhhm"]
-atlas = ExtResource("17_munwf")
-region = Rect2(56, 114.09725, 65, 9.704826)
-
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_munwf"]
 load_path = "res://.godot/imported/Inventory.png-d516c816bd8099cd20e5df7647711743.ctex"
 
@@ -1492,13 +1487,16 @@ grow_vertical = 2
 tooltip_text = "📜 Inventaire"
 theme_override_styles/panel = SubResource("StyleBoxTexture_ctatt")
 
-[node name="TextureRect" type="TextureRect" parent="HUD/PanneauInventaire" unique_id=1653407774]
+[node name="Label2" type="Label" parent="HUD/PanneauInventaire" unique_id=1369206319]
 layout_mode = 0
-offset_left = 86.0
-offset_top = 19.0
-offset_right = 416.0
-offset_bottom = 64.0
-texture = SubResource("AtlasTexture_luhhm")
+offset_left = 166.0
+offset_top = 18.0
+offset_right = 349.0
+offset_bottom = 60.0
+theme_override_colors/font_color = Color(0.4392157, 0.28627452, 0.16470589, 1)
+theme_override_font_sizes/font_size = 30
+text = "INVENTORY"
+horizontal_alignment = 1
 
 [node name="VBoxContainer" type="VBoxContainer" parent="HUD/PanneauInventaire" unique_id=671987013]
 layout_mode = 1
@@ -1533,6 +1531,7 @@ layout_mode = 2
 columns = 4
 
 [node name="PanneauPersonnage" type="Panel" parent="HUD" unique_id=1998030834]
+visible = false
 offset_left = 3.0
 offset_top = 3.0
 offset_right = 529.0
@@ -1541,11 +1540,13 @@ theme_override_styles/panel = SubResource("StyleBoxTexture_ts3gi")
 
 [node name="Label" type="Label" parent="HUD/PanneauPersonnage" unique_id=770399520]
 layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
-theme_override_colors/font_color = Color(1, 0.84313726, 0, 1)
-theme_override_font_sizes/font_size = 18
-text = "📜 Fiche Personnage"
+offset_left = 163.0
+offset_top = 19.0
+offset_right = 346.0
+offset_bottom = 61.0
+theme_override_colors/font_color = Color(0.4392157, 0.28627452, 0.16470589, 1)
+theme_override_font_sizes/font_size = 30
+text = "EQUIPMENT"
 horizontal_alignment = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="HUD/PanneauPersonnage" unique_id=627222160]
@@ -1553,16 +1554,16 @@ layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 10.0
-offset_top = 40.0
-offset_right = -10.0
-offset_bottom = -10.0
+offset_left = 13.0
+offset_top = 88.0
+offset_right = -13.0
+offset_bottom = -17.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
 
 [node name="PanneauStats" type="Panel" parent="HUD/PanneauPersonnage/HBoxContainer" unique_id=20146396]
-custom_minimum_size = Vector2(250, 0)
+custom_minimum_size = Vector2(240, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_munwf")
@@ -1592,7 +1593,7 @@ theme_override_constants/v_separation = 12
 columns = 3
 
 [node name="PanneauEquipement" type="Panel" parent="HUD/PanneauPersonnage/HBoxContainer" unique_id=181852163]
-custom_minimum_size = Vector2(250, 0)
+custom_minimum_size = Vector2(240, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_ts3gi")
@@ -1639,10 +1640,20 @@ offset_bottom = 39.0
 theme_override_colors/font_color = Color(0.15370306, 0.402632, 0.37713718, 1)
 
 [node name="QuestJournal" type="Panel" parent="HUD" unique_id=1317323157]
-visible = false
 offset_right = 366.0
 offset_bottom = 490.0
 theme_override_styles/panel = SubResource("StyleBoxTexture_quest")
+
+[node name="Label2" type="Label" parent="HUD/QuestJournal" unique_id=1276437901]
+layout_mode = 0
+offset_left = 94.0
+offset_top = 12.0
+offset_right = 277.0
+offset_bottom = 54.0
+theme_override_colors/font_color = Color(0.4392157, 0.28627452, 0.16470589, 1)
+theme_override_font_sizes/font_size = 30
+text = "QUESTS"
+horizontal_alignment = 1
 
 [node name="QuestList" type="VBoxContainer" parent="HUD/QuestJournal" unique_id=392713464]
 layout_mode = 0
@@ -1687,7 +1698,7 @@ health = 3
 position = Vector2(362, 267)
 
 [node name="Mouton" parent="Animaux" unique_id=433856896 instance=ExtResource("24_xgqkh")]
-position = Vector2(25, 338)
+position = Vector2(58, 333)
 
 [node name="Mouton2" parent="Animaux" unique_id=1598523569 instance=ExtResource("24_xgqkh")]
 position = Vector2(-89, 277)

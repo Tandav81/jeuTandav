@@ -33,6 +33,7 @@ var item_spritesheets = {
 
 var inventaire_ouvert = false
 var perso_ouvert = false
+var crafting_panel_node = null   # instancié dans _ready()
 
 func _ready():
 	add_to_group("hud")
@@ -48,6 +49,17 @@ func _ready():
 	$BtnQuetes.focus_mode = Control.FOCUS_NONE
 	QuestManager.quest_updated.connect(update_quest_journal)
 
+	# ── Panneau Crafting (construit par code) ──────────────────
+	crafting_panel_node = load("res://scripts/crafting_panel.gd").new()
+	add_child(crafting_panel_node)
+
+func _input(event: InputEvent) -> void:
+	# Touche B (Bricoler) : ouvre/ferme le panneau de crafting
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_B:
+			if crafting_panel_node:
+				crafting_panel_node.toggle()
+
 func _process(_delta):
 	if Input.is_action_just_pressed("ui_cancel"):
 		if panneau.visible:
@@ -56,6 +68,8 @@ func _process(_delta):
 		if panneau_perso.visible:
 			panneau_perso.visible = false
 			perso_ouvert = false
+		if crafting_panel_node and crafting_panel_node.panel_visible:
+			crafting_panel_node.hide_panel()
 			
 	if dialogue_box.visible and Input.is_action_just_pressed("ui_accept"):
 		hide_dialogue()
@@ -347,21 +361,6 @@ func get_item_texture(item_name: String) -> Texture2D:
 			print("Spritesheet non trouvé : ", path)
 			return null
 	return null
-	# Nettoyer
-	for child in quest_liste.get_children():
-		child.queue_free()
-
-	# Ajouter chaque quête
-	for quest in QuestManager.active_quests:
-		var label = Label.new()
-		label.text = "%s : %d / %d" % [
-			quest.name,
-			quest.progress,
-			quest.required
-		]
-		if quest.completed:
-			label.text += " (Terminé !)"
-		quest_liste.add_child(label)
 
 func show_dialogue(text):
 	dialogue_box.visible = true
@@ -399,3 +398,4 @@ func update_quest_journal():
 func _on_btn_quetes_pressed() -> void:
 	toggle_journal()
 	$BtnQuetes.release_focus()
+                                                                                                                                                                                                                                                                                                                                                         
