@@ -1528,12 +1528,6 @@ theme_override_colors/font_color = Color(0.3764706, 0.22352941, 0.15686275, 1)
 theme_override_font_sizes/font_size = 18
 text = "Or : 0"
 
-[node name="LabelOutil" type="Label" parent="HUD/PanneauInventaire/VBoxContainer" unique_id=766272579]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.34509805, 0.19215687, 0.14901961, 1)
-theme_override_font_sizes/font_size = 18
-text = "Outil : Aucun"
-
 [node name="HSeparator" type="HSeparator" parent="HUD/PanneauInventaire/VBoxContainer" unique_id=593114792]
 layout_mode = 2
 

@@ -5,7 +5,6 @@ extends CanvasLayer
 @onready var panneau_perso = $PanneauPersonnage
 @onready var grid = $PanneauInventaire/VBoxContainer/GridContainer
 @onready var label_or = $PanneauInventaire/VBoxContainer/LabelOr
-@onready var label_outil = $PanneauInventaire/VBoxContainer/LabelOutil
 @onready var label_niveau = $PanneauPersonnage/HBoxContainer/PanneauStats/VBoxContainer/LabelNiveau
 @onready var barre_xp = $PanneauPersonnage/HBoxContainer/PanneauStats/VBoxContainer/BarreXP
 @onready var label_points = $PanneauPersonnage/HBoxContainer/PanneauStats/VBoxContainer/LabelPoints
@@ -613,4 +612,3 @@ func update_quest_journal():
 func _on_btn_quetes_pressed() -> void:
 	toggle_journal()
 	$BtnQuetes.release_focus()
-                                                                                                                                                                                                                                                                                                                          

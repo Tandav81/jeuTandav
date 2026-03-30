@@ -1,7 +1,7 @@
 # 📋 Récapitulatif du projet — testJeu2D
 
 > Godot 4.6 — Jeu 2D RPG (top-down)
-> Dernière mise à jour : 2026-03-29
+> Dernière mise à jour : 2026-03-30
 
 ---
 
@@ -11,19 +11,19 @@
 test-jeu-2d/
 ├── project.godot
 ├── scenes/
-│   ├── world.tscn            ← scène principale du jeu
-│   ├── main_menu.tscn        ← menu principal
-│   ├── player.tscn           ← personnage joueur
-│   ├── npc.tscn              ← PNJ donneur de quêtes
-│   ├── enemySlime.tscn       ← ennemi Slime
-│   ├── enemySkeleton.tscn    ← ennemi Squelette
-│   ├── chest.tscn            ← coffre interactif
-│   ├── item.tscn             ← objet ramassable
-│   ├── mouton.tscn           ← animal (mouton)
-│   ├── vache.tscn            ← animal (vache)
-│   ├── rock.tscn             ← ressource (minerai)
-│   ├── tree.tscn             ← ressource (bois)
-│   └── procedural_map_2d.tscn ← carte générée procéduralement
+│   ├── world.tscn                  ← scène principale du jeu
+│   ├── main_menu.tscn              ← menu principal
+│   ├── player.tscn                 ← personnage joueur
+│   ├── npc.tscn                    ← PNJ donneur de quêtes
+│   ├── enemySlime.tscn             ← ennemi Slime
+│   ├── enemySkeleton.tscn          ← ennemi Squelette
+│   ├── chest.tscn                  ← coffre interactif
+│   ├── item.tscn                   ← objet ramassable
+│   ├── mouton.tscn                 ← animal (mouton)
+│   ├── vache.tscn                  ← animal (vache)
+│   ├── rock.tscn                   ← ressource (minerai)
+│   ├── tree.tscn                   ← ressource (bois)
+│   └── procedural_map_2d.tscn      ← carte générée procéduralement
 ├── scripts/
 │   ├── player.gd
 │   ├── enemy.gd
@@ -32,32 +32,40 @@ test-jeu-2d/
 │   ├── chest.gd
 │   ├── item.gd
 │   ├── resource.gd
+│   ├── projectile.gd               ← projectiles (flèche / sort)
 │   ├── hud.gd
-│   ├── health_bar.gd         ← ⚠️ obsolète (voir section bugs)
+│   ├── crafting_panel.gd
+│   ├── health_bar.gd               ← ⚠️ obsolète (voir section bugs)
 │   ├── main_menu.gd
 │   ├── procedural_map_2d.gd
-│   ├── game_manager.gd       ← Autoload
-│   ├── inventory.gd          ← Autoload
-│   ├── quest_manager.gd      ← Autoload
-│   └── stats.gd              ← Autoload
+│   ├── game_manager.gd             ← Autoload
+│   ├── inventory.gd                ← Autoload
+│   ├── quest_manager.gd            ← Autoload
+│   └── stats.gd                    ← Autoload
 └── assets/
+    ├── Player/
+    │   └── Player_bow_attack.png   ← spritesheet attaque arc (6 frames 32×32)
     ├── sprites/
-    └── menus/
+    ├── menus/
+    │   └── character_panel.png     ← HUD barres de vie/mana/xp
+    ├── rpgItems.png                ← spritesheet items 16×16 (8×8 tuiles)
+    └── itemset0.png                ← spritesheet items 16×16 (16×11 tuiles)
 ```
 
 **Autoloads enregistrés :**
 - `GameManager` — gestion de la sauvegarde, position de spawn, état des coffres
 - `Inventory` — inventaire, or, outils, équipements
 - `QuestManager` — quêtes actives/complètes, progression
-- `Stats` — niveau, XP, statistiques de personnage, données d'équipements
+- `Stats` — niveau, XP, statistiques de personnage, mana, données d'équipements
 
 **Touches configurées :**
 | Action | Touche |
 |---|---|
 | Déplacement | Flèches directionnelles |
 | Attaque | Espace |
+| Changer d'arme | Q |
 | Interagir | E |
-| Outil suivant | T |
+| Ouvrir crafting | B |
 | Panneau personnage / Journal | C |
 | Sauvegarder | S |
 | Fermer menu | Échap |
@@ -69,12 +77,24 @@ test-jeu-2d/
 ### 🎮 Joueur
 - Déplacement en 4 directions avec animations (marche, idle, attaque, outils)
 - Système de vie avec signal `health_changed`
+- Dégâts réduits par la défense : `dégâts reçus = max(1, dégâts - Stats.get_defense())`
 - Attaque au corps à corps avec zone de collision directionnelle (`AttackZone`)
+- **Attaque à distance — Arc** : animation de tir dédiée (spritesheet `Player_bow_attack.png`, 6 frames, ajoutée dynamiquement au runtime), puis spawn d'une flèche
+- **Attaque à distance — Bâton magique** : consomme de la mana, spawn d'un projectile de sort
+- Portée des projectiles calculée selon les stats (Arc : Force+Agilité ; Magie : stat Magie)
+- **Changement d'arme** via touche Q : cycle parmi les armes possédées uniquement
 - Invincibilité pendant l'attaque
 - Utilisation d'outils orientés (hache, pioche) avec animations dédiées
-- Changement d'outil via touche T (cycle : aucun → hache → pioche → aucun)
-- Guérison via potions et viande
-- Respawn à une position sauvegardée au démarrage
+- Guérison via potions (+30 PV) et viande (+15 PV)
+- Respawn à la position sauvegardée au démarrage
+- `max_health` synchronisé avec `Stats.get_max_health()` au démarrage
+
+### 🏹 Projectiles
+- Script `projectile.gd` commun pour flèche et sort
+- Propriétés configurables : `proj_type`, `direction`, `max_range`, `damage`
+- Déplacement en ligne droite, disparition au-delà de la portée max
+- Détection de collision via `PhysicsShapeQueryParameters2D` (scan de zone, pas de corps physique)
+- Spawn avec décalage vertical (-14 px) pour aligner visuellement sur le personnage
 
 ### 🗺️ Monde
 - Génération procédurale de carte 2D (80×80 tuiles) avec seed
@@ -86,21 +106,22 @@ test-jeu-2d/
 - Patrouille automatique autour d'un point de départ
 - Détection du joueur dans un rayon configurable → poursuite
 - Dégâts continus au contact (damage per second)
-- Système de vie + animation de mort
-- Respawn automatique après délai configurable
+- Système de vie + animation `hurt` (gardée jusqu'à la fin, non interrompue par le mouvement)
+- Animation de mort + respawn automatique après délai configurable
 - Récompense en XP à la mort
 - Mise à jour des quêtes de type "kill" à la mort
 - Deux types disponibles : Slime, Squelette (configurés via `@export enemy_type`)
 
 ### 🌿 Ressources & Animaux
 - Arbres et rochers avec système de coups nécessaires (`health`)
-- Vérification de l'outil requis avant récolte
+- Vérification de l'outil requis avant récolte (hache pour bois, pioche pour minerai)
 - Animation de "hit" au contact
 - Récolte automatique quand `health <= 0` → ajout à l'inventaire
 - Mise à jour des quêtes de type "collect"
 - Respawn optionnel des ressources
-- Animaux (mouton, vache) qui fuient le joueur
-- Les animaux donnent de la viande quand leur vie tombe à 0
+- Animaux (mouton, vache) qui fuient le joueur dans un rayon configurable
+- Chaque animal donne **deux drops** à la mort : viande (`resource_name`) + peau (`resource_name2`)
+- Les deux drops sont configurables par export dans la scène de l'animal
 
 ### 📦 Inventaire
 - Stockage d'objets avec quantités (dictionnaire)
@@ -110,22 +131,25 @@ test-jeu-2d/
 - Signal `inventory_changed` pour mettre à jour l'UI
 - Utilisation d'items depuis l'UI (potions, viande → soin ; équipements → équipement)
 - Déséquipement depuis le panneau personnage
+- Icônes pixel-art pour tous les items (armes, consommables, ressources)
 
-### 📊 Statistiques & Progression
+### 📊 Statistiques, Mana & Progression
 - 5 statistiques : Force, Endurance, Agilité, Magie, Défense
 - Calcul des stats totales = base + bonus équipements
-- Formules dérivées : vie max, dégâts, vitesse de déplacement
+- Formules dérivées : vie max, dégâts, vitesse de déplacement, portée des projectiles
+- **Système de mana** : `current_mana`, régénération automatique (`get_mana_regen()` mana/s)
+- Coût par attaque magique = `max(5, 20 - Magie)` ; refus si mana insuffisante
+- Signaux : `mana_changed(current, max)`, `stats_changed`, `level_up(new_level)`
 - Système de niveaux et XP avec montée en niveau automatique
 - 3 points à distribuer par niveau
-- Signal `level_up` et `stats_changed`
-- 8 équipements définis dans `Stats.equipment_data` avec leurs bonus
+- 10 équipements définis dans `Stats.equipment_data` avec leurs bonus
 
 ### 📜 Quêtes
 - Deux quêtes implémentées : "Chasseur de slimes" (tuer 5 slimes) et "Bûcheron débutant" (récolter 10 bois)
 - Système de quêtes actives / complètes / récompenses réclamées
 - Démarrage de quête via interaction avec un PNJ
 - Icône de quête au-dessus du PNJ (jaune = disponible, blanc = en cours, vert = récompense disponible)
-- Réclamation de récompense via interaction avec le PNJ une fois la quête terminée
+- Réclamation de récompense via interaction une fois la quête terminée
 - Récompenses : XP, or, items
 - Journal de quêtes accessible via touche C ou bouton HUD
 
@@ -142,130 +166,65 @@ test-jeu-2d/
 - Zone d'interaction
 
 ### 🖥️ Interface (HUD)
-- Barre de vie du joueur
-- Panneau inventaire (grille d'items avec icônes/sprites, or, outil équipé)
-- Panneau personnage (stats avec couleurs, barre XP, boutons "+" pour dépenser les points)
+- **Barre de vie** (rouge) — utilise les rangées rouges du spritesheet `character_panel.png`
+- **Barre de mana** (bleue) — superposée sur le même sprite, rangées bleues ; se met à jour via signal `mana_changed`
+- **Barre d'XP** (verte) — rangées vertes du même sprite ; se met à jour via signal `stats_changed`
+- Les trois barres partagent la même texture source et s'affichent naturellement à des hauteurs différentes
+- **Outil équipé** — icône pixel-art affichée dans un slot sous les barres, visible uniquement si un outil est équipé ; icônes : hache (`Rect2(64,80,16,16)`) et pioche (`Rect2(80,48,16,16)`) de `rpgItems.png`
+- **Système de notifications** — panneau semi-transparent centré en haut, glisse depuis le haut, reste 2,2 s puis s'efface ; couleur configurable ; remplace immédiatement la notification précédente
+  - Mauvais outil → notification orange "Il vous faut une hache 🪓 !"
+  - Level up → notification dorée "🎉 Niveau X ! +3 points à distribuer"
+- Panneau inventaire (grille d'items avec icônes sprites, or)
+- Panneau personnage (stats colorées, boutons "+" pour dépenser les points)
 - Panneau équipements (6 slots avec déséquipement au clic)
 - Journal de quêtes avec progression
 - Boîte de dialogue pour les PNJ
 - Boutons HUD : Inventaire, Personnage, Quêtes
 
+### 🔨 Système de Crafting
+- Touche **B** : ouvre/ferme le panneau de crafting
+- Deux onglets **Armes** / **Potions** : boutons invisibles positionnés sur les icônes du spritesheet
+- Zone gauche : liste des recettes sous forme d'icônes carrées (grille 3 colonnes)
+- Zone droite : ingrédients requis (icône + quantité verte/rouge) et objet résultant
+- Bouton CRÉER transparent superposé sur le sprite CREATE
+- Message de confirmation (2,5 s) après fabrication
+
+**Recettes implémentées :**
+| Recette | Ingrédients | Résultat |
+|---|---|---|
+| Épée en bois | 2 Bois | Epee en bois |
+| Épée en fer | 3 Minerai | Epee en fer |
+| Potion | 1 Plante | Potion |
+
+**Ajouter une recette** dans `scripts/crafting_panel.gd`, section `RECIPES` :
+```gdscript
+const RECIPES = {
+    "armes": [
+        {"name": "Epee en bois", "ingredients": {"Bois": 2},    "result": "Epee en bois", "result_qty": 1},
+        # ajouter ici...
+    ],
+    "potions": [
+        {"name": "Potion",       "ingredients": {"Plante": 1},  "result": "Potion",       "result_qty": 1},
+    ],
+}
+```
+
 ### 💾 Sauvegarde / Chargement
 - Sauvegarde JSON dans `user://save.json`
-- Données sauvegardées : position, vie, inventaire, or, outil, coffres ouverts, stats, équipements
+- Données sauvegardées : position, vie, inventaire, or, outil, coffres ouverts, stats, équipements, **niveau et XP**
 - Compatibilité avec anciennes sauvegardes (vérification des clés)
-- Chargement au menu principal via "Continuer"
+- Chargement au menu principal via "Continuer" → restaure le niveau correctement
 - Bouton "Continuer" désactivé si aucune sauvegarde
 
 ### 🎨 Menu Principal
 - Boutons : Nouvelle Partie, Continuer, Quitter
+- "Nouvelle Partie" réinitialise l'intégralité de l'état : GameManager, Inventory, QuestManager, Stats, mana
 - "Continuer" désactivé si pas de sauvegarde
-- Réinitialisation de l'état du jeu à "Nouvelle Partie"
+- "Quitter" ferme l'application
 
 ---
 
-## ⚠️ Bugs et code obsolète identifiés
-
-### 🔴 Critique
-
-#### 1. `health_bar.gd` — Script obsolète non attaché
-Le fichier `scripts/health_bar.gd` existe mais **n'est attaché à aucune scène**. Il contient des erreurs qui le rendraient non fonctionnel :
-- `get_tree()` appelé au niveau classe (hors `_ready()`) → crash au chargement
-- Signal `healthChanged` n'existe pas dans `player.gd` (le bon nom est `health_changed`)
-- Variables `currentHealth` et `maxHealth` n'existent pas (ce sont `health` et `max_health`)
-
-La barre de vie est correctement gérée par `hud.gd` via `_on_health_changed()`.
-
-**→ Action : supprimer `scripts/health_bar.gd`**
-
----
-
-### 🟠 Important
-
-#### 2. `hud.gd` — Code mort dans `get_item_texture()`
-Après le dernier `return null` de la fonction `get_item_texture()`, il reste du code inaccessible (une ancienne version de `update_quest_journal`) qui ne sera jamais exécuté :
-
-```gdscript
-func get_item_texture(item_name: String) -> Texture2D:
-    ...
-    return null   # ← tout ce qui suit est mort
-    # Nettoyer
-    for child in quest_liste.get_children():   # jamais exécuté
-        child.queue_free()
-    for quest in QuestManager.active_quests:   # jamais exécuté
-        ...
-```
-
-**→ Action : supprimer les lignes mortes après `return null`**
-
-#### 3. `main_menu.gd` — "Nouvelle Partie" ne réinitialise pas les Stats
-Quand le joueur clique "Nouvelle Partie", les autoloads `Stats` ne sont pas remis à zéro ni `Inventory.equipped` :
-
-```gdscript
-# Ce qui est réinitialisé ✅
-GameManager.spawn_position = Vector2.ZERO
-GameManager.player_health = 100
-GameManager.coffres_ouverts = []
-Inventory.items = {}
-Inventory.gold = 0
-Inventory.equipped_tool = ""
-QuestManager.active_quests = []
-QuestManager.completed_quests = []
-
-# Ce qui MANQUE ❌
-Inventory.equipped = {"arme": null, "casque": null, ...}
-Stats.level = 1
-Stats.xp = 0
-Stats.xp_next_level = 100
-Stats.stat_points = 0
-Stats.base_force = 5
-Stats.base_endurance = 5
-Stats.base_agilite = 5
-Stats.base_magie = 5
-Stats.base_defense = 5
-```
-
-**→ Action : ajouter la réinitialisation de `Stats` et `Inventory.equipped` dans `_on_btn_nouvelle_partie_pressed()`**
-
----
-
-### 🟡 Mineur
-
-#### 4. `procedural_map_2d.gd` — Fonctions inutilisées / villages vides
-- `_choisir_tuile()` est définie mais jamais appelée (remplacée par `set_cells_terrain_connect`)
-- `_generate_village()` calcule des positions mais l'appel `_placer_maison()` est commenté → les villages ne sont jamais instanciés visuellement
-- Ancienne `_apply_tiles()` commentée en bloc
-
-**→ Action : supprimer `_choisir_tuile()` et l'ancienne `_apply_tiles()` commentée ; décider si les villages doivent être activés**
-
-#### 5. `animal.gd` — Signal `resource_collected` émis mais jamais connecté
-Le signal est émis puis l'item est aussi ajouté directement via `Inventory.add_item()`. La ligne `emit_signal(...)` est un reliquat d'une architecture précédente.
-
-```gdscript
-emit_signal("resource_collected", "animal", resource_name, quantity)  # reliquat
-Inventory.add_item(resource_name, quantity)  # ← la vraie ligne active
-```
-
-**→ Action : supprimer la ligne `emit_signal` dans `animal.gd`**
-
-#### 6. `npc.gd` — Prints de debug non nettoyés
-Plusieurs `print()` de débogage subsistent :
-- `print("NPC quest_id =", quest_id)`
-- `print("update quest icon")` + `print("Quête disponible")` etc.
-
-**→ Action : supprimer ou commenter ces prints**
-
-#### 7. `player.gd` — `max_health` non synchronisé au démarrage
-`max_health` est hardcodé à `100` dans `player.gd`. Si les stats de base d'endurance changent (via `Stats`), le max_health réel du joueur n'est pas recalculé au démarrage. Il est mis à jour depuis `hud.gd` uniquement lorsqu'on dépense un point d'endurance.
-
-**→ Action : dans `player._ready()`, ajouter `max_health = Stats.get_max_health()`**
-
-#### 8. Fichiers `.tmp` dans le dossier `scenes/`
-Deux fichiers temporaires de Godot sont présents et ne devraient pas être versionnés :
-- `world.tscn86707209802.tmp`
-- `procedural_map_2d.tscn40335090267.tmp`
-
-**→ Action : ajouter `*.tmp` au `.gitignore`**
+## ✅ Aucun bug ou code obsolète connu
 
 ---
 
@@ -292,64 +251,19 @@ Deux fichiers temporaires de Godot sont présents et ne devraient pas être vers
 
 ---
 
-## 🔨 Système de Crafting
-
-### Fonctionnement (v2 — positionnement absolu sur spritesheet)
-- Touche **B** (ou Échap) : ouvre/ferme le panneau de crafting
-- Deux onglets **Armes** / **Potions** : boutons invisibles positionnés sur les icônes du spritesheet (pas de texte par-dessus)
-- Le fond utilise `assets/menus/Craft.png` col 2 — le sprite change automatiquement pour indiquer l'onglet actif
-- Zone GAUCHE : liste des recettes sous forme d'icônes carrées (cases style inventaire, grille 3 colonnes)
-- Zone DROITE : ingrédients requis (icône + quantité verte/rouge) et objet résultant
-- Bouton **CRÉER** transparent superposé exactement sur le bouton CREATE du spritesheet
-- Message de confirmation (2,5 s) après fabrication
-
-### Recettes implémentées
-| Recette | Ingrédients | Résultat |
-|---|---|---|
-| Épée en bois | 2 Bois | Epee en bois |
-
-### Ajouter de nouvelles recettes
-Dans `scripts/crafting_panel.gd`, section `RECIPES` :
-```gdscript
-const RECIPES = {
-    "armes": [
-        {"name": "Epee en bois",  "ingredients": {"Bois": 2},          "result": "Epee en bois",  "result_qty": 1},
-        {"name": "Epee en fer",   "ingredients": {"Minerai": 3},        "result": "Epee en fer",   "result_qty": 1},
-        # ajouter ici...
-    ],
-    "potions": [
-        {"name": "Potion",        "ingredients": {"Plante": 1},         "result": "Potion",        "result_qty": 1},
-    ],
-}
-```
-Pour ajouter une icône au résultat ou à un ingrédient, ajouter l'entrée dans `ITEM_REGIONS` (si issu de `rpgItems.png`) ou `ITEM_IMAGES` (si c'est un fichier PNG dédié).
-
-### Layout absolu (mesures en pixels Craft.png à l'échelle 1×, ×3 à l'écran)
-| Zone | x (1×) | y (1×) | Contenu |
-|---|---|---|---|
-| Onglet Armes | 14–33 | 8–27 | Bouton invisible sur icône T verte |
-| Onglet Potions | 32–51 | 8–27 | Bouton invisible sur icône mortier verte |
-| Liste recettes | 10–68 | 28–117 | GridContainer d'icônes carrées 48×48 |
-| Détail recette | 138–196 | 10–65 | Ingrédients + résultat |
-| Bouton CRÉER | 83–123 | 66–83 | Bouton transparent sur sprite CREATE |
-| Feedback | 72–134 | 84–115 | Message succès/erreur (2,5 s) |
-
-### Fichiers concernés
-- `scripts/crafting_panel.gd` ← v2 (positionnement absolu, fixes visuels)
-- `scripts/hud.gd` ← 4 lignes ajoutées (instantiation, touche B, Échap)
-
----
-
 ## 🔭 Pistes d'évolution possibles
 
-- ~~Système de crafting~~ ✅ implémenté (étape 1 : Épée en bois)
-- Ajouter d'autres recettes de crafting (Épée en fer, Potion, Bâton magique…)
-- Ajouter un objet "Enclume" placé dans le monde (interaction E pour ouvrir le panneau)
-- Activer les villages sur la carte procédurale (décommenter `_placer_maison`)
+- ~~Système de crafting~~ ✅ implémenté
+- ~~Attaques à distance (arc, magie)~~ ✅ implémenté
+- ~~Système de mana~~ ✅ implémenté
+- ~~Barre d'XP sur le HUD~~ ✅ implémenté
+- ~~Affichage de l'outil équipé sur le HUD~~ ✅ implémenté
+- ~~Notifications in-game~~ ✅ implémenté
+- Ajouter d'autres recettes de crafting (Arc, Bâton magique, Casque…)
+- Potion de mana (régénération instantanée de mana)
 - Ajouter d'autres quêtes dans `QuestManager.QUESTS`
-- Système de dialogues plus élaboré (plusieurs lignes, choix)
-- Ennemis supplémentaires avec comportements différents
-- Sons et musique
-- Système de crafting (avec le bois et le minerai récoltés)
+- Sons et musique (effets d'attaque, ambiance, musique de fond)
+- Système de dialogues plus élaboré (plusieurs lignes, choix de réponse)
+- Ennemis supplémentaires avec comportements différents (rôdeur à distance, boss)
 - Plusieurs zones/scènes avec transitions
-- Sauvegarde de la progression des quêtes
+- Minimap
