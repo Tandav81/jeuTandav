@@ -1402,7 +1402,16 @@ corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0nbtd"]
-bg_color = Color(1, 1, 0.2509804, 1)
+content_margin_left = 2.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
+bg_color = Color(0.8980392, 0.8392157, 0.6313726, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.4392157, 0.28627452, 0.16470589, 1)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
@@ -1476,6 +1485,7 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_37qwj")
 text = "📜"
 
 [node name="PanneauInventaire" type="Panel" parent="HUD" unique_id=1086811892]
+visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -1626,21 +1636,26 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -126.0
-offset_top = -42.0
-offset_right = 127.0
-offset_bottom = -2.0
+offset_left = -249.0
+offset_top = -93.0
+offset_right = 4.0
+offset_bottom = -53.0
 grow_horizontal = 2
 grow_vertical = 0
+scale = Vector2(2, 2)
 theme_override_styles/panel = SubResource("StyleBoxFlat_0nbtd")
 
 [node name="DialogueText" type="Label" parent="HUD/DialogueBox" unique_id=1827245332]
 layout_mode = 0
-offset_right = 252.0
-offset_bottom = 39.0
-theme_override_colors/font_color = Color(0.15370306, 0.402632, 0.37713718, 1)
+offset_left = 1.5
+offset_top = 0.5
+offset_right = 253.5
+offset_bottom = 39.5
+theme_override_colors/font_color = Color(0.4392157, 0.28627452, 0.16470589, 1)
+theme_override_font_sizes/font_size = 14
 
 [node name="QuestJournal" type="Panel" parent="HUD" unique_id=1317323157]
+visible = false
 offset_right = 366.0
 offset_bottom = 490.0
 theme_override_styles/panel = SubResource("StyleBoxTexture_quest")
@@ -1684,14 +1699,14 @@ quest_id = "wood_collector"
 [node name="Vache" parent="Animaux" unique_id=711550375 instance=ExtResource("22_oo54l")]
 position = Vector2(-83, 383)
 animal_name = "Vache"
-quantity = 3
+quantity = 2
 flee_speed = 70.0
 health = 3
 
 [node name="Vache2" parent="Animaux" unique_id=928217433 instance=ExtResource("22_oo54l")]
 position = Vector2(-123, 475)
 animal_name = "Vache"
-quantity = 3
+quantity = 2
 flee_speed = 70.0
 health = 3
 
@@ -1720,6 +1735,7 @@ position = Vector2(846, -251)
 
 [node name="Rock5" parent="Ressources" unique_id=1585242657 instance=ExtResource("21_oo54l")]
 position = Vector2(742, -259)
+respawn_time = 3.0
 
 [node name="Rock6" parent="Ressources" unique_id=1212851096 instance=ExtResource("21_oo54l")]
 position = Vector2(1786, 1059)
@@ -1815,7 +1831,7 @@ position = Vector2(-19, 597)
 position = Vector2(23, 673)
 
 [node name="Tree27" parent="Ressources" unique_id=657400078 instance=ExtResource("20_7iits")]
-position = Vector2(361, 657)
+position = Vector2(358, 645)
 
 [node name="Tree28" parent="Ressources" unique_id=665750823 instance=ExtResource("20_7iits")]
 position = Vector2(188, 657)
@@ -1827,7 +1843,7 @@ position = Vector2(415, 716)
 position = Vector2(311, 588)
 
 [node name="Tree31" parent="Ressources" unique_id=578113399 instance=ExtResource("20_7iits")]
-position = Vector2(277, 655)
+position = Vector2(276, 661)
 
 [node name="Tree32" parent="Ressources" unique_id=1232811816 instance=ExtResource("20_7iits")]
 position = Vector2(229, 594)
@@ -1854,7 +1870,7 @@ position = Vector2(375, 803)
 position = Vector2(202, 803)
 
 [node name="Tree40" parent="Ressources" unique_id=562020209 instance=ExtResource("20_7iits")]
-position = Vector2(400, 568)
+position = Vector2(400, 590)
 
 [node name="Tree41" parent="Ressources" unique_id=1403454517 instance=ExtResource("20_7iits")]
 position = Vector2(325, 734)

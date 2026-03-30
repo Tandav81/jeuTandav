@@ -17,8 +17,8 @@ func _on_btn_nouvelle_partie_pressed():
 	QuestManager.active_quests = []
 	QuestManager.completed_quests = []
 	Inventory.equipped = {
-		"arme": null, 
-		"casque": null, 
+		"arme": null,
+		"casque": null,
 		"plastron": null,
 		"bottes": null,
 		"anneau": null,
@@ -32,11 +32,12 @@ func _on_btn_nouvelle_partie_pressed():
 	Stats.base_agilite = 5
 	Stats.base_magie = 5
 	Stats.base_defense = 5
+	Stats.current_mana = float(Stats.get_max_mana())
 	get_tree().change_scene_to_file("res://scenes/world.tscn")
 
 func _on_btn_continuer_pressed():
-	if GameManager.load_game():
-		get_tree().change_scene_to_file(GameManager.current_scene)
+	GameManager.load_game()
+	get_tree().change_scene_to_file(GameManager.current_scene)
 
 func _on_btn_quitter_pressed():
 	get_tree().quit()

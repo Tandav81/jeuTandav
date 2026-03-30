@@ -23,6 +23,25 @@ func _ready():
 		health = GameManager.player_health
 		emit_signal("health_changed", health)
 	Inventory.emit_signal("inventory_changed")
+	_add_bow_animations()
+
+# Ajoute l'animation "bow_right" (6 frames) depuis Player_bow_attack.png
+func _add_bow_animations():
+	var bow_tex = load("res://assets/Player/Player_bow_attack.png")
+	if bow_tex == null:
+		push_warning("Player_bow_attack.png introuvable — animation arc ignorée")
+		return
+	var frames: SpriteFrames = anim.sprite_frames
+	if frames.has_animation("bow_right"):
+		return  # déjà ajouté (re-entrée après reload)
+	frames.add_animation("bow_right")
+	frames.set_animation_speed("bow_right", 8.0)
+	frames.set_animation_loop("bow_right", false)
+	for i in range(6):
+		var atlas = AtlasTexture.new()
+		atlas.atlas = bow_tex
+		atlas.region = Rect2(i * 32, 0, 32, 32)
+		frames.add_frame("bow_right", atlas)
 
 func take_damage(amount):
 	if is_attacking:
@@ -157,14 +176,37 @@ func _attaque_melee():
 	anim.play("idle_down")
 
 func _lancer_projectile(type: String):
+	is_attacking = true
+
+	if type == "arc":
+		# Animation de tir à l'arc : "bow_right" mirrorée pour la gauche
+		anim.flip_h = (attack_direction == Vector2.LEFT)
+		anim.play("bow_right")
+		# Attendre la phase "armé" (≈ 4 frames sur 6 → 0.5 s à 8 fps)
+		await get_tree().create_timer(0.5).timeout
+
+	# Lancer le projectile au moment du relâchement
 	var ProjectileScript = load("res://scripts/projectile.gd")
 	var proj = ProjectileScript.new()
 	proj.proj_type = type
 	proj.direction = attack_direction
 	proj.max_range = get_attack_range()
 	proj.damage    = Stats.get_damage()
-	proj.global_position = global_position + attack_direction * 12.0
+	# Décalage selon l'arme : l'arc est tenu en hauteur dans le sprite
+	var spawn_offset := Vector2.ZERO
+	spawn_offset = Vector2(0, -14)   # remonter pour aligner avec l'arc dessiné
+	proj.global_position = global_position + attack_direction * 12.0 + spawn_offset
 	get_tree().current_scene.add_child(proj)
+
+	if type == "arc":
+		# Laisser les 2 frames de suivi se terminer
+		await anim.animation_finished
+	else:
+		# Magie : courte pause le temps de l'effet visuel
+		await get_tree().create_timer(0.25).timeout
+
+	is_attacking = false
+	anim.play("idle_down")
 
 # ---- Changement d'arme (cycle Q sur les armes possédées) -------------
 

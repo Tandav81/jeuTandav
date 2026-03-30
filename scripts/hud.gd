@@ -23,18 +23,45 @@ var item_images = {
 	"Minerai": "res://assets/sprites/rock/rock.png",
 }
 var item_regions = {
-	"Viande": Rect2(16, 64, 16, 16),
-	"Potion": Rect2(0, 0, 16, 16),
+	"Viande":        Rect2(16,  64, 16, 16),
+	"Potion":        Rect2(0,   0,  16, 16),
+	# Armes (rpgItems.png)
+	"Epee en bois":  Rect2(80,  64, 16, 16),
+	"Epee en fer":   Rect2(96,  64, 16, 16),
+	"Arc":           Rect2(64,  96, 16, 16),
+	"Baton magique": Rect2(64,  48, 16, 16),
+	# Ressource animaux (itemset0.png, col 10 ligne 9)
+	"Peau":          Rect2(144, 128, 16, 16),
 }
 var item_spritesheets = {
-	"Viande": "res://assets/rpgItems.png",
-	"Potion": "res://assets/rpgItems.png",
+	"Viande":        "res://assets/rpgItems.png",
+	"Potion":        "res://assets/rpgItems.png",
+	"Epee en bois":  "res://assets/rpgItems.png",
+	"Epee en fer":   "res://assets/rpgItems.png",
+	"Arc":           "res://assets/rpgItems.png",
+	"Baton magique": "res://assets/rpgItems.png",
+	"Peau":          "res://assets/itemset0.png",
 }
 
 var inventaire_ouvert = false
 var perso_ouvert = false
 var crafting_panel_node = null   # instancié dans _ready()
 var mana_bar: TextureProgressBar = null
+var xp_bar: TextureProgressBar = null
+
+# ── Système de notifications ────────────────────────────────────────────────
+var _notif_panel: PanelContainer = null
+var _notif_label: Label = null
+var _notif_tween: Tween = null
+
+# ── Outil équipé (affiché sous les barres) ──────────────────────────────────
+var _tool_slot: PanelContainer = null
+var _tool_icon: TextureRect   = null
+
+const TOOL_ICONS = {
+	"hache":  {"sheet": "res://assets/rpgItems.png", "region": Rect2(64, 80, 16, 16)},
+	"pioche": {"sheet": "res://assets/rpgItems.png", "region": Rect2(80, 48, 16, 16)},
+}
 
 func _ready():
 	add_to_group("hud")
@@ -45,6 +72,7 @@ func _ready():
 	Stats.level_up.connect(_on_level_up)
 	panneau.visible = false
 	panneau_perso.visible = false
+	quest_journal.visible = false
 	$BtnInventaire.focus_mode = Control.FOCUS_NONE
 	$BtnPersonnage.focus_mode = Control.FOCUS_NONE
 	$BtnQuetes.focus_mode = Control.FOCUS_NONE
@@ -56,6 +84,8 @@ func _ready():
 
 	# ── Barre de mana (construite après le layout) ──────────────
 	call_deferred("_build_mana_bar")
+	# ── Outil équipé (affiché sous les barres) ───────────────────
+	call_deferred("_build_tool_display")
 
 func _input(event: InputEvent) -> void:
 	# Touche B (Bricoler) : ouvre/ferme le panneau de crafting
@@ -80,6 +110,112 @@ func _process(_delta):
 	
 	if Input.is_action_just_pressed("personnage"): # ou une nouvelle touche
 		toggle_journal()
+
+func _build_tool_display():
+	# Petit slot pixel-art positionné juste sous les barres de vie/mana/xp
+	_tool_slot = PanelContainer.new()
+	var style = StyleBoxTexture.new()
+	style.texture = load("res://assets/menus/Inventory.png")
+	style.region_rect = Rect2(272, 16, 16, 16)
+	style.texture_margin_left   = 2
+	style.texture_margin_right  = 2
+	style.texture_margin_top    = 2
+	style.texture_margin_bottom = 2
+	_tool_slot.add_theme_stylebox_override("panel", style)
+	_tool_slot.set_anchor(SIDE_LEFT,   0.0)
+	_tool_slot.set_anchor(SIDE_RIGHT,  0.0)
+	_tool_slot.set_anchor(SIDE_TOP,    0.0)
+	_tool_slot.set_anchor(SIDE_BOTTOM, 0.0)
+	# Positionné sous les barres (barres : top=10, hauteur 72px*scale=2 → ~82px + marge)
+	_tool_slot.offset_left   = 10
+	_tool_slot.offset_top    = 88
+	_tool_slot.offset_right  = 58   # 48px de large
+	_tool_slot.offset_bottom = 136  # 48px de haut
+
+	_tool_icon = TextureRect.new()
+	_tool_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH
+	_tool_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_tool_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_tool_icon.custom_minimum_size = Vector2(32, 32)
+	_tool_slot.add_child(_tool_icon)
+
+	add_child(_tool_slot)
+	# Placer juste après xp_bar pour rester sous les panneaux
+	if xp_bar:
+		move_child(_tool_slot, xp_bar.get_index() + 1)
+
+	_refresh_tool_display()
+
+func _refresh_tool_display():
+	if _tool_slot == null:
+		return
+	var tool = Inventory.equipped_tool
+	if tool == "" or not TOOL_ICONS.has(tool):
+		_tool_slot.visible = false
+		return
+	_tool_slot.visible = true
+	var info = TOOL_ICONS[tool]
+	var atlas = AtlasTexture.new()
+	atlas.atlas = load(info["sheet"])
+	atlas.region = info["region"]
+	_tool_icon.texture = atlas
+
+func _build_notification_panel():
+	_notif_panel = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.0, 0.0, 0.0, 0.72)
+	style.corner_radius_top_left    = 8
+	style.corner_radius_top_right   = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
+	style.content_margin_left   = 18
+	style.content_margin_right  = 18
+	style.content_margin_top    = 8
+	style.content_margin_bottom = 8
+	_notif_panel.add_theme_stylebox_override("panel", style)
+	_notif_panel.modulate.a = 0.0
+
+	_notif_label = Label.new()
+	_notif_label.add_theme_font_size_override("font_size", 17)
+	_notif_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_notif_panel.add_child(_notif_label)
+	add_child(_notif_panel)
+
+	# Centré horizontalement, position initiale hors écran en haut
+	_notif_panel.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_notif_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_notif_panel.set_anchor(SIDE_LEFT,   0.5)
+	_notif_panel.set_anchor(SIDE_RIGHT,  0.5)
+	_notif_panel.set_anchor(SIDE_TOP,    0.0)
+	_notif_panel.set_anchor(SIDE_BOTTOM, 0.0)
+	_notif_panel.offset_left   = -180
+	_notif_panel.offset_right  =  180
+	_notif_panel.offset_top    = -60
+	_notif_panel.offset_bottom =  0
+
+func show_notification(text: String, color: Color = Color.WHITE):
+	if _notif_panel == null:
+		_build_notification_panel()
+	# Annule le tween en cours si une notif est déjà affichée
+	if _notif_tween and _notif_tween.is_valid():
+		_notif_tween.kill()
+
+	_notif_label.text = text
+	_notif_label.add_theme_color_override("font_color", color)
+	_notif_panel.modulate.a = 0.0
+	# Position de départ : légèrement au-dessus de la cible
+	_notif_panel.offset_top    = -70
+	_notif_panel.offset_bottom = -10
+
+	_notif_tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	# Glisse vers le bas + fade in
+	_notif_tween.parallel().tween_property(_notif_panel, "offset_top",    20.0, 0.25)
+	_notif_tween.parallel().tween_property(_notif_panel, "offset_bottom", 60.0, 0.25)
+	_notif_tween.parallel().tween_property(_notif_panel, "modulate:a",     1.0, 0.2)
+	# Pause
+	_notif_tween.tween_interval(2.2)
+	# Fade out
+	_notif_tween.tween_property(_notif_panel, "modulate:a", 0.0, 0.4)
 
 func _on_health_changed(new_health):
 	health_bar.value = new_health
@@ -120,6 +256,24 @@ func _build_mana_bar():
 	mana_bar.texture_progress = _make_bar_texture(15, 19)
 	Stats.mana_changed.connect(_on_mana_changed)
 	add_child(mana_bar)
+	# Placer la barre de mana juste après health_bar dans l'arbre
+	# pour qu'elle s'affiche SOUS les panneaux (inventaire, quêtes, etc.)
+	move_child(mana_bar, health_bar.get_index() + 1)
+
+	# Barre d'XP : rangée VERTE, même position/taille
+	xp_bar = TextureProgressBar.new()
+	xp_bar.offset_left   = health_bar.offset_left
+	xp_bar.offset_top    = health_bar.offset_top
+	xp_bar.offset_right  = health_bar.offset_right
+	xp_bar.offset_bottom = health_bar.offset_bottom
+	xp_bar.scale         = health_bar.scale
+	xp_bar.min_value     = 0.0
+	xp_bar.max_value     = float(Stats.xp_next_level)
+	xp_bar.value         = float(Stats.xp)
+	xp_bar.texture_under    = null
+	xp_bar.texture_progress = _make_bar_texture(20, 24)
+	add_child(xp_bar)
+	move_child(xp_bar, mana_bar.get_index() + 1)
 
 func _on_mana_changed(current: float, max_val: float):
 	if mana_bar:
@@ -133,6 +287,7 @@ func _on_inventory_changed():
 		_refresh_inventaire()
 	if panneau_perso.visible:
 		_refresh_equipement()
+	_refresh_tool_display()
 
 func _on_btn_inventaire_pressed():
 	panneau.visible = !panneau.visible
@@ -147,7 +302,6 @@ func _on_btn_fermer_pressed():
 
 func _refresh_inventaire():
 	label_or.text = "Or : " + str(Inventory.gold)
-	label_outil.text = "Outil : " + (Inventory.equipped_tool if Inventory.equipped_tool != "" else "Aucun")
 	for child in grid.get_children():
 		child.queue_free()
 	for item_name in Inventory.items:
@@ -172,20 +326,27 @@ func _refresh_inventaire():
 		#style.corner_radius_bottom_right = 4
 		container.add_theme_stylebox_override("panel", style)
 		var vbox = VBoxContainer.new()
+		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 		container.add_child(vbox)
-		var texture_rect = TextureRect.new()
-		texture_rect.custom_minimum_size = Vector2(40, 40)
-		texture_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH
-		texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		var texture = get_item_texture(item_name)
 		if texture != null:
+			var texture_rect = TextureRect.new()
+			texture_rect.custom_minimum_size = Vector2(40, 40)
+			texture_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH
+			texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			texture_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			texture_rect.texture = texture
+			vbox.add_child(texture_rect)
 		else:
+			# Aucune icône connue → afficher le nom en texte
 			var label_nom = Label.new()
 			label_nom.text = item_name
 			label_nom.add_theme_color_override("font_color", Color("#3d1f00"))
+			label_nom.add_theme_font_size_override("font_size", 10)
+			label_nom.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			label_nom.custom_minimum_size = Vector2(56, 0)
+			label_nom.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			vbox.add_child(label_nom)
-		vbox.add_child(texture_rect)
 		var label = Label.new()
 		label.text = "x" + str(qty)
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -233,9 +394,13 @@ func _on_stats_changed():
 	# La magie affecte le mana max : mettre à jour la barre
 	if mana_bar:
 		mana_bar.max_value = float(Stats.get_max_mana())
+	# XP : mise à jour de la barre verte
+	if xp_bar:
+		xp_bar.max_value = float(Stats.xp_next_level)
+		xp_bar.value     = float(Stats.xp)
 
 func _on_level_up(new_level):
-	print("🎉 Niveau ", new_level, " !")
+	show_notification("🎉 Niveau " + str(new_level) + " !\n+3 points à distribuer", Color("#FFD700"))
 
 func _on_btn_personnage_pressed():
 	panneau_perso.visible = !panneau_perso.visible
@@ -448,4 +613,4 @@ func update_quest_journal():
 func _on_btn_quetes_pressed() -> void:
 	toggle_journal()
 	$BtnQuetes.release_focus()
-                                                                                                                                                                                                                                                                                                                                                         
+                                                                                                                                                                                                                                                                                                                          
