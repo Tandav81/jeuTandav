@@ -20,6 +20,7 @@ GameManager="*uid://b2dvukctorj6g"
 Inventory="*uid://c8ldmel2jnraj"
 QuestManager="*uid://cyc4qcuwfvvgo"
 Stats="*uid://boffexw3fcbqt"
+SceneTransition="*uid://dalw42nwp6enu"
 
 [global_group]
 
