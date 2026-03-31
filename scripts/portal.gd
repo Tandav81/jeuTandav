@@ -25,4 +25,10 @@ func _on_body_entered(body: Node2D) -> void:
 		push_warning("Portal : target_scene non défini !")
 		return
 	_used = true
+	
+	var fog = get_tree().get_first_node_in_group("fog")
+	if fog:
+		GameManager.fog_data[GameManager.current_scene] = fog.get_save_data()
+		
+	GameManager.current_scene = target_scene
 	SceneTransition.fade_out_to(target_scene, target_spawn)

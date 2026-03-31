@@ -17,6 +17,10 @@ var revealed_cells: Dictionary = {}
 
 func _ready():
 	_build_fog_sprite()
+	
+	var scene_key = GameManager.current_scene
+	if GameManager.fog_data.has(scene_key) and GameManager.fog_data[scene_key].size() > 0:
+		load_save_data(GameManager.fog_data[scene_key])
 
 func _build_fog_sprite():
 	fog_image = Image.create(map_width_tiles, map_height_tiles, false, Image.FORMAT_RGBA8)

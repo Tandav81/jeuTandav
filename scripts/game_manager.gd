@@ -4,10 +4,14 @@ var spawn_position = Vector2.ZERO
 var player_health = 100
 var current_scene = "res://scenes/world.tscn"
 var coffres_ouverts = []
+var fog_data: Dictionary = {}
 
 func save_game():
 	var player = get_tree().get_first_node_in_group("player")
 	var fog = get_tree().get_first_node_in_group("fog")
+	
+	if fog:
+		fog_data[current_scene] = fog.get_save_data()
 	
 	if player == null:
 		return
@@ -31,7 +35,7 @@ func save_game():
 		"base_magie": Stats.base_magie,
 		"base_defense": Stats.base_defense,
 		"equipped": Inventory.equipped,
-		"fog_revealed": fog.get_save_data() if fog else []
+		"fog_revealed": fog_data
 	}
 	
 	var file = FileAccess.open("user://save.json", FileAccess.WRITE)
@@ -76,9 +80,12 @@ func load_game():
 	if data.has("equipped"):
 		Inventory.equipped = data["equipped"]
 	
-	var fog = get_tree().get_first_node_in_group("fog")
-	if fog and data.has("fog_revealed"):
-		fog.load_save_data(data["fog_revealed"])
+	if data.has("fog_revealed"):
+		var raw = data["fog_revealed"]
+		if raw is Dictionary:
+			fog_data = raw
+		else:
+			fog_data = {}
 	
 	return true
 

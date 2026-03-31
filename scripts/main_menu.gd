@@ -8,6 +8,7 @@ func _ready():
 	$Panel/VBoxContainer/BtnQuitter.focus_mode = Control.FOCUS_NONE
 
 func _on_btn_nouvelle_partie_pressed():
+	GameManager.fog_data = {}
 	GameManager.spawn_position = Vector2.ZERO
 	GameManager.player_health = 100
 	GameManager.coffres_ouverts = []
