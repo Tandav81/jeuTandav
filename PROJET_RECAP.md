@@ -253,17 +253,58 @@ const RECIPES = {
 
 ## 🔭 Pistes d'évolution possibles
 
-- ~~Système de crafting~~ ✅ implémenté
-- ~~Attaques à distance (arc, magie)~~ ✅ implémenté
-- ~~Système de mana~~ ✅ implémenté
-- ~~Barre d'XP sur le HUD~~ ✅ implémenté
-- ~~Affichage de l'outil équipé sur le HUD~~ ✅ implémenté
-- ~~Notifications in-game~~ ✅ implémenté
-- Ajouter d'autres recettes de crafting (Arc, Bâton magique, Casque…)
-- Potion de mana (régénération instantanée de mana)
-- Ajouter d'autres quêtes dans `QuestManager.QUESTS`
-- Sons et musique (effets d'attaque, ambiance, musique de fond)
-- Système de dialogues plus élaboré (plusieurs lignes, choix de réponse)
-- Ennemis supplémentaires avec comportements différents (rôdeur à distance, boss)
-- Plusieurs zones/scènes avec transitions
-- Minimap
+🎯 Dans la continuité directe de ce qui existe
+Système de combat
+
+Ennemis à distance : archer squelette qui spawne des flèches, mage slime qui lance des sorts — tu as déjà projectile.gd, il suffit de l'utiliser côté ennemi
+Boss de zone : un ennemi avec beaucoup plus de vie, une barre de vie dédiée en bas d'écran, et des drops uniques (clé de donjon, équipement rare)
+Esquive/roulade : dash d'invincibilité court sur double-tap directionnel, consomme un peu de stamina ou juste un cooldown
+
+Crafting & économie
+
+PNJ marchand : achète/vend des items contre de l'or — tu as déjà la boîte de dialogue PNJ et l'inventaire, c'est une extension naturelle
+Recettes à débloquer : certaines recettes cachées jusqu'à ce que le joueur trouve un "livre de recette" dans un coffre
+Amélioration d'équipements : dépenser du minerai pour améliorer une épée déjà craftée (+1, +2…)
+
+Quêtes
+
+Quêtes de livraison : apporter X items à un PNJ — trivial à ajouter dans quest_manager.gd avec un nouveau type "deliver"
+Quêtes avec timer : défendre un point pendant 60 secondes, chasser X ennemis avant l'aube
+Chaîne de quêtes : une quête qui en débloque une autre chez le même PNJ
+
+
+🗺️ Monde et exploration
+
+Cycle jour/nuit : DirectionalLight2D qui tourne + overlay sombre progressif, les ennemis plus agressifs la nuit, certains spawns uniquement nocturnes
+Météo : pluie avec particules, brouillard visuel (différent du fog of war), effets sur les stats (froid = vitesse réduite)
+Zones à débloquer : une barrière qui s'ouvre quand le joueur atteint le niveau X ou possède un item clé
+
+
+🧠 Profondeur RPG
+
+Classes de personnage au démarrage : Guerrier (bonus Force/Endurance), Archer (bonus Agilité), Mage (bonus Magie) — juste des stats de départ différentes et une arme initiale différente
+Talents passifs : tous les 3 niveaux, choisir parmi 3 bonus passifs (ex: "regain 1 PV par ennemi tué", "les flèches traversent les ennemis", "vitesse +10%")
+Statuts : empoisonné (dégâts sur la durée), ralenti, régénération — tu as déjà le système de dégâts continus sur les ennemis, c'est le même principe inversé
+
+
+🔊 Audio (fort impact, effort moyen)
+
+Sons d'attaque, de récolte, de pas selon le sol (herbe vs pierre)
+Musique d'ambiance différente par zone, fondu enchaîné à la transition
+Son de level up, de notification, d'ouverture de coffre
+
+C'est souvent ce qui donne le plus de "jus" pour le temps investi.
+
+🖥️ QoL interface
+
+Minimap : tu as déjà le fog of war avec ses données — une minimap qui affiche les zones révélées serait une extension naturelle de fog_of_war.gd
+Tooltips sur les items : hover sur un équipement → affiche les stats et la comparaison avec ce qui est équipé
+Raccourci de consommables : barre de raccourcis 1-4 en bas d'écran pour utiliser potions/viande sans ouvrir l'inventaire
+
+
+💡 Ce que je recommanderais en priorité
+Si je devais choisir 3 choses qui auraient le plus d'impact sur le ressenti du jeu :
+
+Sons — même basiques, ils changent complètement l'immersion
+Boss de zone — donne un objectif clair et un sentiment d'accomplissement
+Cycle jour/nuit — peu de code, énorme effet visuel et gameplay

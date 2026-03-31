@@ -5,6 +5,7 @@ var player_health = 100
 var current_scene = "res://scenes/world.tscn"
 var coffres_ouverts = []
 var fog_data: Dictionary = {}
+var time_of_day: float = 0.25
 
 func save_game():
 	var player = get_tree().get_first_node_in_group("player")
@@ -12,6 +13,11 @@ func save_game():
 	
 	if fog:
 		fog_data[current_scene] = fog.get_save_data()
+		
+	var dnc = get_tree().get_first_node_in_group("day_night")
+	if dnc:
+		time_of_day = dnc.get_time()
+
 	
 	if player == null:
 		return
@@ -35,7 +41,8 @@ func save_game():
 		"base_magie": Stats.base_magie,
 		"base_defense": Stats.base_defense,
 		"equipped": Inventory.equipped,
-		"fog_revealed": fog_data
+		"fog_revealed": fog_data,
+		"time_of_day": time_of_day
 	}
 	
 	var file = FileAccess.open("user://save.json", FileAccess.WRITE)
@@ -57,6 +64,9 @@ func load_game():
 	current_scene = data["scene"]
 	Inventory.gold = int(data["gold"])
 	Inventory.equipped_tool = data["equipped_tool"]
+	
+	if data.has("time_of_day"):
+		time_of_day = float(data["time_of_day"])
 	
 	if data.has("coffres_ouverts"):
 		coffres_ouverts = data["coffres_ouverts"]
