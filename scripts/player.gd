@@ -8,6 +8,9 @@ var health = 100
 var is_attacking = false
 var attack_direction = Vector2.DOWN
 var equipped_tool = ""  # "", "hache", "pioche"
+var _fog_timer: float = 0.0
+const FOG_UPDATE_INTERVAL: float = 0.15  # secondes entre chaque mise à jour
+var _fog_node: Node = null
 
 # Ordre de cycle pour le changement d'arme (touche Q)
 const WEAPON_LIST = ["Epee en bois", "Epee en fer", "Arc", "Baton magique"]
@@ -24,6 +27,10 @@ func _ready():
 		emit_signal("health_changed", health)
 	Inventory.emit_signal("inventory_changed")
 	_add_bow_animations()
+	_fog_node = get_tree().get_first_node_in_group("fog")
+	# Révéler immédiatement au spawn
+	if _fog_node:
+		_fog_node.reveal_around(global_position)
 
 # Ajoute l'animation "bow_right" (6 frames) depuis Player_bow_attack.png
 func _add_bow_animations():
@@ -55,7 +62,7 @@ func take_damage(amount):
 func die():
 	get_tree().reload_current_scene()
 
-func _physics_process(_delta):
+func _physics_process(delta):
 	var current_speed = Stats.get_speed()
 
 	if is_attacking:
@@ -98,6 +105,12 @@ func _physics_process(_delta):
 
 	velocity = direction.normalized() * current_speed
 	move_and_slide()
+	
+	_fog_timer += delta
+	if _fog_timer >= FOG_UPDATE_INTERVAL:
+		_fog_timer = 0.0
+		if _fog_node:
+			_fog_node.reveal_around(global_position)
 
 func _utiliser_outil():
 	if Inventory.equipped_tool == "":

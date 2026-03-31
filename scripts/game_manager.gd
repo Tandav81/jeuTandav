@@ -7,6 +7,8 @@ var coffres_ouverts = []
 
 func save_game():
 	var player = get_tree().get_first_node_in_group("player")
+	var fog = get_tree().get_first_node_in_group("fog")
+	
 	if player == null:
 		return
 	
@@ -28,7 +30,8 @@ func save_game():
 		"base_agilite": Stats.base_agilite,
 		"base_magie": Stats.base_magie,
 		"base_defense": Stats.base_defense,
-		"equipped": Inventory.equipped
+		"equipped": Inventory.equipped,
+		"fog_revealed": fog.get_save_data() if fog else []
 	}
 	
 	var file = FileAccess.open("user://save.json", FileAccess.WRITE)
@@ -72,6 +75,10 @@ func load_game():
 	
 	if data.has("equipped"):
 		Inventory.equipped = data["equipped"]
+	
+	var fog = get_tree().get_first_node_in_group("fog")
+	if fog and data.has("fog_revealed"):
+		fog.load_save_data(data["fog_revealed"])
 	
 	return true
 
