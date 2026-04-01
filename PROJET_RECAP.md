@@ -43,13 +43,13 @@ test-jeu-2d/
 │   ├── quest_manager.gd            ← Autoload
 │   └── stats.gd                    ← Autoload
 └── assets/
-    ├── Player/
-    │   └── Player_bow_attack.png   ← spritesheet attaque arc (6 frames 32×32)
-    ├── sprites/
-    ├── menus/
-    │   └── character_panel.png     ← HUD barres de vie/mana/xp
-    ├── rpgItems.png                ← spritesheet items 16×16 (8×8 tuiles)
-    └── itemset0.png                ← spritesheet items 16×16 (16×11 tuiles)
+	├── Player/
+	│   └── Player_bow_attack.png   ← spritesheet attaque arc (6 frames 32×32)
+	├── sprites/
+	├── menus/
+	│   └── character_panel.png     ← HUD barres de vie/mana/xp
+	├── rpgItems.png                ← spritesheet items 16×16 (8×8 tuiles)
+	└── itemset0.png                ← spritesheet items 16×16 (16×11 tuiles)
 ```
 
 **Autoloads enregistrés :**

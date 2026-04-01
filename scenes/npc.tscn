@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b7n27d3yv516k"]
 
 [ext_resource type="Script" uid="uid://bmqispr5kjve0" path="res://scripts/npc.gd" id="1_nh2m4"]
-[ext_resource type="Texture2D" uid="uid://i838ssqxym5p" path="res://assets/Basic Asset Pack/Basic Asset Pack/Basic Monster Animations/Death Slime/DeathSlime.png" id="2_abqhh"]
+[ext_resource type="Texture2D" uid="uid://i838ssqxym5p" path="res://assets/Basic Asset Pack/Basic Monster Animations/Death Slime/DeathSlime.png" id="2_abqhh"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_rv78h"]
 atlas = ExtResource("2_abqhh")
@@ -102,4 +102,3 @@ shape = SubResource("CircleShape2D_sptji")
 [node name="QuestIcon" type="Sprite2D" parent="." unique_id=950347812]
 position = Vector2(0, -18)
 texture = SubResource("CompressedTexture2D_abqhh")
-visible = true

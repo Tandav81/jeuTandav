@@ -10,8 +10,11 @@ extends CanvasLayer
 @onready var label_points = $PanneauPersonnage/HBoxContainer/PanneauStats/VBoxContainer/LabelPoints
 @onready var grid_stats = $PanneauPersonnage/HBoxContainer/PanneauStats/VBoxContainer/GridStats
 @onready var grid_equip = $PanneauPersonnage/HBoxContainer/PanneauEquipement/VBoxContainer/GridEquipement
-@onready var dialogue_box = $DialogueBox
-@onready var dialogue_text = $DialogueBox/DialogueText
+@onready var dialogue_box:       Panel        = $DialogueBox
+@onready var label_nom_pnj:      Label        = $DialogueBox/VBoxContainer/LabelNomPNJ
+@onready var label_dialogue:     Label        = $DialogueBox/VBoxContainer/LabelDialogue
+@onready var choices_container:  VBoxContainer = $DialogueBox/VBoxContainer/ChoicesContainer
+@onready var label_continuer:    Label        = $DialogueBox/VBoxContainer/LabelContinuer
 @onready var quest_journal = $QuestJournal
 @onready var quest_liste = $QuestJournal/QuestList
 
@@ -57,6 +60,8 @@ var _notif_tween: Tween = null
 var _tool_slot: PanelContainer = null
 var _tool_icon: TextureRect   = null
 
+var _active_npc: Node = null
+
 const TOOL_ICONS = {
 	"hache":  {"sheet": "res://assets/rpgItems.png", "region": Rect2(64, 80, 16, 16)},
 	"pioche": {"sheet": "res://assets/rpgItems.png", "region": Rect2(80, 48, 16, 16)},
@@ -72,6 +77,7 @@ func _ready():
 	panneau.visible = false
 	panneau_perso.visible = false
 	quest_journal.visible = false
+	dialogue_box.visible = false
 	$BtnInventaire.focus_mode = Control.FOCUS_NONE
 	$BtnPersonnage.focus_mode = Control.FOCUS_NONE
 	$BtnQuetes.focus_mode = Control.FOCUS_NONE
@@ -92,6 +98,19 @@ func _input(event: InputEvent) -> void:
 		if event.keycode == KEY_B:
 			if crafting_panel_node:
 				crafting_panel_node.toggle()
+	
+	# ── Avancer dans le dialogue avec E (si dialogue actif) ──────────
+	if event.is_action_pressed("interact") and _active_npc != null:
+		_active_npc.advance()
+		get_viewport().set_input_as_handled()
+		return
+
+	# ── Fermer la DialogueBox avec Échap ──────────────────────────────
+	if event.is_action_pressed("ui_cancel"):
+		if _active_npc != null:
+			_active_npc.force_end_dialogue()
+			get_viewport().set_input_as_handled()
+			return
 
 func _process(_delta):
 	if Input.is_action_just_pressed("ui_cancel"):
@@ -307,10 +326,6 @@ func _refresh_inventaire():
 		var qty = Inventory.items[item_name]
 		var container = PanelContainer.new()
 		container.custom_minimum_size = Vector2(64, 64)
-		#style.border_width_left = 2
-		#style.border_width_right = 2
-		#style.border_width_top = 2
-		#style.border_width_bottom = 2
 		var style = StyleBoxTexture.new()
 		style.texture = load("res://assets/menus/Inventory.png")
 		style.region_rect = Rect2(272, 16, 16, 16)  # un slot individuel de la grille
@@ -318,11 +333,6 @@ func _refresh_inventaire():
 		style.texture_margin_right = 2
 		style.texture_margin_top = 2
 		style.texture_margin_bottom = 2
-		#style.border_color = Color("#5c3a1e")
-		#style.corner_radius_top_left = 4
-		#style.corner_radius_top_right = 4
-		#style.corner_radius_bottom_left = 4
-		#style.corner_radius_bottom_right = 4
 		container.add_theme_stylebox_override("panel", style)
 		var vbox = VBoxContainer.new()
 		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -577,7 +587,7 @@ func get_item_texture(item_name: String) -> Texture2D:
 
 func show_dialogue(text):
 	dialogue_box.visible = true
-	dialogue_text.text = text
+	label_dialogue.text = text
 	
 func hide_dialogue():
 	dialogue_box.visible = false
@@ -612,3 +622,65 @@ func update_quest_journal():
 func _on_btn_quetes_pressed() -> void:
 	toggle_journal()
 	$BtnQuetes.release_focus()
+
+## Appelé par npc.gd pour ouvrir la boîte de dialogue.
+func start_npc_dialogue(npc: Node, name: String) -> void:
+	_active_npc              = npc
+	label_nom_pnj.text       = name
+	label_dialogue.text      = ""
+	label_continuer.visible  = true
+	_clear_choices()
+	dialogue_box.visible     = true
+
+## Affiche une ligne simple (le joueur appuie sur E pour continuer).
+func show_dialogue_line(text: String) -> void:
+	label_dialogue.text     = text
+	label_continuer.visible = true
+	_clear_choices()
+
+## Affiche une ligne puis des boutons de choix.
+## choices = [{"label": "...", "goto": "..."}, ...]
+func show_dialogue_line_with_choices(text: String, choices: Array) -> void:
+	label_dialogue.text     = text
+	label_continuer.visible = false   # on attend un clic, pas E
+	_clear_choices()
+
+	for i in choices.size():
+		var choice: Dictionary = choices[i]
+		var btn := Button.new()
+		btn.text              = choice.get("label", "...")
+		btn.focus_mode        = Control.FOCUS_NONE   # évite les conflits avec Espace
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		# Style facultatif — adapte ou supprime selon ton thème
+		var sb := StyleBoxFlat.new()
+		sb.bg_color          = Color(0.15, 0.10, 0.05, 0.85)
+		sb.border_color      = Color(0.7, 0.55, 0.2)
+		sb.set_border_width_all(1)
+		sb.set_corner_radius_all(4)
+		sb.content_margin_left   = 8.0
+		sb.content_margin_right  = 8.0
+		sb.content_margin_top    = 4.0
+		sb.content_margin_bottom = 4.0
+		btn.add_theme_stylebox_override("normal", sb)
+		btn.add_theme_color_override("font_color", Color(0.95, 0.85, 0.5))
+
+		var idx := i   # capture de la variable pour la lambda
+		btn.pressed.connect(func() -> void: _on_dialogue_choice_pressed(idx))
+		choices_container.add_child(btn)
+
+## Ferme la boîte de dialogue.
+func end_npc_dialogue() -> void:
+	dialogue_box.visible = false
+	_clear_choices()
+	_active_npc = null
+
+## Supprime tous les boutons de choix existants.
+func _clear_choices() -> void:
+	for child in choices_container.get_children():
+		child.queue_free()
+
+## Transmet le choix sélectionné au NPC.
+func _on_dialogue_choice_pressed(index: int) -> void:
+	if _active_npc != null:
+		_active_npc.select_choice(index)

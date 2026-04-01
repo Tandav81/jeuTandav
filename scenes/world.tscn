@@ -24,6 +24,7 @@
 [ext_resource type="PackedScene" uid="uid://nwdvquapayba" path="res://scenes/slime.tscn" id="18_lakw3"]
 [ext_resource type="PackedScene" uid="uid://b7rpbyildycup" path="res://scenes/tree.tscn" id="20_7iits"]
 [ext_resource type="PackedScene" uid="uid://1oa8b1bin2pd" path="res://scenes/rock.tscn" id="21_oo54l"]
+[ext_resource type="Script" uid="uid://cvax7ibfxcyjv" path="res://scripts/NPCbucheron.gd" id="22_luhhm"]
 [ext_resource type="PackedScene" uid="uid://d2y4e0mkmkk8i" path="res://scenes/vache.tscn" id="22_oo54l"]
 [ext_resource type="PackedScene" uid="uid://dxd05iqr1cp8n" path="res://scenes/chest.tscn" id="24_ctatt"]
 [ext_resource type="PackedScene" uid="uid://hd57sfo2qs16" path="res://scenes/mouton.tscn" id="24_xgqkh"]
@@ -1115,14 +1116,24 @@ grow_vertical = 0
 scale = Vector2(2, 2)
 theme_override_styles/panel = SubResource("StyleBoxFlat_0nbtd")
 
-[node name="DialogueText" type="Label" parent="HUD/DialogueBox" unique_id=1827245332]
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/DialogueBox" unique_id=1000486929]
 layout_mode = 0
-offset_left = 1.5
-offset_top = 0.5
-offset_right = 253.5
-offset_bottom = 39.5
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="LabelNomPNJ" type="Label" parent="HUD/DialogueBox/VBoxContainer" unique_id=17485653]
+layout_mode = 2
+
+[node name="LabelDialogue" type="Label" parent="HUD/DialogueBox/VBoxContainer" unique_id=1827245332]
+layout_mode = 2
 theme_override_colors/font_color = Color(0.4392157, 0.28627452, 0.16470589, 1)
 theme_override_font_sizes/font_size = 14
+
+[node name="ChoicesContainer" type="VBoxContainer" parent="HUD/DialogueBox/VBoxContainer" unique_id=41522850]
+layout_mode = 2
+
+[node name="LabelContinuer" type="Label" parent="HUD/DialogueBox/VBoxContainer" unique_id=1642269765]
+layout_mode = 2
 
 [node name="QuestJournal" type="Panel" parent="HUD" unique_id=1317323157]
 visible = false
@@ -1159,6 +1170,9 @@ shape = SubResource("RectangleShape2D_7t5mc")
 
 [node name="NPC" parent="." unique_id=1126593173 instance=ExtResource("27_ts3gi")]
 position = Vector2(414, 183)
+script = ExtResource("22_luhhm")
+npc_name = "Vieux Bûcheron"
+quest_id = "bucherondeb"
 
 [node name="NPC2" parent="." unique_id=591351934 instance=ExtResource("27_ts3gi")]
 position = Vector2(521, -102)
