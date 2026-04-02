@@ -20,30 +20,7 @@ extends CanvasLayer
 
 var journal_open = false
 
-var item_images = {
-	"Bois": "res://assets/sprites/wood/wood.png",
-	"Minerai": "res://assets/sprites/rock/rock.png",
-}
-var item_regions = {
-	"Viande":        Rect2(16,  64, 16, 16),
-	"Potion":        Rect2(0,   0,  16, 16),
-	# Armes (rpgItems.png)
-	"Epee en bois":  Rect2(80,  64, 16, 16),
-	"Epee en fer":   Rect2(96,  64, 16, 16),
-	"Arc":           Rect2(64,  96, 16, 16),
-	"Baton magique": Rect2(64,  48, 16, 16),
-	# Ressource animaux (itemset0.png, col 10 ligne 9)
-	"Peau":          Rect2(144, 128, 16, 16),
-}
-var item_spritesheets = {
-	"Viande":        "res://assets/rpgItems.png",
-	"Potion":        "res://assets/rpgItems.png",
-	"Epee en bois":  "res://assets/rpgItems.png",
-	"Epee en fer":   "res://assets/rpgItems.png",
-	"Arc":           "res://assets/rpgItems.png",
-	"Baton magique": "res://assets/rpgItems.png",
-	"Peau":          "res://assets/itemset0.png",
-}
+# Les icônes d'items sont gérées centralement par l'autoload ItemData.
 
 var inventaire_ouvert = false
 var perso_ouvert = false
@@ -376,9 +353,32 @@ func _on_item_pressed(item_name: String):
 			if Inventory.remove_item(item_name, 1):
 				player.heal(30)
 				_refresh_inventaire()
+		"Grande potion":
+			if Inventory.remove_item(item_name, 1):
+				player.heal(60)
+				_refresh_inventaire()
+		"Potion de mana":
+			if Inventory.remove_item(item_name, 1):
+				Stats.restore_mana(40)
+				_refresh_inventaire()
+		"Potion de force":
+			if Inventory.remove_item(item_name, 1):
+				player.heal(20)
+				Stats.restore_mana(20)
+				_refresh_inventaire()
 		"Viande":
 			if Inventory.remove_item(item_name, 1):
 				player.heal(15)
+				_refresh_inventaire()
+		"Livre du forgeron":
+			if Inventory.remove_item(item_name, 1):
+				GameManager.use_book("Livre du forgeron")
+				show_notification("📖 Livre du forgeron lu !\nNouvelles recettes débloquées.", Color("#88ccff"))
+				_refresh_inventaire()
+		"Livre du mage":
+			if Inventory.remove_item(item_name, 1):
+				GameManager.use_book("Livre du mage")
+				show_notification("📖 Livre du mage lu !\nNouvelles recettes débloquées.", Color("#bb88ff"))
 				_refresh_inventaire()
 		"Hache":
 			Inventory.equip_tool("hache")
@@ -527,17 +527,18 @@ func _refresh_equipement():
 	for child in grid_equip.get_children():
 		child.queue_free()
 	var slots = [
-		["arme", "⚔️ Arme"],
-		["casque", "🪖 Casque"],
+		["arme",     "⚔️ Arme"],
+		["casque",   "🪖 Casque"],
 		["plastron", "🛡️ Plastron"],
-		["bottes", "👢 Bottes"],
-		["anneau", "💍 Anneau"],
+		["bouclier", "🛡 Bouclier"],
+		["bottes",   "👢 Bottes"],
+		["anneau",   "💍 Anneau"],
 		["amulette", "📿 Amulette"],
 	]
 	for slot_info in slots:
 		var slot = slot_info[0]
 		var slot_nom = slot_info[1]
-		var item_equipe = Inventory.equipped[slot]
+		var item_equipe = Inventory.equipped.get(slot, null)
 		var lbl_slot = Label.new()
 		lbl_slot.text = slot_nom
 		lbl_slot.add_theme_color_override("font_color", Color("#ddccaa"))
@@ -566,24 +567,7 @@ func _on_desequiper(slot: String):
 # ===== UTILITAIRES =====
 
 func get_item_texture(item_name: String) -> Texture2D:
-	if item_images.has(item_name):
-		var path = item_images[item_name]
-		if ResourceLoader.exists(path):
-			return load(path)
-		else:
-			print("Image non trouvée : ", path)
-			return null
-	if item_regions.has(item_name):
-		var path = item_spritesheets[item_name]
-		if ResourceLoader.exists(path):
-			var atlas = AtlasTexture.new()
-			atlas.atlas = load(path)
-			atlas.region = item_regions[item_name]
-			return atlas
-		else:
-			print("Spritesheet non trouvé : ", path)
-			return null
-	return null
+	return ItemData.get_texture(item_name)
 
 func show_dialogue(text):
 	dialogue_box.visible = true

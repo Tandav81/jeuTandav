@@ -27,6 +27,11 @@ var equipment_data = {
 		"agilite": 0, "magie": 0, "defense": 0,
 		"description": "Une épée solide en fer"
 	},
+	"Epee en or": {
+		"slot": "arme", "force": 14, "endurance": 0,
+		"agilite": 1, "magie": 0, "defense": 0,
+		"description": "Lame tranchante forgée dans l'or pur"
+	},
 	"Baton magique": {
 		"slot": "arme", "force": 0, "endurance": 0,
 		"agilite": 0, "magie": 10, "defense": 0,
@@ -43,6 +48,11 @@ var equipment_data = {
 		"agilite": 0, "magie": 0, "defense": 3,
 		"description": "Protection légère pour la tête"
 	},
+	"Casque en fer": {
+		"slot": "casque", "force": 0, "endurance": 3,
+		"agilite": -1, "magie": 0, "defense": 6,
+		"description": "Heaume forgé dans le fer"
+	},
 	"Plastron en fer": {
 		"slot": "plastron", "force": 0, "endurance": 5,
 		"agilite": -1, "magie": 0, "defense": 8,
@@ -52,6 +62,22 @@ var equipment_data = {
 		"slot": "bottes", "force": 0, "endurance": 0,
 		"agilite": 4, "magie": 0, "defense": 1,
 		"description": "Augmente la vitesse de déplacement"
+	},
+	"Bottes en fer": {
+		"slot": "bottes", "force": 0, "endurance": 1,
+		"agilite": -1, "magie": 0, "defense": 4,
+		"description": "Protection robuste pour les pieds"
+	},
+	# Boucliers
+	"Bouclier en bois": {
+		"slot": "bouclier", "force": 0, "endurance": 0,
+		"agilite": -1, "magie": 0, "defense": 4,
+		"description": "Protection basique, mais ralentit un peu"
+	},
+	"Bouclier en fer": {
+		"slot": "bouclier", "force": 0, "endurance": 1,
+		"agilite": -2, "magie": 0, "defense": 9,
+		"description": "Bouclier solide forgé dans le fer"
 	},
 	# Accessoires
 	"Anneau de force": {
@@ -90,6 +116,10 @@ func get_mana_regen() -> float:
 func get_mana_cost_sort() -> int:
 	# Coût par attaque magique ; diminue quand la magie augmente
 	return max(5, 20 - get_magie())         # ex. magie=5 → 15, magie=15 → 5
+
+func restore_mana(amount: float) -> void:
+	current_mana = min(float(get_max_mana()), current_mana + amount)
+	emit_signal("mana_changed", current_mana, float(get_max_mana()))
 
 func use_mana(amount: float) -> bool:
 	if current_mana < amount:

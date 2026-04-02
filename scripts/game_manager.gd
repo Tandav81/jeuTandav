@@ -6,6 +6,16 @@ var current_scene = "res://scenes/world.tscn"
 var coffres_ouverts = []
 var fog_data: Dictionary = {}
 var time_of_day: float = 0.25
+var used_books: Array = []   # livres de recettes déjà lus
+
+## Retourne true si ce livre a déjà été utilisé (recettes débloquées).
+func is_book_used(book_name: String) -> bool:
+	return used_books.has(book_name)
+
+## Utilise un livre : ajoute à la liste si pas déjà présent.
+func use_book(book_name: String) -> void:
+	if not used_books.has(book_name):
+		used_books.append(book_name)
 
 func save_game():
 	var player = get_tree().get_first_node_in_group("player")
@@ -42,7 +52,8 @@ func save_game():
 		"base_defense": Stats.base_defense,
 		"equipped": Inventory.equipped,
 		"fog_revealed": fog_data,
-		"time_of_day": time_of_day
+		"time_of_day": time_of_day,
+		"used_books": used_books,
 	}
 	
 	var file = FileAccess.open("user://save.json", FileAccess.WRITE)
@@ -89,6 +100,10 @@ func load_game():
 	
 	if data.has("equipped"):
 		Inventory.equipped = data["equipped"]
+		# Migration : ajoute les slots ajoutés après la création de la sauvegarde
+		for slot in ["arme", "casque", "plastron", "bouclier", "bottes", "anneau", "amulette"]:
+			if not Inventory.equipped.has(slot):
+				Inventory.equipped[slot] = null
 	
 	if data.has("fog_revealed"):
 		var raw = data["fog_revealed"]
@@ -96,7 +111,12 @@ func load_game():
 			fog_data = raw
 		else:
 			fog_data = {}
-	
+
+	if data.has("used_books"):
+		used_books = data["used_books"]
+	else:
+		used_books = []   # compatibilité anciennes sauvegardes
+
 	return true
 
 func save_exists() -> bool:

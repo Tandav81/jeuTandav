@@ -23,32 +23,25 @@ const S = PANEL_SCALE
 
 # ---- Chemins assets ----------------------------------------
 const CRAFT_TEX  = "res://assets/menus/Craft.png"
-const ITEMS_TEX  = "res://assets/rpgItems.png"
-
-# ---- Icônes items (fichiers PNG dédiés) --------------------
-const ITEM_IMAGES = {
-	"Bois":    "res://assets/sprites/wood/wood.png",
-	"Minerai": "res://assets/sprites/rock/rock.png",
-}
-
-# Regions dans rpgItems.png (cellules 16×16, grille 8×8)
-const ITEM_REGIONS = {
-	"Potion":        Rect2(0,   0,  16, 16),
-	"Viande":        Rect2(16,  64, 16, 16),
-	"Epee en bois":  Rect2(80,  64, 16, 16),  # ligne 4 col 5 ← CORRIGÉ (v1 avait ligne 3 = pioche)
-	"Epee en fer":   Rect2(96,  64, 16, 16),  # ligne 4 col 6
-	"Baton magique": Rect2(64,  48, 16, 16),  # ligne 3 col 4
-	"Arc":           Rect2(64,  96, 16, 16),  # ligne 6 col 4
-}
+# Les icônes d'items sont gérées centralement par l'autoload ItemData.
 
 # ---- Recettes ----------------------------------------------
-# Ajouter de nouvelles recettes ici sans toucher au reste du code.
+# Chaque recette peut avoir un champ optionnel "book" : le nom du
+# livre de recettes qui doit avoir été utilisé pour la débloquer.
+# Sans ce champ (ou book = ""), la recette est toujours disponible.
 const RECIPES = {
 	"armes": [
+		# ── Toujours disponibles ──────────────────────────────
 		{
 			"name":        "Epee en bois",
 			"ingredients": {"Bois": 2},
 			"result":      "Epee en bois",
+			"result_qty":  1,
+		},
+		{
+			"name":        "Bouclier en bois",
+			"ingredients": {"Bois": 3},
+			"result":      "Bouclier en bois",
 			"result_qty":  1,
 		},
 		{
@@ -57,15 +50,102 @@ const RECIPES = {
 			"result":      "Arc",
 			"result_qty":  1,
 		},
+		# ── Débloquées avec le Livre du forgeron ──────────────
+		{
+			"name":        "Epee en fer",
+			"ingredients": {"Minerai de fer": 3},
+			"result":      "Epee en fer",
+			"result_qty":  1,
+			"book":        "Livre du forgeron",
+		},
+		{
+			"name":        "Bouclier en fer",
+			"ingredients": {"Minerai de fer": 4},
+			"result":      "Bouclier en fer",
+			"result_qty":  1,
+			"book":        "Livre du forgeron",
+		},
+		{
+			"name":        "Epee en or",
+			"ingredients": {"Minerai d'or": 4, "Charbon": 2},
+			"result":      "Epee en or",
+			"result_qty":  1,
+			"book":        "Livre du forgeron",
+		},
+		# ── Débloquées avec le Livre du mage ─────────────────
 		{
 			"name":        "Baton magique",
-			"ingredients": {"Bois": 10, "Minerai": 6},
+			"ingredients": {"Bois": 5, "Cristal": 2},
 			"result":      "Baton magique",
 			"result_qty":  1,
+			"book":        "Livre du mage",
 		},
 	],
 	"potions": [
-		# Exemple : {"name": "Potion", "ingredients": {"Plante": 1}, "result": "Potion", "result_qty": 1}
+		# ── Toujours disponibles ──────────────────────────────
+		{
+			"name":        "Potion",
+			"ingredients": {"Plante": 1},
+			"result":      "Potion",
+			"result_qty":  1,
+		},
+		{
+			"name":        "Grande potion",
+			"ingredients": {"Plante": 2, "Baie": 1},
+			"result":      "Grande potion",
+			"result_qty":  1,
+		},
+		{
+			"name":        "Potion de mana",
+			"ingredients": {"Tournesol": 1},
+			"result":      "Potion de mana",
+			"result_qty":  1,
+		},
+		# ── Débloquées avec le Livre du mage ─────────────────
+		{
+			"name":        "Potion de force",
+			"ingredients": {"Champignon": 2, "Pierre brute": 1},
+			"result":      "Potion de force",
+			"result_qty":  1,
+			"book":        "Livre du mage",
+		},
+	],
+	"cuir": [
+		# ── Toujours disponibles ──────────────────────────────
+		{
+			"name":        "Casque en cuir",
+			"ingredients": {"Peau": 2},
+			"result":      "Casque en cuir",
+			"result_qty":  1,
+		},
+		{
+			"name":        "Bottes légères",
+			"ingredients": {"Peau": 3},
+			"result":      "Bottes légères",
+			"result_qty":  1,
+		},
+		# ── Débloquées avec le Livre du forgeron ──────────────
+		{
+			"name":        "Casque en fer",
+			"ingredients": {"Minerai de fer": 3},
+			"result":      "Casque en fer",
+			"result_qty":  1,
+			"book":        "Livre du forgeron",
+		},
+		{
+			"name":        "Bottes en fer",
+			"ingredients": {"Minerai de fer": 2, "Peau": 1},
+			"result":      "Bottes en fer",
+			"result_qty":  1,
+			"book":        "Livre du forgeron",
+		},
+		{
+			"name":        "Plastron en fer",
+			"ingredients": {"Minerai de fer": 4, "Peau": 2},
+			"result":      "Plastron en fer",
+			"result_qty":  1,
+			"book":        "Livre du forgeron",
+		},
 	],
 }
 
@@ -80,8 +160,9 @@ const C_TEXT_NORMAL = Color("#ddccaa")
 
 # ---- État --------------------------------------------------
 var current_tab           = "armes"
-var selected_recipe_index = -1
+var selected_recipe_index = -1   # index dans RECIPES[current_tab] (pas dans la liste affichée)
 var panel_visible         = false
+var _visible_recipe_indices: Array = []  # indices RECIPES visibles selon les livres débloqués
 
 # ---- Références nœuds UI -----------------------------------
 var root_control:          Control
@@ -145,6 +226,14 @@ func _build_panel() -> void:
 	)
 	root_control.add_child(btn_potions)
 	tab_btns["potions"] = btn_potions
+
+	# Cuir (icône ciseaux) : x=52–61, y=12–22 à 1×
+	var btn_cuir = _make_invisible_btn(
+		Vector2(50, 8) * S, Vector2(20, 20) * S,
+		_on_tab_pressed.bind("cuir")
+	)
+	root_control.add_child(btn_cuir)
+	tab_btns["cuir"] = btn_cuir
 
 	# ── Bouton FERMER — sur la X du spritesheet ────────────
 	# X button pixel data : x=126–134, y=3–9 à 1× (avec bord à x=126/134)
@@ -242,7 +331,13 @@ func _update_bg_texture() -> void:
 	# Col 2 (x=416) : panneau avec bouton CREATE visible
 	# Row 0 (y=  0) : armes (enclume)
 	# Row 1 (y=128) : potions (mortier)
-	var row_y = 0 if current_tab == "armes" else 128
+	# Row 2 (y=256) : cuir (ciseaux)
+	var row_y: int
+	match current_tab:
+		"armes":   row_y = 0
+		"potions": row_y = 128
+		"cuir":    row_y = 256
+		_:         row_y = 0
 	atlas.region = Rect2(416, row_y, PANEL_W, PANEL_H)
 	bg_texture.texture = atlas
 
@@ -253,8 +348,16 @@ func _refresh_recipe_list() -> void:
 	selected_recipe_index = -1
 	_clear_detail_panel()
 
-	var recipes: Array = RECIPES.get(current_tab, [])
-	if recipes.is_empty():
+	# Ne montrer que les recettes disponibles (pas de livre requis, ou livre déjà utilisé)
+	var all_recipes: Array = RECIPES.get(current_tab, [])
+	_visible_recipe_indices.clear()
+	for i in range(all_recipes.size()):
+		var r = all_recipes[i]
+		var required_book: String = r.get("book", "")
+		if required_book == "" or GameManager.is_book_used(required_book):
+			_visible_recipe_indices.append(i)
+
+	if _visible_recipe_indices.is_empty():
 		var empty_lbl = Label.new()
 		empty_lbl.text = "—"
 		empty_lbl.add_theme_color_override("font_color", C_TEXT_GREY)
@@ -262,8 +365,9 @@ func _refresh_recipe_list() -> void:
 		recipe_list_container.add_child(empty_lbl)
 		return
 
-	for i in range(recipes.size()):
-		var slot = _make_recipe_slot(i)
+	for slot_i in range(_visible_recipe_indices.size()):
+		var real_i = _visible_recipe_indices[slot_i]
+		var slot = _make_recipe_slot(real_i)
 		recipe_list_container.add_child(slot)
 		recipe_slots.append(slot)
 
@@ -478,9 +582,9 @@ func _make_recipe_slot(recipe_index: int) -> Control:
 	var slot = Control.new()
 	slot.custom_minimum_size = Vector2(14, 14) * S   # 42×42 à l'écran
 
-	# Fond coloré (fond normal = sombre, sélectionné = légèrement plus clair)
+	# Fond coloré — brun chaud qui s'accorde avec le panneau beige
 	var bg = ColorRect.new()
-	bg.color = Color("#1a1a2e")
+	bg.color = Color("#3d2a18")
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	slot.add_child(bg)
 
@@ -490,17 +594,18 @@ func _make_recipe_slot(recipe_index: int) -> Control:
 	var border_st = StyleBoxFlat.new()
 	border_st.bg_color    = Color(0, 0, 0, 0)
 	border_st.draw_center = false
-	border_st.border_color = Color("#5a5a7a") if not can_craft else Color("#8888aa")
+	border_st.border_color = Color("#7a5a3a") if not can_craft else Color("#b08050")
 	border_st.set_border_width_all(1)
 	border.add_theme_stylebox_override("panel", border_st)
 	slot.add_child(border)
 
 	# Icône de l'objet résultant
+	# Non-craftable : légèrement grisé mais toujours lisible (0.75 au lieu de 0.5)
 	var icon = TextureRect.new()
 	icon.stretch_mode   = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.expand_mode    = TextureRect.EXPAND_IGNORE_SIZE
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	icon.modulate       = Color(1, 1, 1, 1) if can_craft else Color(0.5, 0.5, 0.5, 1)
+	icon.modulate       = Color(1, 1, 1, 1) if can_craft else Color(0.75, 0.65, 0.55, 1)
 	icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var tex = _get_item_texture(recipe["result"])
 	if tex:
@@ -527,7 +632,7 @@ func _set_slot_selected(slot: Control, selected: bool) -> void:
 	if slot.get_child_count() > 0:
 		var bg = slot.get_child(0)
 		if bg is ColorRect:
-			bg.color = Color("#3a3a5e") if selected else Color("#1a1a2e")
+			bg.color = Color("#5a3a20") if selected else Color("#3d2a18")
 	# Deuxième enfant = Panel bordure
 	if slot.get_child_count() > 1:
 		var border = slot.get_child(1)
@@ -535,23 +640,12 @@ func _set_slot_selected(slot: Control, selected: bool) -> void:
 			var st = StyleBoxFlat.new()
 			st.bg_color    = Color(0, 0, 0, 0)
 			st.draw_center = false
-			st.border_color = Color("#FFD700") if selected else Color("#8888aa")
+			st.border_color = Color("#FFD700") if selected else Color("#b08050")
 			st.set_border_width_all(2 if selected else 1)
 			border.add_theme_stylebox_override("panel", st)
 
 # ── Texture d'un item ───────────────────────────────────────
 
 func _get_item_texture(item_name: String) -> Texture2D:
-	# 1. Image PNG dédiée (bois, minerai…)
-	if ITEM_IMAGES.has(item_name):
-		var path = ITEM_IMAGES[item_name]
-		if ResourceLoader.exists(path):
-			return load(path)
-	# 2. Région dans rpgItems.png
-	if ITEM_REGIONS.has(item_name):
-		if ResourceLoader.exists(ITEMS_TEX):
-			var atlas = AtlasTexture.new()
-			atlas.atlas  = load(ITEMS_TEX)
-			atlas.region = ITEM_REGIONS[item_name]
-			return atlas
-	return null
+	return ItemData.get_texture(item_name)
+                                                                                                                                                                                        

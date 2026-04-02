@@ -9,6 +9,7 @@ var equipped = {
 	"arme": null,
 	"casque": null,
 	"plastron": null,
+	"bouclier": null,
 	"bottes": null,
 	"anneau": null,
 	"amulette": null
