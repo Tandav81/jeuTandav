@@ -861,22 +861,6 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0nbtd"]
-content_margin_left = 2.0
-content_margin_top = 2.0
-content_margin_right = 2.0
-content_margin_bottom = 2.0
-bg_color = Color(0.8980392, 0.8392157, 0.6313726, 1)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
-border_color = Color(0.4392157, 0.28627452, 0.16470589, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_quest"]
 content_margin_left = 8.0
 content_margin_top = 16.0
@@ -1107,33 +1091,45 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -249.0
-offset_top = -93.0
-offset_right = 4.0
-offset_bottom = -53.0
+offset_left = -380.0
+offset_top = -170.0
+offset_right = 380.0
+offset_bottom = -12.0
 grow_horizontal = 2
 grow_vertical = 0
-scale = Vector2(2, 2)
-theme_override_styles/panel = SubResource("StyleBoxFlat_0nbtd")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="HUD/DialogueBox" unique_id=1000486929]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 10.0
+offset_right = -12.0
+offset_bottom = -10.0
 
 [node name="LabelNomPNJ" type="Label" parent="HUD/DialogueBox/VBoxContainer" unique_id=17485653]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.75, 0.2, 1)
+theme_override_font_sizes/font_size = 17
 
 [node name="LabelDialogue" type="Label" parent="HUD/DialogueBox/VBoxContainer" unique_id=1827245332]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.4392157, 0.28627452, 0.16470589, 1)
-theme_override_font_sizes/font_size = 14
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.95, 0.90, 0.80, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
 
 [node name="ChoicesContainer" type="VBoxContainer" parent="HUD/DialogueBox/VBoxContainer" unique_id=41522850]
 layout_mode = 2
+theme_override_constants/separation = 4
 
 [node name="LabelContinuer" type="Label" parent="HUD/DialogueBox/VBoxContainer" unique_id=1642269765]
 layout_mode = 2
+horizontal_alignment = 2
+theme_override_colors/font_color = Color(0.65, 0.65, 0.65, 1)
+theme_override_font_sizes/font_size = 13
+text = "▼  Appuie sur E pour continuer"
 
 [node name="QuestJournal" type="Panel" parent="HUD" unique_id=1317323157]
 visible = false

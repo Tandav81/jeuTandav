@@ -46,8 +46,6 @@ var dialogue_data: Dictionary = {
 	],
 }
 
-var player_in_range = false
-var can_interact = true
 var _player_in_range:  bool  = false
 var _dialogue_active:  bool  = false
 var _waiting_for_choice: bool = false
@@ -65,50 +63,15 @@ func _ready():
 
 	update_quest_icon()
 
-func _process(_delta):
-	if player_in_range and Input.is_action_just_pressed("interact"):
-		interact()
-
 func _on_body_entered(body: Node) -> void:
 	if body.is_in_group("player"):
-		player_in_range = true
+		_player_in_range = true
 
 func _on_body_exited(body: Node) -> void:
 	if body.is_in_group("player"):
-		player_in_range = false
+		_player_in_range = false
 		if _dialogue_active:
 			force_end_dialogue()
-
-func interact() -> void:
-	if not can_interact:
-		return
-
-	can_interact = false
-	
-	var quest = get_quest()
-	var hud = get_tree().get_first_node_in_group("hud")
-	if quest == null:
-		QuestManager.start_quest(quest_id)
-		hud.show_dialogue("Peux tu compléter ma quête ?")
-	elif quest.completed and not quest.reward_claimed:
-		QuestManager.claim_reward(quest_id)
-		hud.show_dialogue("Merci ! Voici ta récompense.")
-	elif not quest.completed:
-		hud.show_dialogue("Tu n'as pas encore fini la quête...")
-	else:
-		hud.show_dialogue("Merci encore pour ton aide !")
-		
-	await get_tree().create_timer(0.5).timeout
-	can_interact = true
-
-func get_quest():
-	for quest in QuestManager.active_quests:
-		if quest.id == quest_id:
-			return quest
-	for quest in QuestManager.completed_quests:
-		if quest.id == quest_id:
-			return quest
-	return null
 
 func update_quest_icon():
 	if quest_icon == null:
