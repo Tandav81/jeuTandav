@@ -15,8 +15,8 @@ signal quest_completed(quest_id)
 # ======================
 
 var QUESTS = {
-	"slime_hunter": {
-		"id": "slime_hunter",
+	"villageois_slime": {
+		"id": "villageois_slime",
 		"name": "Chasseur de slimes",
 		"description": "Tuer 5 slimes",
 		"type": "kill",

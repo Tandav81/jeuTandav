@@ -26,6 +26,7 @@
 [ext_resource type="PackedScene" uid="uid://1oa8b1bin2pd" path="res://scenes/rock.tscn" id="21_oo54l"]
 [ext_resource type="Script" uid="uid://cvax7ibfxcyjv" path="res://scripts/NPCbucheron.gd" id="22_luhhm"]
 [ext_resource type="PackedScene" uid="uid://d2y4e0mkmkk8i" path="res://scenes/vache.tscn" id="22_oo54l"]
+[ext_resource type="Script" uid="uid://c7ydiyottscjh" path="res://scripts/NPCslime.gd" id="23_fh13f"]
 [ext_resource type="PackedScene" uid="uid://dxd05iqr1cp8n" path="res://scenes/chest.tscn" id="24_ctatt"]
 [ext_resource type="PackedScene" uid="uid://hd57sfo2qs16" path="res://scenes/mouton.tscn" id="24_xgqkh"]
 [ext_resource type="PackedScene" uid="uid://cg2erk14uqu3s" path="res://scenes/skeleton.tscn" id="25_munwf"]
@@ -1107,6 +1108,8 @@ offset_left = 12.0
 offset_top = 10.0
 offset_right = -12.0
 offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="LabelNomPNJ" type="Label" parent="HUD/DialogueBox/VBoxContainer" unique_id=17485653]
 layout_mode = 2
@@ -1116,7 +1119,7 @@ theme_override_font_sizes/font_size = 17
 [node name="LabelDialogue" type="Label" parent="HUD/DialogueBox/VBoxContainer" unique_id=1827245332]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.95, 0.90, 0.80, 1)
+theme_override_colors/font_color = Color(0.95, 0.9, 0.8, 1)
 theme_override_font_sizes/font_size = 16
 autowrap_mode = 3
 
@@ -1126,10 +1129,10 @@ theme_override_constants/separation = 4
 
 [node name="LabelContinuer" type="Label" parent="HUD/DialogueBox/VBoxContainer" unique_id=1642269765]
 layout_mode = 2
-horizontal_alignment = 2
 theme_override_colors/font_color = Color(0.65, 0.65, 0.65, 1)
 theme_override_font_sizes/font_size = 13
 text = "▼  Appuie sur E pour continuer"
+horizontal_alignment = 2
 
 [node name="QuestJournal" type="Panel" parent="HUD" unique_id=1317323157]
 visible = false
@@ -1172,7 +1175,9 @@ quest_id = "bucherondeb"
 
 [node name="NPC2" parent="." unique_id=591351934 instance=ExtResource("27_ts3gi")]
 position = Vector2(521, -102)
-quest_id = "wood_collector"
+script = ExtResource("23_fh13f")
+npc_name = "Villageois"
+quest_id = "villageois_slime"
 
 [node name="Animaux" type="Node2D" parent="." unique_id=1218620349]
 
