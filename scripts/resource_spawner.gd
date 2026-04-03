@@ -14,20 +14,23 @@ extends Node2D
 const GRASS_SOURCE_IDS = [2, 3]
 const SAND_SOURCE_ID   = 5
 
-const MAX_PER_TYPE   = 4      # maximum simultané par type de ressource
+const MAX_PLANTS     = 5      # maximum simultané par type de plante
 const RESPAWN_DELAY  = 90.0   # secondes avant réapparition ailleurs
 const MIN_DIST       = 28.0   # distance minimale entre deux ressources
 
 # Sprites "carte" des minerais dans spr_tileset_sunnysideworld_16px.png
-# 3 formes de rocher à x=832, 848, 864 — même ligne y que le gem inventaire
-# Le spawner en choisit une aléatoirement pour la variété visuelle.
+# 3 tailles de rocher par minerai, à gauche du gem (gem à x=880).
+#   Grande taille : x=784, 32×32 px
+#   Taille moyenne: x=816, 32×32 px
+#   Petite taille : x=848, 32×32 px
+# y_start = y_gem - 16  (le rocher dépasse d'une tile au-dessus de la ligne gem)
 const _TILESET_PATH = "res://assets/Tileset/spr_tileset_sunnysideworld_16px.png"
 const MINERAL_MAP_SPRITES = {
-	"Pierre brute":   [Rect2(832, 480, 16, 16), Rect2(848, 480, 16, 16), Rect2(864, 480, 16, 16)],
-	"Minerai de fer": [Rect2(832, 352, 16, 16), Rect2(848, 352, 16, 16), Rect2(864, 352, 16, 16)],
-	"Charbon":        [Rect2(832, 384, 16, 16), Rect2(848, 384, 16, 16), Rect2(864, 384, 16, 16)],
-	"Cristal":        [Rect2(832, 416, 16, 16), Rect2(848, 416, 16, 16), Rect2(864, 416, 16, 16)],
-	"Minerai d'or":   [Rect2(832, 448, 16, 16), Rect2(848, 448, 16, 16), Rect2(864, 448, 16, 16)],
+	"Minerai de fer": [Rect2(784, 336, 32, 32), Rect2(816, 336, 32, 32), Rect2(848, 336, 32, 32)],
+	"Charbon":        [Rect2(784, 368, 32, 32), Rect2(816, 368, 32, 32), Rect2(848, 368, 32, 32)],
+	"Cristal":        [Rect2(784, 400, 32, 32), Rect2(816, 400, 32, 32), Rect2(848, 400, 32, 32)],
+	"Minerai d'or":   [Rect2(784, 432, 32, 32), Rect2(816, 432, 32, 32), Rect2(848, 432, 32, 32)],
+	"Pierre brute":   [Rect2(784, 464, 32, 32), Rect2(816, 464, 32, 32), Rect2(848, 464, 32, 32)],
 }
 
 # ── Définitions des ressources ──────────────────────────────
@@ -38,11 +41,11 @@ const PLANT_DEFS = [
 	{"name": "Baie",       "qty": 1, "health": 1, "tool": ""},
 ]
 const MINERAL_DEFS = [
-	{"name": "Pierre brute",   "qty": 2, "health": 2, "tool": "pioche"},
-	{"name": "Minerai de fer", "qty": 1, "health": 3, "tool": "pioche"},
-	{"name": "Charbon",        "qty": 1, "health": 3, "tool": "pioche"},
-	{"name": "Cristal",        "qty": 1, "health": 4, "tool": "pioche"},
-	{"name": "Minerai d'or",   "qty": 1, "health": 4, "tool": "pioche"},
+	{"name": "Pierre brute",   "qty": 2, "health": 3,  "tool": "pioche", "max": 6},  # commun    — 3 coups,  6 simultanés
+	{"name": "Minerai de fer", "qty": 1, "health": 5,  "tool": "pioche", "max": 4},  # peu rare  — 5 coups,  4 simultanés
+	{"name": "Charbon",        "qty": 2, "health": 5,  "tool": "pioche", "max": 4},  # peu rare  — 5 coups,  4 simultanés
+	{"name": "Cristal",        "qty": 1, "health": 8,  "tool": "pioche", "max": 2},  # rare      — 8 coups,  2 simultanés
+	{"name": "Minerai d'or",   "qty": 1, "health": 10, "tool": "pioche", "max": 2},  # très rare — 10 coups, 2 simultanés
 ]
 
 var _grass_positions: Array = []
@@ -100,10 +103,10 @@ func _scan_tiles() -> void:
 
 func _initial_spawn() -> void:
 	for def in PLANT_DEFS:
-		for i in range(MAX_PER_TYPE):
+		for i in range(MAX_PLANTS):
 			_try_spawn(def, true)
 	for def in MINERAL_DEFS:
-		for i in range(MAX_PER_TYPE):
+		for i in range(def.get("max", 4)):
 			_try_spawn(def, false)
 
 # ============================================================
@@ -187,11 +190,17 @@ func _build_resource_node(def: Dictionary, pos: Vector2) -> Node2D:
 # ============================================================
 
 func _on_resource_depleted(res_name: String, def: Dictionary, is_plant: bool) -> void:
-	# Attend RESPAWN_DELAY secondes puis respawne ailleurs
+	# Attend RESPAWN_DELAY secondes puis respawne ailleurs si sous le max
 	await get_tree().create_timer(RESPAWN_DELAY).timeout
 	if not is_inside_tree():
 		return
-	_try_spawn(def, is_plant)
+	var max_count = MAX_PLANTS if is_plant else def.get("max", 4)
+	var current_count = 0
+	for child in get_children():
+		if is_instance_valid(child) and child.get("resource_name") == def["name"]:
+			current_count += 1
+	if current_count < max_count:
+		_try_spawn(def, is_plant)
 
 # ============================================================
 #  TEXTURE CARTE (sprite affiché dans le monde)

@@ -11,8 +11,7 @@ const _TEX_WORLD    = "res://assets/Tileset/spr_tileset_sunnysideworld_16px.png"
 
 # Images PNG dédiées (items sans spritesheet)
 const _IMAGES = {
-	"Bois":    "res://assets/sprites/wood/wood.png",
-	"Minerai": "res://assets/sprites/rock/rock.png",
+	"Bois": "res://assets/sprites/wood/wood.png",
 }
 
 # Régions dans rpgItems.png

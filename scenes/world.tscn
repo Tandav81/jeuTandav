@@ -23,7 +23,6 @@
 [ext_resource type="PackedScene" uid="uid://bq8my2d0nr4x1" path="res://scenes/golem.tscn" id="17_7t5mc"]
 [ext_resource type="PackedScene" uid="uid://nwdvquapayba" path="res://scenes/slime.tscn" id="18_lakw3"]
 [ext_resource type="PackedScene" uid="uid://b7rpbyildycup" path="res://scenes/tree.tscn" id="20_7iits"]
-[ext_resource type="PackedScene" uid="uid://1oa8b1bin2pd" path="res://scenes/rock.tscn" id="21_oo54l"]
 [ext_resource type="Script" uid="uid://cvax7ibfxcyjv" path="res://scripts/NPCbucheron.gd" id="22_luhhm"]
 [ext_resource type="PackedScene" uid="uid://d2y4e0mkmkk8i" path="res://scenes/vache.tscn" id="22_oo54l"]
 [ext_resource type="Script" uid="uid://c7ydiyottscjh" path="res://scripts/NPCslime.gd" id="23_fh13f"]
@@ -1201,37 +1200,6 @@ position = Vector2(58, 333)
 position = Vector2(-89, 277)
 
 [node name="Ressources" type="Node2D" parent="." unique_id=1857122905]
-
-[node name="Rock" parent="Ressources" unique_id=243602992 instance=ExtResource("21_oo54l")]
-position = Vector2(895, -259)
-
-[node name="Rock2" parent="Ressources" unique_id=1543676765 instance=ExtResource("21_oo54l")]
-position = Vector2(943, -259)
-
-[node name="Rock3" parent="Ressources" unique_id=1394315817 instance=ExtResource("21_oo54l")]
-position = Vector2(794, -257)
-
-[node name="Rock4" parent="Ressources" unique_id=1930940662 instance=ExtResource("21_oo54l")]
-position = Vector2(846, -251)
-
-[node name="Rock5" parent="Ressources" unique_id=1585242657 instance=ExtResource("21_oo54l")]
-position = Vector2(742, -259)
-respawn_time = 3.0
-
-[node name="Rock6" parent="Ressources" unique_id=1212851096 instance=ExtResource("21_oo54l")]
-position = Vector2(1786, 1059)
-
-[node name="Rock7" parent="Ressources" unique_id=1652237376 instance=ExtResource("21_oo54l")]
-position = Vector2(1834, 1059)
-
-[node name="Rock8" parent="Ressources" unique_id=212770808 instance=ExtResource("21_oo54l")]
-position = Vector2(1768, 1098)
-
-[node name="Rock9" parent="Ressources" unique_id=1092241269 instance=ExtResource("21_oo54l")]
-position = Vector2(1737, 1067)
-
-[node name="Rock10" parent="Ressources" unique_id=1899762470 instance=ExtResource("21_oo54l")]
-position = Vector2(1812, 1093)
 
 [node name="Tree" parent="Ressources" unique_id=1261098600 instance=ExtResource("20_7iits")]
 position = Vector2(587, 573)
