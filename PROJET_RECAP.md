@@ -1,7 +1,7 @@
 # 📋 Récapitulatif du projet — testJeu2D
 
 > Godot 4.6 — Jeu 2D RPG (top-down)
-> Dernière mise à jour : 2026-03-30
+> Dernière mise à jour : 2026-04-03
 
 ---
 
@@ -11,52 +11,68 @@
 test-jeu-2d/
 ├── project.godot
 ├── scenes/
-│   ├── world.tscn                  ← scène principale du jeu
+│   ├── world.tscn                  ← scène principale (extérieur)
+│   ├── cave.tscn                   ← scène grotte (accessible via portail)
 │   ├── main_menu.tscn              ← menu principal
 │   ├── player.tscn                 ← personnage joueur
-│   ├── npc.tscn                    ← PNJ donneur de quêtes
-│   ├── enemySlime.tscn             ← ennemi Slime
-│   ├── enemySkeleton.tscn          ← ennemi Squelette
+│   ├── npc.tscn                    ← PNJ base
+│   ├── portal.tscn                 ← portail de transition entre scènes
 │   ├── chest.tscn                  ← coffre interactif
 │   ├── item.tscn                   ← objet ramassable
+│   ├── rock.tscn                   ← ressource (minerai statique — legacy)
+│   ├── tree.tscn                   ← ressource (bois statique — legacy)
+│   ├── slime.tscn                  ← ennemi Slime
+│   ├── skeleton.tscn               ← ennemi Squelette
+│   ├── golem.tscn                  ← ennemi Golem (boss)
+│   ├── bat.tscn                    ← ennemi Chauve-souris (grotte)
+│   ├── minotaur.tscn               ← ennemi Minotaure
+│   ├── flyingMushroom.tscn         ← ennemi Champignon volant
 │   ├── mouton.tscn                 ← animal (mouton)
 │   ├── vache.tscn                  ← animal (vache)
-│   ├── rock.tscn                   ← ressource (minerai)
-│   ├── tree.tscn                   ← ressource (bois)
-│   └── procedural_map_2d.tscn      ← carte générée procéduralement
+│   └── poulet.tscn                 ← animal (poulet)
 ├── scripts/
 │   ├── player.gd
-│   ├── enemy.gd
-│   ├── npc.gd
+│   ├── enemy.gd                    ← script commun à tous les ennemis
+│   ├── npc.gd                      ← base PNJ avec système de dialogue
+│   ├── NPCbucheron.gd              ← PNJ spécialisé (extends npc.gd)
+│   ├── NPCslime.gd                 ← PNJ spécialisé (extends npc.gd)
 │   ├── animal.gd
+│   ├── animal_spawner.gd           ← spawn dynamique des animaux
+│   ├── resource.gd
+│   ├── resource_spawner.gd         ← spawn dynamique des ressources
+│   ├── day_night_cycle.gd          ← cycle jour/nuit avec overlay
+│   ├── fog_of_war.gd               ← brouillard de guerre par scène
+│   ├── portal.gd                   ← portail de transition
+│   ├── scene_transition.gd         ← Autoload fondu noir entre scènes
 │   ├── chest.gd
 │   ├── item.gd
-│   ├── resource.gd
-│   ├── projectile.gd               ← projectiles (flèche / sort)
+│   ├── item_data.gd                ← Autoload textures des items
+│   ├── projectile.gd
 │   ├── hud.gd
 │   ├── crafting_panel.gd
-│   ├── health_bar.gd               ← ⚠️ obsolète (voir section bugs)
 │   ├── main_menu.gd
-│   ├── procedural_map_2d.gd
 │   ├── game_manager.gd             ← Autoload
 │   ├── inventory.gd                ← Autoload
 │   ├── quest_manager.gd            ← Autoload
 │   └── stats.gd                    ← Autoload
 └── assets/
-	├── Player/
-	│   └── Player_bow_attack.png   ← spritesheet attaque arc (6 frames 32×32)
-	├── sprites/
-	├── menus/
-	│   └── character_panel.png     ← HUD barres de vie/mana/xp
-	├── rpgItems.png                ← spritesheet items 16×16 (8×8 tuiles)
-	└── itemset0.png                ← spritesheet items 16×16 (16×11 tuiles)
+	├── Player/                     ← spritesheets joueur (attaque, arc…)
+	├── Enemies/                    ← Bat/, Golem_1/, flyingMushroom/, etc.
+	├── Animals/                    ← Chicken/, etc.
+	├── sprites/                    ← redbar_00 à redbar_06 (barre de vie ennemis)
+	├── Tileset/                    ← spr_tileset_sunnysideworld_16px.png
+	├── menus/                      ← character_panel.png (HUD barres)
+	├── rpgItems.png                ← spritesheet items 16×16
+	└── itemset0.png                ← spritesheet items 16×16
 ```
 
 **Autoloads enregistrés :**
-- `GameManager` — gestion de la sauvegarde, position de spawn, état des coffres
+- `GameManager` — sauvegarde, position de spawn, état des coffres, scène courante, temps du jour, données brouillard
 - `Inventory` — inventaire, or, outils, équipements
 - `QuestManager` — quêtes actives/complètes, progression
-- `Stats` — niveau, XP, statistiques de personnage, mana, données d'équipements
+- `Stats` — niveau, XP, statistiques, mana, données d'équipements
+- `ItemData` — textures des items (sprites depuis les tilesets)
+- `SceneTransition` — fondu noir entre les scènes
 
 **Touches configurées :**
 | Action | Touche |
@@ -65,9 +81,12 @@ test-jeu-2d/
 | Attaque | Espace |
 | Changer d'arme | Q |
 | Interagir | E |
+| Ouvrir inventaire | I |
 | Ouvrir crafting | B |
-| Panneau personnage / Journal | C |
+| Panneau personnage | P |
+| Journal de quêtes | C |
 | Sauvegarder | S |
+| Guide d'aide | F1 |
 | Fermer menu | Échap |
 
 ---
@@ -79,49 +98,97 @@ test-jeu-2d/
 - Système de vie avec signal `health_changed`
 - Dégâts réduits par la défense : `dégâts reçus = max(1, dégâts - Stats.get_defense())`
 - Attaque au corps à corps avec zone de collision directionnelle (`AttackZone`)
-- **Attaque à distance — Arc** : animation de tir dédiée (spritesheet `Player_bow_attack.png`, 6 frames, ajoutée dynamiquement au runtime), puis spawn d'une flèche
+- **Attaque à distance — Arc** : animation dédiée (6 frames), spawn d'une flèche
 - **Attaque à distance — Bâton magique** : consomme de la mana, spawn d'un projectile de sort
-- Portée des projectiles calculée selon les stats (Arc : Force+Agilité ; Magie : stat Magie)
-- **Changement d'arme** via touche Q : cycle parmi les armes possédées uniquement
+- Portée des projectiles calculée selon les stats
+- **Changement d'arme** via touche Q : cycle parmi les armes possédées
 - Invincibilité pendant l'attaque
 - Utilisation d'outils orientés (hache, pioche) avec animations dédiées
 - Guérison via potions (+30 PV) et viande (+15 PV)
-- Respawn à la position sauvegardée au démarrage
+- Respawn à la position sauvegardée
 - `max_health` synchronisé avec `Stats.get_max_health()` au démarrage
 
 ### 🏹 Projectiles
 - Script `projectile.gd` commun pour flèche et sort
 - Propriétés configurables : `proj_type`, `direction`, `max_range`, `damage`
 - Déplacement en ligne droite, disparition au-delà de la portée max
-- Détection de collision via `PhysicsShapeQueryParameters2D` (scan de zone, pas de corps physique)
-- Spawn avec décalage vertical (-14 px) pour aligner visuellement sur le personnage
+- Détection de collision via `PhysicsShapeQueryParameters2D`
 
-### 🗺️ Monde
-- Génération procédurale de carte 2D (80×80 tuiles) avec seed
-- 4 biomes : EAU, SABLE, FORÊT, ROCHE
-- Transitions automatiques entre biomes via `set_cells_terrain_connect`
-- Logique de placement de villages (positions calculées, instances commentées)
+### 🗺️ Monde & Navigation
+- TileMapLayer avec 3 types de terrain : Herbe, Chemin (sable), Ferme
+- **Portails de transition** (`portal.gd` + `SceneTransition`) : fondu noir 0.5 s → changement de scène → fondu retour
+- **Scène Grotte** (`cave.tscn`) : environnement séparé avec ennemis dédiés (Chauve-souris) et portail de retour
+- Position de spawn configurable par portail
+- Sauvegarde du brouillard par scène dans `GameManager.fog_data`
+
+### 🌅 Cycle Jour/Nuit
+- Overlay `ColorRect` sur `CanvasLayer` avec interpolation de couleur
+- Durée d'un cycle : **20 minutes** réelles (1200 secondes)
+- Plages horaires : Aube (6h–9h), Plein jour (9h–15h), Crépuscule (16h48–18h), Nuit (18h–6h)
+- Nuits jouables (alpha 0.55 — assombri sans être noir complet)
+- Horloge en temps réel affichée sur le HUD (format HH:MM)
+- Signal `time_of_day_changed` (valeurs: `"day"`, `"night"`, `"dawn"`, `"dusk"`)
+- L'heure courante est sauvegardée et restaurée via `GameManager`
+
+### 🌫️ Brouillard de Guerre
+- Image pixel : 1 pixel = 1 tuile, mise à jour en temps réel via `ImageTexture`
+- Révélation progressive avec fondu sur les bords (rayon 7 tuiles)
+- Persiste par scène : rechargé au retour depuis la grotte
+- Sauvegarde/chargement des cellules révélées
 
 ### 👾 Ennemis
+- Script commun `enemy.gd` — instancié par toutes les scènes d'ennemis
 - Patrouille automatique autour d'un point de départ
-- Détection du joueur dans un rayon configurable → poursuite
-- Dégâts continus au contact (damage per second)
-- Système de vie + animation `hurt` (gardée jusqu'à la fin, non interrompue par le mouvement)
-- Animation de mort + respawn automatique après délai configurable
-- Récompense en XP à la mort
-- Mise à jour des quêtes de type "kill" à la mort
-- Deux types disponibles : Slime, Squelette (configurés via `@export enemy_type`)
+- Détection du joueur → poursuite
+- **Animation d'attaque** : `_do_attack()` joue l'animation, inflige les dégâts après 0.3 s, attend la fin de l'animation avant de rejouer
+- Flag `is_attacking` qui bloque l'écrasement d'animation par le mouvement
+- Système de vie — `health` initialisé dans `_ready()` depuis `max_health` (fix appliqué)
+- Animation `hurt` non interrompue par le mouvement
+- Animation de mort + respawn automatique
+- Récompense XP + mise à jour des quêtes de type "kill"
+- **Barre de vie flottante** : sprite `redbar_00` (vide) à `redbar_06` (plein), 15×7 px affiché ×2 au-dessus de l'ennemi, visible uniquement quand endommagé
 
-### 🌿 Ressources & Animaux
-- Arbres et rochers avec système de coups nécessaires (`health`)
-- Vérification de l'outil requis avant récolte (hache pour bois, pioche pour minerai)
-- Animation de "hit" au contact
-- Récolte automatique quand `health <= 0` → ajout à l'inventaire
-- Mise à jour des quêtes de type "collect"
-- Respawn optionnel des ressources
-- Animaux (mouton, vache) qui fuient le joueur dans un rayon configurable
-- Chaque animal donne **deux drops** à la mort : viande (`resource_name`) + peau (`resource_name2`)
-- Les deux drops sont configurables par export dans la scène de l'animal
+**Ennemis disponibles :**
+| Scène | Type | Contexte |
+|---|---|---|
+| `slime.tscn` | Slime vert | Extérieur |
+| `skeleton.tscn` | Squelette | Extérieur |
+| `golem.tscn` | Golem (boss) | Extérieur |
+| `bat.tscn` | Chauve-souris | Grotte |
+| `minotaur.tscn` | Minotaure | Extérieur/Grotte |
+| `flyingMushroom.tscn` | Champignon volant | Extérieur |
+
+### 🌿 Ressources (Spawn Dynamique)
+- `ResourceSpawner` spawne automatiquement plantes ET minerais au démarrage
+- Plantes → tiles herbe (source_id 2 et 3) ; Minerais → tiles chemin (source_id 5)
+- Vérification de l'outil requis avant récolte
+- Respawn après 90 secondes à un **nouvel emplacement aléatoire**
+- Maximum simultané par type configurable
+
+**Plantes :** Plante, Tournesol, Champignon, Baie (5 de chaque)
+
+**Minerais** avec système de rareté :
+| Minerai | Coups requis | Max simultanés | Rareté |
+|---|---|---|---|
+| Pierre brute | 3 | 6 | Commun |
+| Minerai de fer | 5 | 4 | Peu rare |
+| Charbon | 5 | 4 | Peu rare |
+| Cristal | 8 | 2 | Rare |
+| Minerai d'or | 10 | 2 | Très rare |
+
+Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai).
+
+### 🐄 Animaux (Spawn Dynamique)
+- `AnimalSpawner` spawne les animaux sur les tiles herbe au démarrage
+- Respawn après 120 secondes à un nouvel emplacement après la mort
+- Distance minimale de 60 px entre animaux au spawn
+
+**Animaux disponibles :**
+| Animal | Max | Drops |
+|---|---|---|
+| Mouton | 6 | Viande + Peau |
+| Vache | 3 | (configurable) |
+| Poulet | 12 | (configurable) |
 
 ### 📦 Inventaire
 - Stockage d'objets avec quantités (dictionnaire)
@@ -131,180 +198,145 @@ test-jeu-2d/
 - Signal `inventory_changed` pour mettre à jour l'UI
 - Utilisation d'items depuis l'UI (potions, viande → soin ; équipements → équipement)
 - Déséquipement depuis le panneau personnage
-- Icônes pixel-art pour tous les items (armes, consommables, ressources)
 
 ### 📊 Statistiques, Mana & Progression
 - 5 statistiques : Force, Endurance, Agilité, Magie, Défense
 - Calcul des stats totales = base + bonus équipements
-- Formules dérivées : vie max, dégâts, vitesse de déplacement, portée des projectiles
-- **Système de mana** : `current_mana`, régénération automatique (`get_mana_regen()` mana/s)
-- Coût par attaque magique = `max(5, 20 - Magie)` ; refus si mana insuffisante
+- **Système de mana** : régénération automatique, coût par attaque magique
 - Signaux : `mana_changed(current, max)`, `stats_changed`, `level_up(new_level)`
-- Système de niveaux et XP avec montée en niveau automatique
-- 3 points à distribuer par niveau
-- 10 équipements définis dans `Stats.equipment_data` avec leurs bonus
+- Montée en niveau automatique + 3 points à distribuer par niveau
+- 10 équipements définis dans `Stats.equipment_data`
 
 ### 📜 Quêtes
-- Deux quêtes implémentées : "Chasseur de slimes" (tuer 5 slimes) et "Bûcheron débutant" (récolter 10 bois)
-- Système de quêtes actives / complètes / récompenses réclamées
-- Démarrage de quête via interaction avec un PNJ
-- Icône de quête au-dessus du PNJ (jaune = disponible, blanc = en cours, vert = récompense disponible)
-- Réclamation de récompense via interaction une fois la quête terminée
-- Récompenses : XP, or, items
-- Journal de quêtes accessible via touche C ou bouton HUD
+- Deux quêtes : "Chasseur de slimes" (tuer 5 slimes) et "Bûcheron débutant" (récolter 10 bois)
+- Système actives / complètes / récompenses réclamées
+- Icône de quête au-dessus du PNJ (jaune/blanc/vert selon état)
+- Réclamation de récompense via interaction PNJ
 
 ### 🧙 PNJ
-- Zone d'interaction avec détection du joueur
-- Dialogue contextuel selon l'état de la quête
-- Icône flottante dynamique selon l'état
-- `quest_id` configurable par export (un PNJ par quête)
+- Système de dialogue contextuel basé sur l'état de la quête
+- Scripts spécialisés (`NPCbucheron.gd`, `NPCslime.gd`) qui étendent `npc.gd`
+- Dialogues avec choix multiples (`choices` + `goto`)
+- Action `start_quest` déclenchable depuis le dialogue
 
 ### 💰 Coffres
-- Coffre avec animation ouverture/fermé
-- Contenu configurable : potion, or, ou item quelconque
-- Persistance de l'état ouvert via `GameManager.coffres_ouverts`
-- Zone d'interaction
+- Contenu configurable, persistance de l'état ouvert via `GameManager`
 
 ### 🖥️ Interface (HUD)
-- **Barre de vie** (rouge) — utilise les rangées rouges du spritesheet `character_panel.png`
-- **Barre de mana** (bleue) — superposée sur le même sprite, rangées bleues ; se met à jour via signal `mana_changed`
-- **Barre d'XP** (verte) — rangées vertes du même sprite ; se met à jour via signal `stats_changed`
-- Les trois barres partagent la même texture source et s'affichent naturellement à des hauteurs différentes
-- **Outil équipé** — icône pixel-art affichée dans un slot sous les barres, visible uniquement si un outil est équipé ; icônes : hache (`Rect2(64,80,16,16)`) et pioche (`Rect2(80,48,16,16)`) de `rpgItems.png`
-- **Système de notifications** — panneau semi-transparent centré en haut, glisse depuis le haut, reste 2,2 s puis s'efface ; couleur configurable ; remplace immédiatement la notification précédente
-  - Mauvais outil → notification orange "Il vous faut une hache 🪓 !"
-  - Level up → notification dorée "🎉 Niveau X ! +3 points à distribuer"
-- Panneau inventaire (grille d'items avec icônes sprites, or)
-- Panneau personnage (stats colorées, boutons "+" pour dépenser les points)
-- Panneau équipements (6 slots avec déséquipement au clic)
-- Journal de quêtes avec progression
-- Boîte de dialogue pour les PNJ
-- Boutons HUD : Inventaire, Personnage, Quêtes
+- **Barre de vie** (rouge), **Barre de mana** (bleue), **Barre XP** (verte) — partagent `character_panel.png`
+- **Outil équipé** — icône pixel-art dans un slot dédié
+- **Raccourcis clavier visibles** : labels I/P/C superposés sur les boutons HUD
+- **Bouton ❓** avec label F1 pour ouvrir le guide
+- **Notifications** : panneau semi-transparent animé en haut d'écran, 2.2 s
+  - Mauvais outil → orange
+  - Level up → doré
+  - Équipement équipé → vert clair
+- **Guide d'aide (F1)** : overlay plein écran avec toutes les touches classées par section (Déplacement, Combat, Interface, Conseils)
+- Panneau inventaire, personnage, équipements, journal de quêtes, boîte de dialogue PNJ
 
-### 🔨 Système de Crafting
-- Touche **B** : ouvre/ferme le panneau de crafting
-- Deux onglets **Armes** / **Potions** : boutons invisibles positionnés sur les icônes du spritesheet
-- Zone gauche : liste des recettes sous forme d'icônes carrées (grille 3 colonnes)
-- Zone droite : ingrédients requis (icône + quantité verte/rouge) et objet résultant
-- Bouton CRÉER transparent superposé sur le sprite CREATE
-- Message de confirmation (2,5 s) après fabrication
+### 🔨 Crafting
+- Touche B — deux onglets Armes / Potions
+- Recettes :
 
-**Recettes implémentées :**
 | Recette | Ingrédients | Résultat |
 |---|---|---|
 | Épée en bois | 2 Bois | Epee en bois |
-| Épée en fer | 3 Minerai | Epee en fer |
+| Épée en fer | 3 Minerai de fer | Epee en fer |
 | Potion | 1 Plante | Potion |
 
-**Ajouter une recette** dans `scripts/crafting_panel.gd`, section `RECIPES` :
-```gdscript
-const RECIPES = {
-    "armes": [
-        {"name": "Epee en bois", "ingredients": {"Bois": 2},    "result": "Epee en bois", "result_qty": 1},
-        # ajouter ici...
-    ],
-    "potions": [
-        {"name": "Potion",       "ingredients": {"Plante": 1},  "result": "Potion",       "result_qty": 1},
-    ],
-}
-```
+**Ajouter une recette** dans `scripts/crafting_panel.gd` → section `RECIPES`.
 
 ### 💾 Sauvegarde / Chargement
-- Sauvegarde JSON dans `user://save.json`
-- Données sauvegardées : position, vie, inventaire, or, outil, coffres ouverts, stats, équipements, **niveau et XP**
+- JSON dans `user://save.json`
+- Données : position, vie, inventaire, or, outil, coffres, stats, équipements, niveau/XP, **heure du jour**, **brouillard par scène**
 - Compatibilité avec anciennes sauvegardes (vérification des clés)
-- Chargement au menu principal via "Continuer" → restaure le niveau correctement
-- Bouton "Continuer" désactivé si aucune sauvegarde
 
 ### 🎨 Menu Principal
-- Boutons : Nouvelle Partie, Continuer, Quitter
-- "Nouvelle Partie" réinitialise l'intégralité de l'état : GameManager, Inventory, QuestManager, Stats, mana
+- Boutons : Nouvelle Partie (réinitialise tout), Continuer, Quitter
 - "Continuer" désactivé si pas de sauvegarde
-- "Quitter" ferme l'application
 
 ---
 
-## ✅ Aucun bug ou code obsolète connu
+## ⚠️ Points d'attention
+
+- `rock.tscn` est encore référencé dans `cave.tscn` (ressource statique legacy) — peut être remplacé par ResourceSpawner dans la grotte si souhaité
+- `health_bar.gd` est présent mais n'est plus utilisé (la barre de vie ennemi est maintenant gérée directement dans `enemy.gd`)
 
 ---
 
-## 📈 Historique des commits
+## 📈 Historique des commits (récents → anciens)
 
 | Commit | Description |
 |---|---|
-| `0266fea` | modif buttons |
-| `d149e84` | modif menus |
-| `758b20c` | fonctionne avec une quête |
-| `db7c7fd` | nettoyage 2 |
-| `8e5d9c6` | nettoyage |
-| `f097eab` | btn journal quete |
-| `5da919c` | refacto |
-| `b587972` | NPC + quête |
-| `36b391a` | stats perso |
-| `aa7889d` | mouton |
-| `5e101c1` | menu principal |
-| `5675d74` | ajout inventaire |
-| `26777b9` | ajout |
-| `d3942f2` | modified |
-| `d145b82` | init |
-| `38a4240` | first commit |
+| `1bac24f` | Amélioration attaque ennemis (animation + health bar flottante) |
+| `4399336` | Modifications diverses |
+| `5fae94c` | Ajout ennemis (Golem, Bat, Minotaure, FlyingMushroom) |
+| `044342b` | Corrections |
+| `6619cf0` | Modification minerais (sprites 32×32, rareté) |
+| `1cb975d` | ResourceSpawner |
+| `c509e25` | Modification PNJ |
+| `6c35627` | Dialogue amélioré (choices/goto) |
+| `16881fa` | Ajout PNJ dialogue |
+| `2d53077` | Cycle jour/nuit |
+| `d4b3ac1` | Fog of war par scène |
+| `36f14fa` | Fog of war |
+| `07c2ba7` | Grotte avec passage (portail + SceneTransition) |
+| `a52e833` | Attaque arc et magie, visuel |
+| `f6e53cf` | Crafting panel + mana + arc |
+| `fcadec6` | Ajout panel craft |
+| `0266fea` | Modification buttons |
 
 ---
 
-## 🔭 Pistes d'évolution possibles
+## 🔭 Pistes d'évolution
 
-🎯 Dans la continuité directe de ce qui existe
-Système de combat
+### 🎯 Dans la continuité directe
 
-Ennemis à distance : archer squelette qui spawne des flèches, mage slime qui lance des sorts — tu as déjà projectile.gd, il suffit de l'utiliser côté ennemi
-Boss de zone : un ennemi avec beaucoup plus de vie, une barre de vie dédiée en bas d'écran, et des drops uniques (clé de donjon, équipement rare)
-Esquive/roulade : dash d'invincibilité court sur double-tap directionnel, consomme un peu de stamina ou juste un cooldown
+**Combat & ennemis**
+- Ennemis à distance : archer squelette ou mage — `projectile.gd` existe déjà côté joueur, il suffit de l'utiliser côté ennemi
+- Boss avec barre de vie dédiée en bas d'écran (CanvasLayer HUD) et drops uniques
+- Esquive/roulade : dash d'invincibilité sur double-tap directionnel
+- Comportements nocturnes : ennemis plus rapides/agressifs la nuit (le signal `time_of_day_changed` est déjà émis)
 
-Crafting & économie
+**Spawns & monde**
+- Spawns nocturnes exclusifs : ennemis qui n'apparaissent qu'entre 18h et 6h
+- ResourceSpawner dans la grotte (actuellement rochers statiques)
+- Nouvelles zones accessibles via portail (donjon, village, désert…)
 
-PNJ marchand : achète/vend des items contre de l'or — tu as déjà la boîte de dialogue PNJ et l'inventaire, c'est une extension naturelle
-Recettes à débloquer : certaines recettes cachées jusqu'à ce que le joueur trouve un "livre de recette" dans un coffre
-Amélioration d'équipements : dépenser du minerai pour améliorer une épée déjà craftée (+1, +2…)
+**Crafting & économie**
+- PNJ marchand : achète/vend des items — dialogue PNJ + inventaire existent déjà
+- Nouvelles recettes utilisant Pierre brute, Cristal, Or
+- Amélioration d'équipements : dépenser des minerais pour upgrader une arme (+1, +2…)
+- Recettes à débloquer via livres de recettes dans des coffres
 
-Quêtes
+**Quêtes**
+- Type "deliver" : apporter X items à un PNJ (trivial à ajouter dans `quest_manager.gd`)
+- Chaîne de quêtes : une quête qui en débloque une autre chez le même PNJ
+- Quêtes avec timer : défendre un point, chasser X ennemis avant la nuit
 
-Quêtes de livraison : apporter X items à un PNJ — trivial à ajouter dans quest_manager.gd avec un nouveau type "deliver"
-Quêtes avec timer : défendre un point pendant 60 secondes, chasser X ennemis avant l'aube
-Chaîne de quêtes : une quête qui en débloque une autre chez le même PNJ
+### 🧠 Profondeur RPG
 
+- **Classes au démarrage** : Guerrier / Archer / Mage — stats de départ et arme initiale différentes
+- **Talents passifs** : tous les N niveaux, choisir parmi 3 bonus (ex: "regain 1 PV par kill", "flèches traversantes", "vitesse +10%")
+- **Statuts** : empoisonné (dégâts sur la durée), ralenti, régénération — le système de dégâts continus des ennemis est déjà en place, c'est le même principe inversé
 
-🗺️ Monde et exploration
+### 🔊 Audio (fort impact, effort moyen)
 
-Cycle jour/nuit : DirectionalLight2D qui tourne + overlay sombre progressif, les ennemis plus agressifs la nuit, certains spawns uniquement nocturnes
-Météo : pluie avec particules, brouillard visuel (différent du fog of war), effets sur les stats (froid = vitesse réduite)
-Zones à débloquer : une barrière qui s'ouvre quand le joueur atteint le niveau X ou possède un item clé
+- Sons d'attaque, récolte, pas selon le sol
+- Musique d'ambiance différente extérieur/grotte, fondu enchaîné
+- Son de level up, notification, ouverture de coffre
 
+### 🖥️ QoL interface
 
-🧠 Profondeur RPG
+- **Minimap** : les données du brouillard sont déjà disponibles dans `fog_of_war.gd`
+- **Tooltips** : hover sur un équipement → stats + comparaison avec l'équipé
+- **Barre de raccourcis consommables** : 1-4 pour potions/viande sans ouvrir l'inventaire
+- **Indicateur de l'heure** : afficher jour/nuit avec une icône soleil/lune (l'heure est déjà dans `SunLabel`)
 
-Classes de personnage au démarrage : Guerrier (bonus Force/Endurance), Archer (bonus Agilité), Mage (bonus Magie) — juste des stats de départ différentes et une arme initiale différente
-Talents passifs : tous les 3 niveaux, choisir parmi 3 bonus passifs (ex: "regain 1 PV par ennemi tué", "les flèches traversent les ennemis", "vitesse +10%")
-Statuts : empoisonné (dégâts sur la durée), ralenti, régénération — tu as déjà le système de dégâts continus sur les ennemis, c'est le même principe inversé
+### 💡 Priorité suggérée
 
+Si 3 choses pouvaient avoir le plus d'impact sur le ressenti du jeu en ce moment :
 
-🔊 Audio (fort impact, effort moyen)
-
-Sons d'attaque, de récolte, de pas selon le sol (herbe vs pierre)
-Musique d'ambiance différente par zone, fondu enchaîné à la transition
-Son de level up, de notification, d'ouverture de coffre
-
-C'est souvent ce qui donne le plus de "jus" pour le temps investi.
-
-🖥️ QoL interface
-
-Minimap : tu as déjà le fog of war avec ses données — une minimap qui affiche les zones révélées serait une extension naturelle de fog_of_war.gd
-Tooltips sur les items : hover sur un équipement → affiche les stats et la comparaison avec ce qui est équipé
-Raccourci de consommables : barre de raccourcis 1-4 en bas d'écran pour utiliser potions/viande sans ouvrir l'inventaire
-
-
-💡 Ce que je recommanderais en priorité
-Si je devais choisir 3 choses qui auraient le plus d'impact sur le ressenti du jeu :
-
-Sons — même basiques, ils changent complètement l'immersion
-Boss de zone — donne un objectif clair et un sentiment d'accomplissement
-Cycle jour/nuit — peu de code, énorme effet visuel et gameplay
+1. **Audio** — même des sons basiques changent complètement l'immersion
+2. **Spawns nocturnes** — exploite le cycle jour/nuit déjà en place, fort impact gameplay pour peu de code
+3. **PNJ marchand** — donne un objectif à l'or accumulé et une raison de farmer les ressources

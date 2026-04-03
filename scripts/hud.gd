@@ -39,6 +39,11 @@ var _tool_slot: PanelContainer = null
 var _tool_icon: TextureRect   = null
 
 var _active_npc: Node = null
+var _shop_panel: Control = null   # panneau boutique
+var _shop_merchant: Node  = null  # marchand actif
+var _shop_buy_list:  VBoxContainer = null
+var _shop_sell_list: VBoxContainer = null
+var _shop_gold_label: Label = null
 
 const TOOL_ICONS = {
 	"hache":  {"sheet": "res://assets/rpgItems.png", "region": Rect2(64, 80, 16, 16)},
@@ -73,6 +78,8 @@ func _ready():
 	_build_help_panel()
 	# ── Bouton ❓ et raccourcis claviers sur boutons HUD ─────────
 	call_deferred("_build_hud_shortcuts")
+	# ── Panneau boutique (construit à la demande) ───────────────
+	call_deferred("_build_shop_panel")
 
 func _input(event: InputEvent) -> void:
 	# Touche B (Bricoler) : ouvre/ferme le panneau de crafting
@@ -120,6 +127,8 @@ func _process(_delta):
 			perso_ouvert = false
 		if crafting_panel_node and crafting_panel_node.panel_visible:
 			crafting_panel_node.hide_panel()
+		if _shop_panel and _shop_panel.visible:
+			_shop_panel.visible = false
 			
 	if dialogue_box.visible and Input.is_action_just_pressed("ui_accept"):
 		hide_dialogue()
@@ -893,3 +902,249 @@ func _build_hud_shortcuts() -> void:
 	lbl_f1.offset_bottom = -2
 	lbl_f1.mouse_filter  = Control.MOUSE_FILTER_IGNORE
 	btn_help.add_child(lbl_f1)
+
+
+# ============================================================
+#  BOUTIQUE MARCHAND
+# ============================================================
+
+func _build_shop_panel() -> void:
+	# Overlay sombre plein écran
+	var overlay = ColorRect.new()
+	overlay.name = "ShopOverlay"
+	overlay.color = Color(0, 0, 0, 0.65)
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.visible = false
+	add_child(overlay)
+	_shop_panel = overlay
+
+	# Panneau centré
+	var panel = PanelContainer.new()
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	panel.custom_minimum_size = Vector2(520, 420)
+	panel.offset_left   = -260
+	panel.offset_top    = -210
+	panel.offset_right  = 260
+	panel.offset_bottom = 210
+	var style = StyleBoxFlat.new()
+	style.bg_color          = Color(0.12, 0.10, 0.07, 0.97)
+	style.border_color      = Color(0.8, 0.65, 0.25, 1.0)
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(8)
+	panel.add_theme_stylebox_override("panel", style)
+	overlay.add_child(panel)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	panel.add_child(vbox)
+
+	# ── Titre ──────────────────────────────────────────────────
+	var title_row = HBoxContainer.new()
+	vbox.add_child(title_row)
+
+	var lbl_title = Label.new()
+	lbl_title.name = "ShopTitle"
+	lbl_title.text = "Boutique"
+	lbl_title.add_theme_font_size_override("font_size", 20)
+	lbl_title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_row.add_child(lbl_title)
+
+	# Or du joueur
+	_shop_gold_label = Label.new()
+	_shop_gold_label.add_theme_font_size_override("font_size", 14)
+	_shop_gold_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.2))
+	_shop_gold_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	title_row.add_child(_shop_gold_label)
+
+	# Bouton fermer
+	var btn_close = Button.new()
+	btn_close.text = "✕"
+	btn_close.focus_mode = Control.FOCUS_NONE
+	btn_close.add_theme_font_size_override("font_size", 16)
+	btn_close.pressed.connect(func(): _shop_panel.visible = false)
+	title_row.add_child(btn_close)
+
+	# Séparateur
+	vbox.add_child(HSeparator.new())
+
+	# ── Corps : Acheter | Vendre côte à côte ───────────────────
+	var hbox = HBoxContainer.new()
+	hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	hbox.add_theme_constant_override("separation", 12)
+	vbox.add_child(hbox)
+
+	# Colonne Acheter
+	var col_buy = VBoxContainer.new()
+	col_buy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(col_buy)
+	var lbl_buy = Label.new()
+	lbl_buy.text = "🛒 Acheter"
+	lbl_buy.add_theme_font_size_override("font_size", 14)
+	lbl_buy.add_theme_color_override("font_color", Color(0.6, 1.0, 0.6))
+	col_buy.add_child(lbl_buy)
+	col_buy.add_child(HSeparator.new())
+	var scroll_buy = ScrollContainer.new()
+	scroll_buy.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	col_buy.add_child(scroll_buy)
+	_shop_buy_list = VBoxContainer.new()
+	_shop_buy_list.add_theme_constant_override("separation", 4)
+	scroll_buy.add_child(_shop_buy_list)
+
+	# Séparateur vertical
+	hbox.add_child(VSeparator.new())
+
+	# Colonne Vendre
+	var col_sell = VBoxContainer.new()
+	col_sell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(col_sell)
+	var lbl_sell = Label.new()
+	lbl_sell.text = "💰 Vendre"
+	lbl_sell.add_theme_font_size_override("font_size", 14)
+	lbl_sell.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
+	col_sell.add_child(lbl_sell)
+	col_sell.add_child(HSeparator.new())
+	var scroll_sell = ScrollContainer.new()
+	scroll_sell.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	col_sell.add_child(scroll_sell)
+	_shop_sell_list = VBoxContainer.new()
+	_shop_sell_list.add_theme_constant_override("separation", 4)
+	scroll_sell.add_child(_shop_sell_list)
+
+func open_shop(merchant: Node) -> void:
+	if not _shop_panel:
+		return
+	_shop_merchant = merchant
+	_refresh_shop()
+	_shop_panel.visible = true
+
+func _refresh_shop() -> void:
+	if not _shop_merchant or not _shop_buy_list or not _shop_sell_list:
+		return
+
+	# Titre
+	var title = _shop_panel.find_child("ShopTitle", true, false)
+	if title:
+		title.text = _shop_merchant.get("shop_title") if _shop_merchant.get("shop_title") else "Boutique"
+
+	# Or du joueur
+	_shop_gold_label.text = "💰 %d or" % Inventory.gold
+
+	# ── Liste Acheter ───────────────────────────────────────────
+	for child in _shop_buy_list.get_children():
+		child.queue_free()
+	var items_to_sell: Array = _shop_merchant.get("sell_items") if _shop_merchant.get("sell_items") else []
+	for item in items_to_sell:
+		_shop_buy_list.add_child(_make_shop_row_buy(item["name"], item["price"]))
+
+	# ── Liste Vendre (inventaire du joueur) ─────────────────────
+	for child in _shop_sell_list.get_children():
+		child.queue_free()
+	var buy_prices: Dictionary = _shop_merchant.get("buy_prices") if _shop_merchant.get("buy_prices") else {}
+	var can_buy: bool = _shop_merchant.get("can_buy_from_player") if _shop_merchant.get("can_buy_from_player") else false
+	if can_buy:
+		for item_name in Inventory.items:
+			var qty: int = Inventory.items[item_name]
+			if qty <= 0:
+				continue
+			# Prix de rachat : buy_prices ou price/2
+			var price: int = buy_prices.get(item_name, 0)
+			if price <= 0:
+				continue
+			_shop_sell_list.add_child(_make_shop_row_sell(item_name, qty, price))
+	if _shop_sell_list.get_child_count() == 0:
+		var lbl = Label.new()
+		lbl.text = "Rien à vendre."
+		lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		_shop_sell_list.add_child(lbl)
+
+func _make_shop_row_buy(item_name: String, price: int) -> HBoxContainer:
+	var row = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+
+	# Icône
+	var icon = TextureRect.new()
+	icon.texture = get_item_texture(item_name)
+	icon.custom_minimum_size = Vector2(24, 24)
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	row.add_child(icon)
+
+	# Nom
+	var lbl = Label.new()
+	lbl.text = item_name
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl.add_theme_font_size_override("font_size", 12)
+	row.add_child(lbl)
+
+	# Prix
+	var lbl_price = Label.new()
+	var can_afford: bool = Inventory.gold >= price
+	lbl_price.text = "%d 💰" % price
+	lbl_price.add_theme_color_override("font_color",
+		Color(0.3, 1.0, 0.3) if can_afford else Color(1.0, 0.3, 0.3))
+	lbl_price.add_theme_font_size_override("font_size", 12)
+	row.add_child(lbl_price)
+
+	# Bouton acheter
+	var btn = Button.new()
+	btn.text = "Acheter"
+	btn.focus_mode = Control.FOCUS_NONE
+	btn.disabled = not can_afford
+	btn.add_theme_font_size_override("font_size", 11)
+	btn.pressed.connect(_on_buy_pressed.bind(item_name, price))
+	row.add_child(btn)
+	return row
+
+func _make_shop_row_sell(item_name: String, qty: int, price: int) -> HBoxContainer:
+	var row = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+
+	# Icône
+	var icon = TextureRect.new()
+	icon.texture = get_item_texture(item_name)
+	icon.custom_minimum_size = Vector2(24, 24)
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	row.add_child(icon)
+
+	# Nom + quantité
+	var lbl = Label.new()
+	lbl.text = "%s ×%d" % [item_name, qty]
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl.add_theme_font_size_override("font_size", 12)
+	row.add_child(lbl)
+
+	# Prix de vente
+	var lbl_price = Label.new()
+	lbl_price.text = "%d 💰" % price
+	lbl_price.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	lbl_price.add_theme_font_size_override("font_size", 12)
+	row.add_child(lbl_price)
+
+	# Bouton vendre
+	var btn = Button.new()
+	btn.text = "Vendre"
+	btn.focus_mode = Control.FOCUS_NONE
+	btn.add_theme_font_size_override("font_size", 11)
+	btn.pressed.connect(_on_sell_pressed.bind(item_name, price))
+	row.add_child(btn)
+	return row
+
+func _on_buy_pressed(item_name: String, price: int) -> void:
+	if Inventory.gold < price:
+		show_notification("Pas assez d'or !", Color(1.0, 0.4, 0.2))
+		return
+	Inventory.add_gold(-price)
+	Inventory.add_item(item_name, 1)
+	show_notification("Acheté : %s" % item_name, Color(0.6, 1.0, 0.6))
+	_refresh_shop()
+
+func _on_sell_pressed(item_name: String, price: int) -> void:
+	if not Inventory.items.has(item_name) or Inventory.items[item_name] <= 0:
+		return
+	Inventory.remove_item(item_name, 1)
+	Inventory.add_gold(price)
+	show_notification("Vendu : %s (+%d or)" % [item_name, price], Color(1.0, 0.9, 0.3))
+	_refresh_shop()

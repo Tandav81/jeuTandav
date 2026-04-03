@@ -31,8 +31,10 @@
 [ext_resource type="PackedScene" path="res://scenes/portal.tscn" id="27_0nbtd"]
 [ext_resource type="PackedScene" uid="uid://dr7vonan2wpke" path="res://scenes/flyingMushroom.tscn" id="27_rup4s"]
 [ext_resource type="PackedScene" uid="uid://b7n27d3yv516k" path="res://scenes/npc.tscn" id="27_ts3gi"]
+[ext_resource type="Script" uid="uid://0hd0kunkw7ui" path="res://scripts/npc_merchant.gd" id="32_f17e3"]
 [ext_resource type="Script" uid="uid://dfdtlcnbbyv6i" path="res://scripts/animal_spawner.gd" id="98_aspawn"]
 [ext_resource type="Script" uid="uid://drkbx61r6meye" path="res://scripts/resource_spawner.gd" id="99_spawner"]
+[ext_resource type="Script" uid="uid://drchyvwr7ika6" path="res://scripts/night_enemy_spawner.gd" id="100_nspawn"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_luhhm"]
 texture = ExtResource("1_37qwj")
@@ -1411,11 +1413,42 @@ script = ExtResource("23_fh13f")
 npc_name = "Villageois"
 quest_id = "villageois_slime"
 
+[node name="Marchand" parent="Quetes" unique_id=395001833 instance=ExtResource("27_ts3gi")]
+position = Vector2(595, 117)
+script = ExtResource("32_f17e3")
+merchant_name = "Marchand"
+shop_title = "Boutique"
+sell_items = [{
+"name": "Potion",
+"price": 30
+}, {
+"name": "Epee en bois",
+"price": 50
+}, {
+"name": "Epee en fer",
+"price": 200
+}]
+can_buy_from_player = true
+buy_prices = {
+"Baie": 5,
+"Bois": 3,
+"Champignon": 6,
+"Charbon": 12,
+"Cristal": 45,
+"Minerai d'or": 60,
+"Minerai de fer": 20,
+"Pierre brute": 2,
+"Plante": 8
+}
+
 [node name="ResourceSpawner" type="Node2D" parent="." unique_id=999888777]
 script = ExtResource("99_spawner")
 
 [node name="AnimalSpawner" type="Node2D" parent="." unique_id=581867941]
 script = ExtResource("98_aspawn")
+
+[node name="NightEnemySpawner" type="Node2D" parent="." unique_id=14491648]
+script = ExtResource("100_nspawn")
 
 [connection signal="pressed" from="HUD/BtnInventaire" to="HUD" method="_on_btn_inventaire_pressed"]
 [connection signal="pressed" from="HUD/BtnPersonnage" to="HUD" method="_on_btn_personnage_pressed"]
