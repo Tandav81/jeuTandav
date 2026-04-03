@@ -133,9 +133,9 @@ func _load_sequence(key: String) -> void:
 func _emit_current() -> bool:
 	# Exécuter automatiquement les actions silencieuses
 	while _current_index < _current_sequence.size():
-		var node = _current_sequence[_current_index]
-		if node is Dictionary and node.has("action") and not node.has("text"):
-			_execute_action(node["action"])
+		var entry = _current_sequence[_current_index]
+		if entry is Dictionary and entry.has("action") and not entry.has("text"):
+			_execute_action(entry["action"])
 			_current_index += 1
 		else:
 			break

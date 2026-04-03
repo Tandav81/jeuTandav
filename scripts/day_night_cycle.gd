@@ -1,8 +1,8 @@
 # day_night_cycle.gd
 extends CanvasLayer
 
-# Durée d'un cycle complet en secondes (600 = 10 min réelles)
-@export var day_duration: float = 600.0
+# Durée d'un cycle complet en secondes (1200 = 20 min réelles)
+@export var day_duration: float = 1200.0
 # Heure de départ (0.0 = minuit, 0.25 = 6h, 0.5 = midi, 0.75 = 18h)
 @export var start_time: float = 0.25
 
@@ -14,16 +14,16 @@ var current_time: float = start_time
 # Palette de couleurs selon l'heure
 # Chaque entrée : [heure normalisée, Color de l'overlay]
 const TIME_COLORS = [
-	[0.00, Color(0.0,0.02, 0.1,0.85)],# Minuit — nuit profonde
-	[0.20, Color(0.0,0.02, 0.1,0.85)],# 4h30— encore nuit
-	[0.25, Color(0.05, 0.05, 0.2,0.6)], # 6h— aube
-	[0.30, Color(0.1,0.05, 0.0,0.25)],# 7h12— lever de soleil
-	[0.38, Color(0.0,0.0,0.0,0.0)], # 9h— plein jour
-	[0.62, Color(0.0,0.0,0.0,0.0)], # 15h — plein jour
-	[0.70, Color(0.15, 0.05, 0.0,0.2)], # 16h48 — coucher de soleil
-	[0.75, Color(0.1,0.02, 0.05, 0.5)], # 18h — crépuscule
-	[0.80, Color(0.0,0.02, 0.1,0.85)],# 19h12 — nuit tombée
-	[1.00, Color(0.0,0.02, 0.1,0.85)],# boucle
+	[0.00, Color(0.0, 0.02, 0.1, 0.55)], # Minuit — nuit (encore jouable)
+	[0.20, Color(0.0, 0.02, 0.1, 0.55)], # 4h30  — encore nuit
+	[0.25, Color(0.05, 0.05, 0.2, 0.35)],# 6h    — aube
+	[0.30, Color(0.1,  0.05, 0.0, 0.15)],# 7h12  — lever de soleil
+	[0.38, Color(0.0,  0.0,  0.0, 0.0)], # 9h    — plein jour
+	[0.62, Color(0.0,  0.0,  0.0, 0.0)], # 15h   — plein jour
+	[0.70, Color(0.15, 0.05, 0.0, 0.15)],# 16h48 — coucher de soleil
+	[0.75, Color(0.1,  0.02, 0.05, 0.35)],# 18h  — crépuscule
+	[0.80, Color(0.0,  0.02, 0.1, 0.55)],# 19h12 — nuit tombée
+	[1.00, Color(0.0,  0.02, 0.1, 0.55)],# boucle
 ]
 
 signal time_of_day_changed(period: String)# "day", "night", "dawn", "dusk"
@@ -41,7 +41,7 @@ func _ready():
 # Créer le label d'heure (optionnel)
 	sun_label = Label.new()
 	sun_label.name = "SunLabel"
-	sun_label.position = Vector2(10, 80)
+	sun_label.position = Vector2(180, 10)
 	add_child(sun_label)
 
 # Restaurer l'heure sauvegardée

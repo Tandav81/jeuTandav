@@ -608,9 +608,9 @@ func _on_btn_quetes_pressed() -> void:
 	$BtnQuetes.release_focus()
 
 ## Appelé par npc.gd pour ouvrir la boîte de dialogue.
-func start_npc_dialogue(npc: Node, name: String) -> void:
+func start_npc_dialogue(npc: Node, npc_name: String) -> void:
 	_active_npc              = npc
-	label_nom_pnj.text       = name
+	label_nom_pnj.text       = npc_name
 	label_dialogue.text      = ""
 	label_continuer.visible  = true
 	_clear_choices()

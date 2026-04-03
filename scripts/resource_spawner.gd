@@ -189,7 +189,7 @@ func _build_resource_node(def: Dictionary, pos: Vector2) -> Node2D:
 #  RÉAPPARITION APRÈS RÉCOLTE
 # ============================================================
 
-func _on_resource_depleted(res_name: String, def: Dictionary, is_plant: bool) -> void:
+func _on_resource_depleted(_res_name: String, def: Dictionary, is_plant: bool) -> void:
 	# Attend RESPAWN_DELAY secondes puis respawne ailleurs si sous le max
 	await get_tree().create_timer(RESPAWN_DELAY).timeout
 	if not is_inside_tree():

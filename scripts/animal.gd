@@ -11,6 +11,8 @@ extends CharacterBody2D
 
 @onready var anim = $AnimatedSprite2D
 
+signal died(animal_name)   # émis juste avant queue_free(), utilisé par AnimalSpawner
+
 var player = null
 var is_dead = false
 var current_health = 0
@@ -88,4 +90,5 @@ func die():
 		tween.tween_property(self, "modulate:a", 0.0, 0.5)
 		await tween.finished
 
+	emit_signal("died", animal_name)
 	queue_free()
