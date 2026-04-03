@@ -42,6 +42,11 @@ var equipment_data = {
 		"agilite": 4, "magie": 0, "defense": 0,
 		"description": "Attaque à distance — portée : Force + Agilité"
 	},
+	"Arc en fer": {
+		"slot": "arme", "force": 4, "endurance": 0,
+		"agilite": 6, "magie": 0, "defense": 0,
+		"description": "Attaque à distance — flèches puissantes"
+	},
 	# Armures
 	"Casque en cuir": {
 		"slot": "casque", "force": 0, "endurance": 2,

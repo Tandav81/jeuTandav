@@ -20,19 +20,20 @@ const ANIMAL_DEFS = [
 	{
 		"name":      "Mouton",
 		"scene":     "res://scenes/mouton.tscn",
-		"max":       4,
+		"max":       6,
+		"overrides": {}   # valeurs par défaut de animal.gd : Viande×1 + Peau×1, health=2
+	},
+	{
+		"name":      "Poulet",
+		"scene":     "res://scenes/poulet.tscn",
+		"max":       12,
 		"overrides": {}   # valeurs par défaut de animal.gd : Viande×1 + Peau×1, health=2
 	},
 	{
 		"name":      "Vache",
 		"scene":     "res://scenes/vache.tscn",
-		"max":       2,
-		"overrides": {
-			"animal_name": "Vache",
-			"quantity":    2,
-			"flee_speed":  70.0,
-			"health":      3
-		}
+		"max":       3,
+		"overrides": {}
 	},
 ]
 

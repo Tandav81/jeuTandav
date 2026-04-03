@@ -1005,7 +1005,6 @@ layout_mode = 2
 columns = 4
 
 [node name="PanneauPersonnage" type="Panel" parent="HUD" unique_id=1998030834]
-visible = false
 offset_left = 3.0
 offset_top = 3.0
 offset_right = 529.0
@@ -1093,7 +1092,6 @@ layout_mode = 2
 columns = 2
 
 [node name="DialogueBox" type="Panel" parent="HUD" unique_id=117938536]
-visible = false
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
@@ -1124,6 +1122,7 @@ theme_override_colors/font_color = Color(0.95, 0.75, 0.2, 1)
 theme_override_font_sizes/font_size = 17
 
 [node name="LabelDialogue" type="Label" parent="HUD/DialogueBox/VBoxContainer" unique_id=1827245332]
+custom_minimum_size = Vector2(500, 100)
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.95, 0.9, 0.8, 1)
@@ -1360,8 +1359,7 @@ contenu = "Livre du forgeron"
 
 [node name="Chest2" parent="Coffres" unique_id=63944724 instance=ExtResource("24_ctatt")]
 position = Vector2(86, -46)
-contenu = "or"
-quantite = 0
+contenu = "Livre du mage"
 gold_amount = 100
 
 [node name="Chest3" parent="Coffres" unique_id=1835836748 instance=ExtResource("24_ctatt")]

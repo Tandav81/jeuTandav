@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://byix3j3hf80nx" path="res://scripts/main_menu.gd" id="1_l6cm7"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_l6cm7"]
-load_path = "res://.godot/imported/menu_background.png-db72826fab3386aacb134bd9cfee5e23.ctex"
+load_path = "res://.godot/imported/menu_background2.png-5c3d12fffa47c8b95c6f43a856825976.ctex"
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_ekxnf"]
 load_path = "res://.godot/imported/freefantasy.png-b524764537f90878c86fb1e12b6e6450.ctex"
@@ -46,10 +46,10 @@ expand_mode = 3
 
 [node name="Panel" type="Panel" parent="." unique_id=1739500005]
 layout_mode = 0
-offset_left = 423.0
-offset_top = 63.0
-offset_right = 751.0
-offset_bottom = 488.0
+offset_left = 444.0
+offset_top = 67.0
+offset_right = 772.0
+offset_bottom = 492.0
 theme_override_styles/panel = SubResource("StyleBoxTexture_bqqt6")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Panel" unique_id=1995975005]
@@ -59,10 +59,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -108.5
-offset_top = -118.5
-offset_right = 91.5
-offset_bottom = 114.5
+offset_left = -103.0
+offset_top = -108.5
+offset_right = 97.0
+offset_bottom = 124.5
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 20

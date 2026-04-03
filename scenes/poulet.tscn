@@ -1,0 +1,145 @@
+[gd_scene format=3 uid="uid://d1bdm45djxh2x"]
+
+[ext_resource type="Script" uid="uid://bs45nps5rq4d8" path="res://scripts/animal.gd" id="1_mkb41"]
+[ext_resource type="Texture2D" uid="uid://bmrg7h6p2emtu" path="res://assets/Animals/Chicken/Chicken.png" id="2_pc7dl"]
+[ext_resource type="Texture2D" uid="uid://cyjhelkbw7amx" path="res://assets/rpgItems.png" id="3_mi7im"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hfljg"]
+atlas = ExtResource("2_pc7dl")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7184g"]
+atlas = ExtResource("2_pc7dl")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7ykub"]
+atlas = ExtResource("3_mi7im")
+region = Rect2(16, 16, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6k1j5"]
+atlas = ExtResource("2_pc7dl")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wqudv"]
+atlas = ExtResource("2_pc7dl")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lqpet"]
+atlas = ExtResource("2_pc7dl")
+region = Rect2(0, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ljj5k"]
+atlas = ExtResource("2_pc7dl")
+region = Rect2(32, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qa00t"]
+atlas = ExtResource("2_pc7dl")
+region = Rect2(0, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vhckw"]
+atlas = ExtResource("2_pc7dl")
+region = Rect2(32, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_60dgn"]
+atlas = ExtResource("2_pc7dl")
+region = Rect2(0, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kqr8w"]
+atlas = ExtResource("2_pc7dl")
+region = Rect2(32, 32, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_8iy0n"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hfljg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7184g")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7ykub")
+}],
+"loop": false,
+"name": &"die",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6k1j5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wqudv")
+}],
+"loop": true,
+"name": &"idle_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lqpet")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ljj5k")
+}],
+"loop": true,
+"name": &"walk_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qa00t")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vhckw")
+}],
+"loop": true,
+"name": &"walk_right",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_60dgn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kqr8w")
+}],
+"loop": true,
+"name": &"walk_up",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_06qkg"]
+size = Vector2(20, 10)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_tnugy"]
+radius = 16.0
+
+[node name="Poulet" type="CharacterBody2D" unique_id=433856896 groups=["enemy"]]
+script = ExtResource("1_mkb41")
+animal_name = "Poulet"
+resource_name2 = ""
+quantity2 = 0
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=788398037 groups=["enemy"]]
+position = Vector2(0, -8)
+sprite_frames = SubResource("SpriteFrames_8iy0n")
+animation = &"walk_down"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=639254283 groups=["enemy"]]
+visible = false
+position = Vector2(0, -5)
+shape = SubResource("RectangleShape2D_06qkg")
+
+[node name="InteractionZone" type="Area2D" parent="." unique_id=1923186306 groups=["enemy"]]
+visible = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionZone" unique_id=987945629 groups=["enemy"]]
+visible = false
+position = Vector2(0, -8)
+shape = SubResource("CircleShape2D_tnugy")

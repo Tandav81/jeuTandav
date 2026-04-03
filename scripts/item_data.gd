@@ -28,8 +28,8 @@ const _REG_RPG = {
 	"Epee en bois":   Rect2(80,  64,  16, 16),
 	"Epee en fer":    Rect2(112, 64,  16, 16),
 	"Epee en or":     Rect2(112, 112, 16, 16),  # grande épée
-	"Baton magique":  Rect2(64,  48,  16, 16),
 	"Arc":            Rect2(64,  96,  16, 16),
+	"Arc en fer":     Rect2(96,  96,  16, 16),
 	# Armures métal
 	"Casque en fer":  Rect2(96,  0,   16, 16),  # heaume métal
 	"Bottes en fer":  Rect2(112, 16,  16, 16),  # bottes métal
@@ -69,6 +69,7 @@ const _REG_SET0 = {
 	# Boucliers
 	"Bouclier en bois":  Rect2(96,  96,  16, 16),
 	"Bouclier en fer":   Rect2(112, 96,  16, 16),
+	"Baton magique":  	 Rect2(0,  96,  16, 16),
 	# Armures
 	"Casque en cuir":    Rect2(112, 112, 16, 16),
 	"Plastron en fer":   Rect2(96,  80,  16, 16),

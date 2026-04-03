@@ -122,6 +122,7 @@ radius = 15.0
 
 [node name="Vache" type="CharacterBody2D" unique_id=711550375 groups=["enemy"]]
 script = ExtResource("1_qqs4v")
+animal_name = "Vache"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=911845986 groups=["enemy"]]
 position = Vector2(0, -11)
