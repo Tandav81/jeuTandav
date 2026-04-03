@@ -71,6 +71,8 @@ func _ready():
 	call_deferred("_build_tool_display")
 	# ── Panneau d'aide (F1) ──────────────────────────────────────
 	_build_help_panel()
+	# ── Bouton ❓ et raccourcis claviers sur boutons HUD ─────────
+	call_deferred("_build_hud_shortcuts")
 
 func _input(event: InputEvent) -> void:
 	# Touche B (Bricoler) : ouvre/ferme le panneau de crafting
@@ -78,6 +80,14 @@ func _input(event: InputEvent) -> void:
 		if event.keycode == KEY_B:
 			if crafting_panel_node:
 				crafting_panel_node.toggle()
+		# Touche I : inventaire
+		elif event.keycode == KEY_I:
+			_on_btn_inventaire_pressed()
+			get_viewport().set_input_as_handled()
+		# Touche P : fiche personnage
+		elif event.keycode == KEY_P:
+			_on_btn_personnage_pressed()
+			get_viewport().set_input_as_handled()
 		# Touche F1 : ouvre/ferme le panneau d'aide
 		elif event.keycode == KEY_F1:
 			if _help_panel:
@@ -393,15 +403,18 @@ func _on_item_pressed(item_name: String):
 				_refresh_inventaire()
 		"Hache":
 			Inventory.equip_tool("hache")
+			show_notification("🪓  Hache équipée", Color("#aaffaa"))
 			_refresh_inventaire()
 		"Pioche":
 			Inventory.equip_tool("pioche")
+			show_notification("⛏️  Pioche équipée", Color("#aaffaa"))
 			_refresh_inventaire()
 		_:
 			if Stats.equipment_data.has(item_name):
 				var slot = Stats.equipment_data[item_name]["slot"]
 				Inventory.equip_item(slot, item_name)
 				Stats.emit_signal("stats_changed")
+				show_notification("✅  " + item_name + " équipé(e)", Color("#aaffaa"))
 				_refresh_inventaire()
 				if panneau_perso.visible:
 					_refresh_equipement()
@@ -740,11 +753,12 @@ func _build_help_panel() -> void:
 			["T",              "Changer d'outil équipé"],
 		]],
 		["Interface", [
+			["I",              "Inventaire"],
+			["P",              "Fiche personnage"],
 			["C",              "Journal de quêtes"],
-			["🖱 Clic",        "Inventaire / Fiche perso (boutons HUD)"],
 			["B",              "Atelier de craft"],
 			["S",              "Sauvegarder"],
-			["F1",             "Ce guide"],
+			["F1 / ❓",        "Guide d'aide"],
 			["Échap",          "Fermer les panneaux"],
 		]],
 		["Conseils", [
@@ -795,3 +809,87 @@ func _build_help_panel() -> void:
 	footer.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
 	footer.add_theme_font_size_override("font_size", 11)
 	vbox.add_child(footer)
+
+#============================================================
+#  BOUTON AIDE + LABELS RACCOURCIS SUR LES BOUTONS HUD
+# ============================================================
+
+func _build_hud_shortcuts() -> void:
+	# ── Raccourcis sur les 3 boutons existants ──────────────────
+	var shortcut_map = {
+		"BtnInventaire": "I",
+		"BtnPersonnage":  "P",
+		"BtnQuetes":      "C",
+	}
+	for btn_name in shortcut_map:
+		var btn = get_node_or_null(btn_name)
+		if not btn:
+			continue
+		var lbl = Label.new()
+		lbl.text = shortcut_map[btn_name]
+		lbl.add_theme_font_size_override("font_size", 9)
+		lbl.add_theme_color_override("font_color", Color(1, 1, 0.6, 0.9))
+		# Positionner en bas-droite du bouton
+		lbl.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+		lbl.set_anchor(SIDE_LEFT,   1.0)
+		lbl.set_anchor(SIDE_RIGHT,  1.0)
+		lbl.set_anchor(SIDE_TOP,    1.0)
+		lbl.set_anchor(SIDE_BOTTOM, 1.0)
+		lbl.offset_left   = -14
+		lbl.offset_top    = -14
+		lbl.offset_right  = -2
+		lbl.offset_bottom = -2
+		lbl.mouse_filter  = Control.MOUSE_FILTER_IGNORE
+		btn.add_child(lbl)
+
+	# ── Bouton ❓ (aide F1) à gauche de BtnQuetes ───────────────
+	var btn_quetes = get_node_or_null("BtnQuetes")
+	if not btn_quetes:
+		return
+
+	var btn_help = Button.new()
+	btn_help.name = "BtnAide"
+	btn_help.text = "❓"
+	btn_help.focus_mode = Control.FOCUS_NONE
+	btn_help.tooltip_text = "Aide (F1)"
+	btn_help.add_theme_font_size_override("font_size", 18)
+
+	# Même style que BtnQuetes
+	var style = StyleBoxFlat.new()
+	style.bg_color          = Color(0.18, 0.14, 0.08, 0.88)
+	style.border_color      = Color(0.7, 0.6, 0.3, 0.9)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	btn_help.add_theme_stylebox_override("normal", style)
+
+	# Position : à gauche de BtnQuetes (décalé de 70px)
+	btn_help.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	btn_help.set_anchor(SIDE_LEFT,   btn_quetes.anchor_left)
+	btn_help.set_anchor(SIDE_RIGHT,  btn_quetes.anchor_right)
+	btn_help.set_anchor(SIDE_TOP,    btn_quetes.anchor_top)
+	btn_help.set_anchor(SIDE_BOTTOM, btn_quetes.anchor_bottom)
+	btn_help.offset_left   = btn_quetes.offset_left - 70
+	btn_help.offset_right  = btn_quetes.offset_right - 70
+	btn_help.offset_top    = btn_quetes.offset_top
+	btn_help.offset_bottom = btn_quetes.offset_bottom
+	add_child(btn_help)
+	btn_help.pressed.connect(func():
+		if _help_panel:
+			_help_panel.visible = not _help_panel.visible
+	)
+
+	# Label "F1" en bas-droite du bouton aide
+	var lbl_f1 = Label.new()
+	lbl_f1.text = "F1"
+	lbl_f1.add_theme_font_size_override("font_size", 9)
+	lbl_f1.add_theme_color_override("font_color", Color(1, 1, 0.6, 0.9))
+	lbl_f1.set_anchor(SIDE_LEFT,   1.0)
+	lbl_f1.set_anchor(SIDE_RIGHT,  1.0)
+	lbl_f1.set_anchor(SIDE_TOP,    1.0)
+	lbl_f1.set_anchor(SIDE_BOTTOM, 1.0)
+	lbl_f1.offset_left   = -16
+	lbl_f1.offset_top    = -14
+	lbl_f1.offset_right  = -2
+	lbl_f1.offset_bottom = -2
+	lbl_f1.mouse_filter  = Control.MOUSE_FILTER_IGNORE
+	btn_help.add_child(lbl_f1)

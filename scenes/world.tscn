@@ -933,6 +933,15 @@ theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_oo54l")
 text = "🎒"
 
+[node name="Label" type="Label" parent="HUD/BtnInventaire" unique_id=863762827]
+layout_mode = 0
+offset_left = 46.0
+offset_top = 3.0
+offset_right = 61.0
+offset_bottom = 26.0
+theme_override_colors/font_color = Color(0.36078432, 0.22745098, 0.11764706, 1)
+text = "i"
+
 [node name="BtnPersonnage" type="Button" parent="HUD" unique_id=950408381]
 anchors_preset = -1
 anchor_bottom = 0.045
@@ -943,6 +952,15 @@ offset_bottom = 610.84
 theme_override_styles/normal = SubResource("StyleBoxFlat_ctatt")
 text = "⚔️"
 
+[node name="Label" type="Label" parent="HUD/BtnPersonnage" unique_id=1792844261]
+layout_mode = 0
+offset_left = 46.0
+offset_top = 3.0
+offset_right = 61.0
+offset_bottom = 26.0
+theme_override_colors/font_color = Color(0.36078432, 0.22745098, 0.11764706, 1)
+text = "p"
+
 [node name="BtnQuetes" type="Button" parent="HUD" unique_id=1061778074]
 offset_left = 950.0
 offset_top = 585.0
@@ -952,6 +970,15 @@ theme_override_colors/font_color = Color(0.23921569, 0.12156863, 0, 1)
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_37qwj")
 text = "📜"
+
+[node name="Label" type="Label" parent="HUD/BtnQuetes" unique_id=1279074955]
+layout_mode = 0
+offset_left = 46.0
+offset_top = 3.0
+offset_right = 61.0
+offset_bottom = 26.0
+theme_override_colors/font_color = Color(0.36078432, 0.22745098, 0.11764706, 1)
+text = "c"
 
 [node name="PanneauInventaire" type="Panel" parent="HUD" unique_id=1086811892]
 visible = false
@@ -1005,6 +1032,7 @@ layout_mode = 2
 columns = 4
 
 [node name="PanneauPersonnage" type="Panel" parent="HUD" unique_id=1998030834]
+visible = false
 offset_left = 3.0
 offset_top = 3.0
 offset_right = 529.0
@@ -1092,6 +1120,7 @@ layout_mode = 2
 columns = 2
 
 [node name="DialogueBox" type="Panel" parent="HUD" unique_id=117938536]
+visible = false
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
