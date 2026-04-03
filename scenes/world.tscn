@@ -27,10 +27,11 @@
 [ext_resource type="Script" uid="uid://c7ydiyottscjh" path="res://scripts/NPCslime.gd" id="23_fh13f"]
 [ext_resource type="PackedScene" uid="uid://dxd05iqr1cp8n" path="res://scenes/chest.tscn" id="24_ctatt"]
 [ext_resource type="PackedScene" uid="uid://cg2erk14uqu3s" path="res://scenes/skeleton.tscn" id="25_munwf"]
+[ext_resource type="PackedScene" uid="uid://clylwton1l3a6" path="res://scenes/minotaur.tscn" id="26_fh13f"]
 [ext_resource type="PackedScene" path="res://scenes/portal.tscn" id="27_0nbtd"]
+[ext_resource type="PackedScene" uid="uid://dr7vonan2wpke" path="res://scenes/flyingMushroom.tscn" id="27_rup4s"]
 [ext_resource type="PackedScene" uid="uid://b7n27d3yv516k" path="res://scenes/npc.tscn" id="27_ts3gi"]
-
-[ext_resource type="Script" uid="uid://animal_spawner_001" path="res://scripts/animal_spawner.gd" id="98_aspawn"]
+[ext_resource type="Script" uid="uid://dfdtlcnbbyv6i" path="res://scripts/animal_spawner.gd" id="98_aspawn"]
 [ext_resource type="Script" uid="uid://drkbx61r6meye" path="res://scripts/resource_spawner.gd" id="99_spawner"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_luhhm"]
@@ -1344,6 +1345,13 @@ position = Vector2(-584, 369)
 [node name="Skeleton5" parent="Ennemis" unique_id=1452608380 instance=ExtResource("25_munwf")]
 position = Vector2(-100, 780)
 
+[node name="EnemyMinotaur" parent="Ennemis" unique_id=1136997858 instance=ExtResource("26_fh13f")]
+position = Vector2(-516, 124)
+
+[node name="EnemyFlyingMushroom" parent="Ennemis" unique_id=1701691408 instance=ExtResource("27_rup4s")]
+position = Vector2(-424, -111)
+scale = Vector2(0.5, 0.5)
+
 [node name="Coffres" type="Node2D" parent="." unique_id=544727082]
 
 [node name="Chest" parent="Coffres" unique_id=781992566 instance=ExtResource("24_ctatt")]
@@ -1379,7 +1387,7 @@ quest_id = "villageois_slime"
 [node name="ResourceSpawner" type="Node2D" parent="." unique_id=999888777]
 script = ExtResource("99_spawner")
 
-[node name="AnimalSpawner" type="Node2D" parent="."]
+[node name="AnimalSpawner" type="Node2D" parent="." unique_id=581867941]
 script = ExtResource("98_aspawn")
 
 [connection signal="pressed" from="HUD/BtnInventaire" to="HUD" method="_on_btn_inventaire_pressed"]

@@ -11,9 +11,9 @@ extends CanvasLayer
 @onready var grid_stats = $PanneauPersonnage/HBoxContainer/PanneauStats/VBoxContainer/GridStats
 @onready var grid_equip = $PanneauPersonnage/HBoxContainer/PanneauEquipement/VBoxContainer/GridEquipement
 @onready var dialogue_box:       Panel        = $DialogueBox
+@onready var choices_container:  VBoxContainer = $DialogueBox/VBoxContainer/ChoicesContainer
 @onready var label_nom_pnj:      Label        = $DialogueBox/VBoxContainer/LabelNomPNJ
 @onready var label_dialogue:     Label        = $DialogueBox/VBoxContainer/LabelDialogue
-@onready var choices_container:  VBoxContainer = $DialogueBox/VBoxContainer/ChoicesContainer
 @onready var label_continuer:    Label        = $DialogueBox/VBoxContainer/LabelContinuer
 @onready var quest_journal = $QuestJournal
 @onready var quest_liste = $QuestJournal/QuestList
@@ -27,6 +27,7 @@ var perso_ouvert = false
 var crafting_panel_node = null   # instancié dans _ready()
 var mana_bar: TextureProgressBar = null
 var xp_bar: TextureProgressBar = null
+var _help_panel: Control = null   # panneau d'aide (F1)
 
 # ── Système de notifications ────────────────────────────────────────────────
 var _notif_panel: PanelContainer = null
@@ -68,6 +69,8 @@ func _ready():
 	call_deferred("_build_mana_bar")
 	# ── Outil équipé (affiché sous les barres) ───────────────────
 	call_deferred("_build_tool_display")
+	# ── Panneau d'aide (F1) ──────────────────────────────────────
+	_build_help_panel()
 
 func _input(event: InputEvent) -> void:
 	# Touche B (Bricoler) : ouvre/ferme le panneau de crafting
@@ -75,6 +78,11 @@ func _input(event: InputEvent) -> void:
 		if event.keycode == KEY_B:
 			if crafting_panel_node:
 				crafting_panel_node.toggle()
+		# Touche F1 : ouvre/ferme le panneau d'aide
+		elif event.keycode == KEY_F1:
+			if _help_panel:
+				_help_panel.visible = not _help_panel.visible
+				get_viewport().set_input_as_handled()
 	
 	# ── Avancer dans le dialogue avec E (si dialogue actif) ──────────
 	if event.is_action_pressed("interact") and _active_npc != null:
@@ -91,6 +99,9 @@ func _input(event: InputEvent) -> void:
 
 func _process(_delta):
 	if Input.is_action_just_pressed("ui_cancel"):
+		if _help_panel and _help_panel.visible:
+			_help_panel.visible = false
+			return
 		if panneau.visible:
 			panneau.visible = false
 			inventaire_ouvert = false
@@ -668,3 +679,119 @@ func _clear_choices() -> void:
 func _on_dialogue_choice_pressed(index: int) -> void:
 	if _active_npc != null:
 		_active_npc.select_choice(index)
+
+# ============================================================
+#  PANNEAU D'AIDE (F1)
+# ============================================================
+
+func _build_help_panel() -> void:
+	# Fond semi-transparent plein écran
+	var bg = ColorRect.new()
+	bg.name = "HelpPanel"
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color(0.0, 0.0, 0.0, 0.7)
+	bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	bg.visible = false
+	add_child(bg)
+	_help_panel = bg
+
+	# Panneau centré
+	var panel = PanelContainer.new()
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	panel.custom_minimum_size = Vector2(480, 0)
+	bg.add_child(panel)
+
+	# Forcer le centrage après layout
+	panel.set_deferred("position", Vector2(40, 20))
+
+	# Style du panneau
+	var style = StyleBoxFlat.new()
+	style.bg_color          = Color(0.12, 0.10, 0.18, 0.97)
+	style.border_color      = Color(0.6, 0.5, 0.8, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(20)
+	panel.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	panel.add_child(vbox)
+
+	# Titre
+	var title = Label.new()
+	title.text = "⚔  GUIDE DES TOUCHES  ⚔"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	title.add_theme_font_size_override("font_size", 18)
+	vbox.add_child(title)
+
+	var sep = HSeparator.new()
+	sep.add_theme_color_override("color", Color(0.6, 0.5, 0.8, 0.6))
+	vbox.add_child(sep)
+
+	# Sections de touches
+	const SECTIONS = [
+		["Déplacement", [
+			["↑ ↓ ← →",       "Se déplacer"],
+		]],
+		["Combat & Actions", [
+			["Espace",         "Attaquer"],
+			["E",              "Interagir / Ramasser"],
+			["T",              "Changer d'outil équipé"],
+		]],
+		["Interface", [
+			["C",              "Journal de quêtes"],
+			["🖱 Clic",        "Inventaire / Fiche perso (boutons HUD)"],
+			["B",              "Atelier de craft"],
+			["S",              "Sauvegarder"],
+			["F1",             "Ce guide"],
+			["Échap",          "Fermer les panneaux"],
+		]],
+		["Conseils", [
+			["⛏",              "Équipe une pioche pour miner"],
+			["🪓",             "Équipe une hache pour couper le bois"],
+			["💊",             "Utilise les potions depuis l'inventaire"],
+			["🌙",             "La nuit est dangereuse, reste prudent !"],
+		]],
+	]
+
+	for section in SECTIONS:
+		var section_label = Label.new()
+		section_label.text = section[0]
+		section_label.add_theme_color_override("font_color", Color(0.8, 0.7, 1.0))
+		section_label.add_theme_font_size_override("font_size", 13)
+		vbox.add_child(section_label)
+
+		for entry in section[1]:
+			var row = HBoxContainer.new()
+			vbox.add_child(row)
+
+			var key_label = Label.new()
+			key_label.text = entry[0]
+			key_label.custom_minimum_size = Vector2(110, 0)
+			key_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			key_label.add_theme_color_override("font_color", Color(0.95, 0.85, 0.4))
+			key_label.add_theme_font_size_override("font_size", 13)
+			row.add_child(key_label)
+
+			var spacer = Control.new()
+			spacer.custom_minimum_size = Vector2(12, 0)
+			row.add_child(spacer)
+
+			var desc_label = Label.new()
+			desc_label.text = entry[1]
+			desc_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
+			desc_label.add_theme_font_size_override("font_size", 13)
+			row.add_child(desc_label)
+
+		var gap = Control.new()
+		gap.custom_minimum_size = Vector2(0, 4)
+		vbox.add_child(gap)
+
+	# Pied de page
+	var footer = Label.new()
+	footer.text = "F1 ou Échap pour fermer"
+	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	footer.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+	footer.add_theme_font_size_override("font_size", 11)
+	vbox.add_child(footer)

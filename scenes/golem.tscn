@@ -535,6 +535,7 @@ script = ExtResource("1_7p1mj")
 speed = 30.0
 damage_per_second = 50.0
 max_health = 500
+xp_reward = 50
 respawn_time = 100.0
 enemy_type = "golem"
 
