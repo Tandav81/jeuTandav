@@ -20,13 +20,9 @@
 [ext_resource type="Texture2D" uid="uid://delps5hd3ejx4" path="res://assets/Outdoor decoration/Oak_Tree_Small.png" id="15_lakw3"]
 [ext_resource type="Texture2D" uid="uid://b3h2i0n3gp78i" path="res://assets/menus/character_panel.png" id="16_munwf"]
 [ext_resource type="Script" uid="uid://b6os5puclitbj" path="res://scripts/day_night_cycle.gd" id="16_navra"]
-[ext_resource type="PackedScene" uid="uid://bq8my2d0nr4x1" path="res://scenes/golem.tscn" id="17_7t5mc"]
-[ext_resource type="PackedScene" uid="uid://nwdvquapayba" path="res://scenes/slime.tscn" id="18_lakw3"]
-[ext_resource type="PackedScene" uid="uid://b7rpbyildycup" path="res://scenes/tree.tscn" id="20_7iits"]
 [ext_resource type="Script" uid="uid://cvax7ibfxcyjv" path="res://scripts/NPCbucheron.gd" id="22_luhhm"]
 [ext_resource type="Script" uid="uid://c7ydiyottscjh" path="res://scripts/NPCslime.gd" id="23_fh13f"]
 [ext_resource type="PackedScene" uid="uid://dxd05iqr1cp8n" path="res://scenes/chest.tscn" id="24_ctatt"]
-[ext_resource type="PackedScene" uid="uid://cg2erk14uqu3s" path="res://scenes/skeleton.tscn" id="25_munwf"]
 [ext_resource type="PackedScene" uid="uid://clylwton1l3a6" path="res://scenes/minotaur.tscn" id="26_fh13f"]
 [ext_resource type="PackedScene" path="res://scenes/portal.tscn" id="27_0nbtd"]
 [ext_resource type="PackedScene" uid="uid://dr7vonan2wpke" path="res://scenes/flyingMushroom.tscn" id="27_rup4s"]
@@ -35,6 +31,7 @@
 [ext_resource type="Script" uid="uid://dfdtlcnbbyv6i" path="res://scripts/animal_spawner.gd" id="98_aspawn"]
 [ext_resource type="Script" uid="uid://drkbx61r6meye" path="res://scripts/resource_spawner.gd" id="99_spawner"]
 [ext_resource type="Script" uid="uid://drchyvwr7ika6" path="res://scripts/night_enemy_spawner.gd" id="100_nspawn"]
+[ext_resource type="Script" uid="uid://dd4iy06081pme" path="res://scripts/day_enemy_spawner.gd" id="101_dspawn"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_luhhm"]
 texture = ExtResource("1_37qwj")
@@ -1204,216 +1201,47 @@ motion_mode = 1
 position = Vector2(-0.5, -3.5)
 shape = SubResource("RectangleShape2D_7t5mc")
 
-[node name="Animaux" type="Node2D" parent="." unique_id=1218620349]
+[node name="EnnemisFixe" type="Node2D" parent="." unique_id=1341981110]
 
-[node name="Ressources" type="Node2D" parent="." unique_id=1857122905]
+[node name="EnemyMinotaur" parent="EnnemisFixe" unique_id=1136997858 instance=ExtResource("26_fh13f")]
+position = Vector2(-803, 147)
 
-[node name="Tree" parent="Ressources" unique_id=1261098600 instance=ExtResource("20_7iits")]
-position = Vector2(587, 573)
-
-[node name="Tree2" parent="Ressources" unique_id=1019590620 instance=ExtResource("20_7iits")]
-position = Vector2(622, 636)
-
-[node name="Tree3" parent="Ressources" unique_id=935306093 instance=ExtResource("20_7iits")]
-position = Vector2(499, 569)
-
-[node name="Tree4" parent="Ressources" unique_id=1684418117 instance=ExtResource("20_7iits")]
-position = Vector2(541, 645)
-
-[node name="Tree5" parent="Ressources" unique_id=662524237 instance=ExtResource("20_7iits")]
-position = Vector2(879, 629)
-
-[node name="Tree6" parent="Ressources" unique_id=375475097 instance=ExtResource("20_7iits")]
-position = Vector2(706, 629)
-
-[node name="Tree11" parent="Ressources" unique_id=63815640 instance=ExtResource("20_7iits")]
-position = Vector2(438, 636)
-
-[node name="Tree7" parent="Ressources" unique_id=570732432 instance=ExtResource("20_7iits")]
-position = Vector2(829, 560)
-
-[node name="Tree10" parent="Ressources" unique_id=1049386787 instance=ExtResource("20_7iits")]
-position = Vector2(795, 627)
-
-[node name="Tree8" parent="Ressources" unique_id=952261937 instance=ExtResource("20_7iits")]
-position = Vector2(747, 566)
-
-[node name="Tree9" parent="Ressources" unique_id=2048597856 instance=ExtResource("20_7iits")]
-position = Vector2(664, 568)
-
-[node name="Tree12" parent="Ressources" unique_id=1625321982 instance=ExtResource("20_7iits")]
-position = Vector2(588, 709)
-
-[node name="Tree13" parent="Ressources" unique_id=1697448046 instance=ExtResource("20_7iits")]
-position = Vector2(623, 772)
-
-[node name="Tree14" parent="Ressources" unique_id=1664359014 instance=ExtResource("20_7iits")]
-position = Vector2(500, 705)
-
-[node name="Tree15" parent="Ressources" unique_id=586121558 instance=ExtResource("20_7iits")]
-position = Vector2(542, 781)
-
-[node name="Tree16" parent="Ressources" unique_id=1164783557 instance=ExtResource("20_7iits")]
-position = Vector2(880, 765)
-
-[node name="Tree17" parent="Ressources" unique_id=532044398 instance=ExtResource("20_7iits")]
-position = Vector2(707, 765)
-
-[node name="Tree18" parent="Ressources" unique_id=271116786 instance=ExtResource("20_7iits")]
-position = Vector2(463, 785)
-
-[node name="Tree19" parent="Ressources" unique_id=1512803733 instance=ExtResource("20_7iits")]
-position = Vector2(830, 696)
-
-[node name="Tree20" parent="Ressources" unique_id=1727766954 instance=ExtResource("20_7iits")]
-position = Vector2(796, 763)
-
-[node name="Tree21" parent="Ressources" unique_id=929655303 instance=ExtResource("20_7iits")]
-position = Vector2(748, 702)
-
-[node name="Tree22" parent="Ressources" unique_id=1627313234 instance=ExtResource("20_7iits")]
-position = Vector2(665, 704)
-
-[node name="Tree23" parent="Ressources" unique_id=271453941 instance=ExtResource("20_7iits")]
-position = Vector2(69, 601)
-
-[node name="Tree24" parent="Ressources" unique_id=1644633843 instance=ExtResource("20_7iits")]
-position = Vector2(104, 664)
-
-[node name="Tree25" parent="Ressources" unique_id=121314443 instance=ExtResource("20_7iits")]
-position = Vector2(-19, 597)
-
-[node name="Tree26" parent="Ressources" unique_id=1852946865 instance=ExtResource("20_7iits")]
-position = Vector2(23, 673)
-
-[node name="Tree27" parent="Ressources" unique_id=657400078 instance=ExtResource("20_7iits")]
-position = Vector2(358, 645)
-
-[node name="Tree28" parent="Ressources" unique_id=665750823 instance=ExtResource("20_7iits")]
-position = Vector2(188, 657)
-
-[node name="Tree29" parent="Ressources" unique_id=1099885714 instance=ExtResource("20_7iits")]
-position = Vector2(415, 716)
-
-[node name="Tree30" parent="Ressources" unique_id=1229954194 instance=ExtResource("20_7iits")]
-position = Vector2(311, 588)
-
-[node name="Tree31" parent="Ressources" unique_id=578113399 instance=ExtResource("20_7iits")]
-position = Vector2(276, 661)
-
-[node name="Tree32" parent="Ressources" unique_id=1232811816 instance=ExtResource("20_7iits")]
-position = Vector2(229, 594)
-
-[node name="Tree33" parent="Ressources" unique_id=498484257 instance=ExtResource("20_7iits")]
-position = Vector2(146, 596)
-
-[node name="Tree34" parent="Ressources" unique_id=181734634 instance=ExtResource("20_7iits")]
-position = Vector2(83, 747)
-
-[node name="Tree35" parent="Ressources" unique_id=1780531862 instance=ExtResource("20_7iits")]
-position = Vector2(118, 810)
-
-[node name="Tree36" parent="Ressources" unique_id=1821970232 instance=ExtResource("20_7iits")]
-position = Vector2(-5, 743)
-
-[node name="Tree37" parent="Ressources" unique_id=100619175 instance=ExtResource("20_7iits")]
-position = Vector2(37, 819)
-
-[node name="Tree38" parent="Ressources" unique_id=1158198182 instance=ExtResource("20_7iits")]
-position = Vector2(375, 803)
-
-[node name="Tree39" parent="Ressources" unique_id=220105817 instance=ExtResource("20_7iits")]
-position = Vector2(202, 803)
-
-[node name="Tree40" parent="Ressources" unique_id=562020209 instance=ExtResource("20_7iits")]
-position = Vector2(400, 590)
-
-[node name="Tree41" parent="Ressources" unique_id=1403454517 instance=ExtResource("20_7iits")]
-position = Vector2(325, 734)
-
-[node name="Tree42" parent="Ressources" unique_id=1698942590 instance=ExtResource("20_7iits")]
-position = Vector2(291, 801)
-
-[node name="Tree43" parent="Ressources" unique_id=1775656438 instance=ExtResource("20_7iits")]
-position = Vector2(243, 740)
-
-[node name="Tree44" parent="Ressources" unique_id=1480224836 instance=ExtResource("20_7iits")]
-position = Vector2(160, 742)
-
-[node name="Ennemis" type="Node2D" parent="." unique_id=1341981110]
-
-[node name="Slime" parent="Ennemis" unique_id=2145179066 instance=ExtResource("18_lakw3")]
-position = Vector2(1531, 292)
-
-[node name="Slime2" parent="Ennemis" unique_id=1724891382 instance=ExtResource("18_lakw3")]
-position = Vector2(1382, 56)
-
-[node name="Slime3" parent="Ennemis" unique_id=1642892159 instance=ExtResource("18_lakw3")]
-position = Vector2(1263, 609)
-
-[node name="Slime4" parent="Ennemis" unique_id=292115739 instance=ExtResource("18_lakw3")]
-position = Vector2(1307, -278)
-
-[node name="Slime5" parent="Ennemis" unique_id=1187662990 instance=ExtResource("18_lakw3")]
-position = Vector2(752, 767)
-
-[node name="Golem" parent="Ennemis" unique_id=1325374603 instance=ExtResource("17_7t5mc")]
-position = Vector2(-753, 123)
-
-[node name="Skeleton" parent="Ennemis" unique_id=1106417163 instance=ExtResource("25_munwf")]
-position = Vector2(84, -128)
-
-[node name="Skeleton2" parent="Ennemis" unique_id=1882173084 instance=ExtResource("25_munwf")]
-position = Vector2(-303, -227)
-
-[node name="Skeleton3" parent="Ennemis" unique_id=752504131 instance=ExtResource("25_munwf")]
-position = Vector2(-465, -528)
-
-[node name="Skeleton4" parent="Ennemis" unique_id=554127473 instance=ExtResource("25_munwf")]
-position = Vector2(-584, 369)
-
-[node name="Skeleton5" parent="Ennemis" unique_id=1452608380 instance=ExtResource("25_munwf")]
-position = Vector2(-100, 780)
-
-[node name="EnemyMinotaur" parent="Ennemis" unique_id=1136997858 instance=ExtResource("26_fh13f")]
-position = Vector2(-516, 124)
-
-[node name="EnemyFlyingMushroom" parent="Ennemis" unique_id=1701691408 instance=ExtResource("27_rup4s")]
-position = Vector2(-424, -111)
+[node name="EnemyFlyingMushroom" parent="EnnemisFixe" unique_id=1701691408 instance=ExtResource("27_rup4s")]
+position = Vector2(1710, -713)
 scale = Vector2(0.5, 0.5)
 
-[node name="Coffres" type="Node2D" parent="." unique_id=544727082]
+[node name="CoffresFixe" type="Node2D" parent="." unique_id=544727082]
 
-[node name="Chest" parent="Coffres" unique_id=781992566 instance=ExtResource("24_ctatt")]
+[node name="Chest" parent="CoffresFixe" unique_id=781992566 instance=ExtResource("24_ctatt")]
 position = Vector2(224, -47)
 contenu = "Livre du forgeron"
 
-[node name="Chest2" parent="Coffres" unique_id=63944724 instance=ExtResource("24_ctatt")]
+[node name="Chest2" parent="CoffresFixe" unique_id=63944724 instance=ExtResource("24_ctatt")]
 position = Vector2(86, -46)
 contenu = "Livre du mage"
 gold_amount = 100
 
-[node name="Chest3" parent="Coffres" unique_id=1835836748 instance=ExtResource("24_ctatt")]
+[node name="Chest3" parent="CoffresFixe" unique_id=1835836748 instance=ExtResource("24_ctatt")]
 position = Vector2(954, -31)
 contenu = "or"
 quantite = 0
 gold_amount = 100
 
-[node name="Quetes" type="Node2D" parent="." unique_id=1111313192]
+[node name="PNJ" type="Node2D" parent="." unique_id=1111313192]
 
-[node name="QueteBucheron" parent="Quetes" unique_id=1126593173 instance=ExtResource("27_ts3gi")]
+[node name="QueteBucheron" parent="PNJ" unique_id=1126593173 instance=ExtResource("27_ts3gi")]
 position = Vector2(414, 183)
 script = ExtResource("22_luhhm")
 npc_name = "Vieux Bûcheron"
 quest_id = "bucherondeb"
 
-[node name="QueteSlimeVillageois" parent="Quetes" unique_id=591351934 instance=ExtResource("27_ts3gi")]
+[node name="QueteSlimeVillageois" parent="PNJ" unique_id=591351934 instance=ExtResource("27_ts3gi")]
 position = Vector2(521, -102)
 script = ExtResource("23_fh13f")
 npc_name = "Villageois"
 quest_id = "villageois_slime"
 
-[node name="Marchand" parent="Quetes" unique_id=395001833 instance=ExtResource("27_ts3gi")]
+[node name="Marchand" parent="PNJ" unique_id=395001833 instance=ExtResource("27_ts3gi")]
 position = Vector2(595, 117)
 script = ExtResource("32_f17e3")
 merchant_name = "Marchand"
@@ -1449,6 +1277,9 @@ script = ExtResource("98_aspawn")
 
 [node name="NightEnemySpawner" type="Node2D" parent="." unique_id=14491648]
 script = ExtResource("100_nspawn")
+
+[node name="DayEnemySpawner" type="Node2D" parent="." unique_id=20240404]
+script = ExtResource("101_dspawn")
 
 [connection signal="pressed" from="HUD/BtnInventaire" to="HUD" method="_on_btn_inventaire_pressed"]
 [connection signal="pressed" from="HUD/BtnPersonnage" to="HUD" method="_on_btn_personnage_pressed"]

@@ -100,6 +100,23 @@ var equipment_data = {
 signal stats_changed
 signal level_up(new_level)
 signal mana_changed(current_mana, max_mana)
+signal talent_available(choices: Array)
+
+# ── Talents passifs ──────────────────────────────────────────
+const TALENT_EVERY_N_LEVELS = 5
+
+const TALENT_POOL = [
+	{ "id": "regen_on_kill",   "label": "Vampire",           "desc": "+5 PV à chaque kill ennemi" },
+	{ "id": "speed_boost",     "label": "Leste",             "desc": "Vitesse de déplacement +15%" },
+	{ "id": "piercing_arrows", "label": "Flèches perçantes", "desc": "Les flèches traversent les ennemis" },
+	{ "id": "max_health_up",   "label": "Robuste",           "desc": "PV maximum +30" },
+	{ "id": "crit_chance",     "label": "Précision",         "desc": "20% de chances de coup critique (×1.5)" },
+	{ "id": "mana_regen_up",   "label": "Mystique",          "desc": "Régénération de mana ×2" },
+	{ "id": "double_loot",     "label": "Chanceux",          "desc": "Les ressources récoltées donnent ×2 objets" },
+	{ "id": "dash_heal",       "label": "Esquiveur",         "desc": "+3 PV à chaque esquive réussie" },
+]
+
+var active_talents: Array = []
 
 # ---- Mana -------------------------------------------------------
 # La mana alimente les attaques magiques. Elle se régénère au fil du temps.
@@ -115,8 +132,6 @@ func _process(delta: float) -> void:
 func get_max_mana() -> int:
 	return 20 + get_magie() * 8             # ex. magie=5 → 60 mana
 
-func get_mana_regen() -> float:
-	return 1.0 + get_magie() * 0.4          # ex. magie=5 → 3 mana/s
 
 func get_mana_cost_sort() -> int:
 	# Coût par attaque magique ; diminue quand la magie augmente
@@ -156,13 +171,19 @@ func get_defense() -> int:
 	return base_defense + _get_equipment_bonus("defense")
 
 func get_max_health() -> int:
-	return 100 + (get_endurance() * 10)
+	var bonus = 30 if has_talent("max_health_up") else 0
+	return 100 + (get_endurance() * 10) + bonus
 
 func get_damage() -> int:
 	return 10 + (get_force() * 2)
 
 func get_speed() -> float:
-	return 150.0 + (get_agilite() * 5.0)
+	var mult = 1.15 if has_talent("speed_boost") else 1.0
+	return (150.0 + (get_agilite() * 5.0)) * mult
+
+func get_mana_regen() -> float:
+	var mult = 2.0 if has_talent("mana_regen_up") else 1.0
+	return (1.0 + get_magie() * 0.4) * mult
 
 func _get_equipment_bonus(stat: String) -> int:
 	var total = 0
@@ -186,6 +207,27 @@ func _level_up():
 	xp_next_level = int(xp_next_level * 1.5)  # XP nécessaire augmente
 	emit_signal("level_up", level)
 	print("NIVEAU ", level, " ! Tu as ", stat_points, " points à distribuer !")
+	# Proposition de talent tous les N niveaux
+	if level % TALENT_EVERY_N_LEVELS == 0:
+		_propose_talents()
+
+func _propose_talents() -> void:
+	# Piocher 3 talents distincts non encore acquis dans le pool
+	var pool = TALENT_POOL.filter(func(t): return not has_talent(t["id"]))
+	pool.shuffle()
+	var choices = pool.slice(0, min(3, pool.size()))
+	if choices.is_empty():
+		return
+	emit_signal("talent_available", choices)
+
+func apply_talent(talent_id: String) -> void:
+	if has_talent(talent_id):
+		return
+	active_talents.append(talent_id)
+	emit_signal("stats_changed")
+
+func has_talent(talent_id: String) -> bool:
+	return active_talents.has(talent_id)
 
 func spend_point(stat: String) -> bool:
 	if stat_points <= 0:

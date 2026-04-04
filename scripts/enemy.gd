@@ -9,6 +9,15 @@ extends CharacterBody2D
 @export var respawn_time = 5.0  # secondes avant respawn
 @export var enemy_type = "slime"
 
+# ── Boss ─────────────────────────────────────────────────────
+@export var is_boss: bool = false
+@export var boss_name: String = "Boss"
+## Items droppés à la mort : [{ "name": "Cle de donjon", "qty": 1 }, …]
+@export var unique_drops: Array = []
+
+signal boss_health_changed(current_hp: int, max_hp: int)
+signal boss_died
+
 @onready var anim = $AnimatedSprite2D
 
 # Barre de vie flottante (sprites redbar_00 à redbar_06)
@@ -43,6 +52,11 @@ func _ready():
 	await get_tree().process_frame
 	player = get_tree().get_first_node_in_group("player")
 	add_collision_exception_with(player)
+	# Notifier le HUD si c'est un boss
+	if is_boss:
+		var hud = get_tree().get_first_node_in_group("hud")
+		if hud:
+			hud.on_boss_spawned(self)
 
 func _build_health_bar() -> void:
 	_health_bar = Sprite2D.new()
@@ -63,8 +77,14 @@ func _update_health_bar() -> void:
 	_health_bar.visible = health < max_health and not is_dying
 
 func take_damage(amount):
-	health -= amount
+	# Talent crit_chance : 20% de chances de coup critique
+	var final_amount = amount
+	if Stats.has_talent("crit_chance") and randf() < 0.20:
+		final_amount = int(amount * 1.5)
+	health -= final_amount
 	_update_health_bar()
+	if is_boss:
+		boss_health_changed.emit(health, max_health)
 	if health <= 0:
 		die()
 	else:
@@ -100,6 +120,19 @@ func die():
 
 	Stats.add_xp(xp_reward)
 	QuestManager.update_kill(enemy_type)
+	# Talent : régénération au kill
+	if Stats.has_talent("regen_on_kill"):
+		var p = get_tree().get_first_node_in_group("player")
+		if p:
+			p.heal(5)
+	# Boss : drops uniques + signal HUD
+	if is_boss:
+		for drop in unique_drops:
+			Inventory.add_item(drop["name"], drop.get("qty", 1))
+		boss_died.emit()
+		var hud = get_tree().get_first_node_in_group("hud")
+		if hud:
+			hud.on_boss_died()
 	# jouer animation de mort
 	$AnimatedSprite2D.play("die")
 	
@@ -130,6 +163,11 @@ func respawn():
 	var tween = create_tween()
 	tween.tween_property(self, "modulate:a", 1.0, 0.5)
 	_update_health_bar()
+	if is_boss:
+		boss_health_changed.emit(health, max_health)
+		var hud = get_tree().get_first_node_in_group("hud")
+		if hud:
+			hud.on_boss_spawned(self)
 	
 func _physics_process(delta):
 	if is_dying:

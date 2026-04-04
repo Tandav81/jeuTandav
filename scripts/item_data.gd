@@ -21,6 +21,7 @@ const _REG_RPG = {
 	"Grande potion":  Rect2(48,  0,   16, 16),  # fiole jaune (soin ×2)
 	"Potion de force":Rect2(16,  0,   16, 16),  # fiole verte
 	"Viande":         Rect2(16,  64,  16, 16),
+	"Cle de donjon":  Rect2(32,  112,  16, 16),
 	# Outils
 	"Hache":          Rect2(64,  80,  16, 16),
 	"Pioche":         Rect2(80,  48,  16, 16),

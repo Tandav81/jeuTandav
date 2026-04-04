@@ -532,12 +532,15 @@ size = Vector2(70, 40.5)
 
 [node name="EnemyGolem" type="CharacterBody2D" unique_id=1106417163 groups=["Enemy", "enemy"]]
 script = ExtResource("1_7p1mj")
-speed = 30.0
+speed = 40.0
+detection_range = 200.0
 damage_per_second = 50.0
 max_health = 500
-xp_reward = 50
-respawn_time = 100.0
+xp_reward = 100
+respawn_time = 1000.0
 enemy_type = "golem"
+is_boss = true
+unique_drops = [["{ \"name\": \"Cle de donjon\", \"qty\": 1 }"]]
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=182257883]
 position = Vector2(0, -64)

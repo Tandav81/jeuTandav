@@ -6,6 +6,7 @@ extends Node2D
 #  Créé dynamiquement par player.gd via _lancer_projectile().
 #  Se déplace en ligne droite, détruit à max_range ou au contact
 #  d'un ennemi.
+#  Talent "piercing_arrows" : les flèches traversent les ennemis.
 # ============================================================
 
 ## "arc" ou "magie"
@@ -17,6 +18,7 @@ var damage:           int     = 10
 
 var distance_traveled: float  = 0.0
 var _visual:          ColorRect
+var _hit_bodies:      Array   = []   # ennemis déjà touchés (flèches perçantes)
 
 func _ready() -> void:
 	_build_visual()
@@ -57,13 +59,21 @@ func _check_hit() -> void:
 	query.transform = Transform2D(0, global_position)
 	query.collision_mask = 0xFFFFFFFF   # tous les layers
 
-	for result in space.intersect_shape(query, 4):
+	# Talent flèches perçantes : uniquement pour les flèches (pas la magie)
+	var piercing: bool = proj_type == "arc" and Stats.has_talent("piercing_arrows")
+
+	for result in space.intersect_shape(query, 8):
 		var body = result["collider"]
-		if body.is_in_group("enemy"):
+		if body.is_in_group("enemy") and not _hit_bodies.has(body):
 			body.take_damage(damage)
 			_spawn_impact()
-			queue_free()
-			return
+			if piercing:
+				# Mémoriser pour ne pas toucher deux fois le même ennemi
+				_hit_bodies.append(body)
+				# Continuer — ne pas détruire le projectile
+			else:
+				queue_free()
+				return
 
 func _spawn_impact() -> void:
 	# Petit flash visuel à l'impact

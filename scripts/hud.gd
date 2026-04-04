@@ -41,6 +41,33 @@ var _tool_icon: TextureRect   = null
 var _active_npc: Node = null
 var _shop_panel: Control = null   # panneau boutique
 var _shop_merchant: Node  = null  # marchand actif
+var _talent_panel: Control = null   # panneau de choix de talent
+var _boss_bar_container: Control = null   # barre boss (bas écran)
+var _boss_bar_fill: ColorRect    = null
+var _boss_bar_label: Label       = null
+var _boss_max_hp: int = 1
+var _minimap_rect: TextureRect   = null
+var _minimap_image: Image        = null
+var _minimap_texture: ImageTexture = null
+var _minimap_timer: float        = 0.0
+var _minimap_visible: bool       = true
+const MINIMAP_UPDATE_INTERVAL: float = 0.5
+const MINIMAP_DISPLAY_SIZE: int = 120
+
+# ── Icônes de talents actifs (rangée sous les barres) ───────────────────────
+var _talent_icons_row: HBoxContainer = null
+
+# Couleur et abréviation par talent_id
+const TALENT_ICON_DEFS: Dictionary = {
+	"regen_on_kill":   { "abbr": "VA", "color": Color("#c0392b"), "full": "Vampire — +5 PV par kill" },
+	"speed_boost":     { "abbr": "LE", "color": Color("#1abc9c"), "full": "Leste — Vitesse +15%" },
+	"piercing_arrows": { "abbr": "FP", "color": Color("#e67e22"), "full": "Flèches perçantes — traversent les ennemis" },
+	"max_health_up":   { "abbr": "RO", "color": Color("#27ae60"), "full": "Robuste — PV max +30" },
+	"crit_chance":     { "abbr": "PR", "color": Color("#f1c40f"), "full": "Précision — 20% de coups critiques ×1.5" },
+	"mana_regen_up":   { "abbr": "MY", "color": Color("#3498db"), "full": "Mystique — Régén mana ×2" },
+	"double_loot":     { "abbr": "CH", "color": Color("#f39c12"), "full": "Chanceux — Ressources ×2" },
+	"dash_heal":       { "abbr": "ES", "color": Color("#9b59b6"), "full": "Esquiveur — +3 PV par esquive" },
+}
 var _shop_buy_list:  VBoxContainer = null
 var _shop_sell_list: VBoxContainer = null
 var _shop_gold_label: Label = null
@@ -80,6 +107,15 @@ func _ready():
 	call_deferred("_build_hud_shortcuts")
 	# ── Panneau boutique (construit à la demande) ───────────────
 	call_deferred("_build_shop_panel")
+	# ── Talents passifs ──────────────────────────────────────────
+	Stats.talent_available.connect(_show_talent_choices)
+	call_deferred("_build_talent_panel")
+	# ── Barre de vie boss ────────────────────────────────────────
+	call_deferred("_build_boss_bar")
+	# ── Minimap ──────────────────────────────────────────────────
+	call_deferred("_build_minimap")
+	# ── Icônes talents actifs (sous les barres) ──────────────────
+	call_deferred("_build_talent_icons")
 
 func _input(event: InputEvent) -> void:
 	# Touche B (Bricoler) : ouvre/ferme le panneau de crafting
@@ -100,6 +136,12 @@ func _input(event: InputEvent) -> void:
 			if _help_panel:
 				_help_panel.visible = not _help_panel.visible
 				get_viewport().set_input_as_handled()
+		# Touche M : afficher/masquer la minimap
+		elif event.keycode == KEY_M:
+			_minimap_visible = not _minimap_visible
+			if _minimap_rect:
+				_minimap_rect.get_parent().visible = _minimap_visible
+			get_viewport().set_input_as_handled()
 	
 	# ── Avancer dans le dialogue avec E (si dialogue actif) ──────────
 	if event.is_action_pressed("interact") and _active_npc != null:
@@ -114,7 +156,7 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
-func _process(_delta):
+func _process(delta: float):
 	if Input.is_action_just_pressed("ui_cancel"):
 		if _help_panel and _help_panel.visible:
 			_help_panel.visible = false
@@ -129,12 +171,19 @@ func _process(_delta):
 			crafting_panel_node.hide_panel()
 		if _shop_panel and _shop_panel.visible:
 			_shop_panel.visible = false
+		if _talent_panel and _talent_panel.visible:
+			pass  # talent panel non fermable — choix obligatoire
 			
 	if dialogue_box.visible and Input.is_action_just_pressed("ui_accept"):
 		hide_dialogue()
 	
 	if Input.is_action_just_pressed("personnage"): # ou une nouvelle touche
 		toggle_journal()
+	# Minimap — mise à jour périodique
+	_minimap_timer += delta
+	if _minimap_timer >= MINIMAP_UPDATE_INTERVAL:
+		_minimap_timer = 0.0
+		_update_minimap()
 
 func _build_tool_display():
 	# Petit slot pixel-art positionné juste sous les barres de vie/mana/xp
@@ -440,6 +489,8 @@ func _on_stats_changed():
 	if xp_bar:
 		xp_bar.max_value = float(Stats.xp_next_level)
 		xp_bar.value     = float(Stats.xp)
+	# Icônes de talents actifs
+	_refresh_talent_icons()
 
 func _on_level_up(new_level):
 	show_notification("🎉 Niveau " + str(new_level) + " !\n+3 points à distribuer", Color("#FFD700"))
@@ -1148,3 +1199,338 @@ func _on_sell_pressed(item_name: String, price: int) -> void:
 	Inventory.add_gold(price)
 	show_notification("Vendu : %s (+%d or)" % [item_name, price], Color(1.0, 0.9, 0.3))
 	_refresh_shop()
+
+# ============================================================
+#  TALENTS PASSIFS
+# ============================================================
+
+func _build_talent_panel() -> void:
+	var overlay = ColorRect.new()
+	overlay.name = "TalentOverlay"
+	overlay.color = Color(0, 0, 0, 0.80)
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.visible = false
+	add_child(overlay)
+	_talent_panel = overlay
+
+	var vbox = VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_CENTER)
+	vbox.add_theme_constant_override("separation", 20)
+	vbox.custom_minimum_size = Vector2(600, 0)
+	vbox.offset_left = -300
+	vbox.offset_right = 300
+	overlay.add_child(vbox)
+
+	var title = Label.new()
+	title.name = "TalentTitle"
+	title.text = "🌟 Choisis un talent !"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_color_override("font_color", Color(1.0, 0.9, 0.2))
+	vbox.add_child(title)
+
+	var cards_row = HBoxContainer.new()
+	cards_row.name = "CardsRow"
+	cards_row.add_theme_constant_override("separation", 16)
+	vbox.add_child(cards_row)
+
+func _show_talent_choices(choices: Array) -> void:
+	if not _talent_panel:
+		return
+	_talent_panel.visible = true
+	get_tree().paused = true
+
+	var vbox = _talent_panel.get_child(0)
+	var cards_row: HBoxContainer = vbox.get_node("CardsRow")
+	# Nettoyer les cartes précédentes
+	for c in cards_row.get_children():
+		c.queue_free()
+
+	for talent in choices:
+		var card = _make_talent_card(talent)
+		cards_row.add_child(card)
+
+func _make_talent_card(talent: Dictionary) -> PanelContainer:
+	var card = PanelContainer.new()
+	card.custom_minimum_size = Vector2(170, 180)
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.10, 0.07, 0.97)
+	style.border_color = Color(0.8, 0.65, 0.25, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(10)
+	card.add_theme_stylebox_override("panel", style)
+
+	var vb = VBoxContainer.new()
+	vb.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.add_theme_constant_override("separation", 10)
+	card.add_child(vb)
+
+	var lbl_name = Label.new()
+	lbl_name.text = talent["label"]
+	lbl_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_name.add_theme_font_size_override("font_size", 16)
+	lbl_name.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
+	vb.add_child(lbl_name)
+
+	vb.add_child(HSeparator.new())
+
+	var lbl_desc = Label.new()
+	lbl_desc.text = talent["desc"]
+	lbl_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lbl_desc.add_theme_font_size_override("font_size", 12)
+	lbl_desc.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
+	vb.add_child(lbl_desc)
+
+	var btn = Button.new()
+	btn.text = "Choisir"
+	btn.focus_mode = Control.FOCUS_NONE
+	btn.add_theme_font_size_override("font_size", 13)
+	btn.pressed.connect(_on_talent_chosen.bind(talent["id"], talent["label"]))
+	vb.add_child(btn)
+
+	return card
+
+func _on_talent_chosen(talent_id: String, talent_label: String) -> void:
+	Stats.apply_talent(talent_id)
+	get_tree().paused = false
+	_talent_panel.visible = false
+	show_notification("🌟 Talent acquis : " + talent_label, Color(1.0, 0.9, 0.2))
+	_refresh_talent_icons()
+
+# ============================================================
+#  BARRE DE VIE BOSS
+# ============================================================
+
+func _build_boss_bar() -> void:
+	var container = PanelContainer.new()
+	container.name = "BossBarContainer"
+	container.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	container.custom_minimum_size = Vector2(0, 52)
+	container.offset_left  = 160
+	container.offset_right = -160
+	container.offset_top   = -70
+	container.offset_bottom = -18
+
+	var style = StyleBoxFlat.new()
+	style.bg_color     = Color(0.05, 0.03, 0.03, 0.95)
+	style.border_color = Color(0.75, 0.15, 0.10, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	container.add_theme_stylebox_override("panel", style)
+	container.visible = false
+	add_child(container)
+	_boss_bar_container = container
+
+	var vb = VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 4)
+	container.add_child(vb)
+
+	_boss_bar_label = Label.new()
+	_boss_bar_label.text = "Boss"
+	_boss_bar_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_bar_label.add_theme_font_size_override("font_size", 13)
+	_boss_bar_label.add_theme_color_override("font_color", Color(1.0, 0.4, 0.3))
+	vb.add_child(_boss_bar_label)
+
+	# Fond de la barre
+	var bar_bg = PanelContainer.new()
+	var bar_style = StyleBoxFlat.new()
+	bar_style.bg_color = Color(0.15, 0.05, 0.05)
+	bar_style.set_corner_radius_all(4)
+	bar_bg.add_theme_stylebox_override("panel", bar_style)
+	bar_bg.custom_minimum_size = Vector2(0, 14)
+	bar_bg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vb.add_child(bar_bg)
+
+	# Remplissage rouge
+	_boss_bar_fill = ColorRect.new()
+	_boss_bar_fill.color = Color(0.85, 0.15, 0.10)
+	_boss_bar_fill.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_boss_bar_fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar_bg.add_child(_boss_bar_fill)
+
+func on_boss_spawned(boss: Node) -> void:
+	if not _boss_bar_container:
+		return
+	_boss_max_hp = boss.max_health
+	_boss_bar_label.text = "☠ " + boss.get("boss_name") + " ☠"
+	_boss_bar_fill.anchor_right = 1.0
+	_boss_bar_container.visible = true
+	# Connecter le signal de santé
+	if not boss.boss_health_changed.is_connected(_on_boss_health_changed):
+		boss.boss_health_changed.connect(_on_boss_health_changed)
+
+func _on_boss_health_changed(current_hp: int, max_hp: int) -> void:
+	if not _boss_bar_fill:
+		return
+	_boss_max_hp = max_hp
+	var pct = clamp(float(current_hp) / float(max_hp), 0.0, 1.0)
+	_boss_bar_fill.anchor_right = pct
+
+func on_boss_died() -> void:
+	if not _boss_bar_container:
+		return
+	# Animer la barre à zéro puis cacher
+	var tw = create_tween()
+	tw.tween_property(_boss_bar_fill, "anchor_right", 0.0, 0.6)
+	tw.tween_interval(0.4)
+	tw.tween_property(_boss_bar_container, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(func():
+		_boss_bar_container.visible = false
+		_boss_bar_container.modulate.a = 1.0
+	)
+
+# ============================================================
+#  ICÔNES DE TALENTS ACTIFS
+# ============================================================
+
+func _build_talent_icons() -> void:
+	_talent_icons_row = HBoxContainer.new()
+	_talent_icons_row.name = "TalentIconsRow"
+	# Positionnée en haut-gauche, sous les barres de vie/mana/xp
+	# Les barres occupent environ y=10 à y=82 (72px × scale 2 + marge)
+	_talent_icons_row.set_anchor(SIDE_LEFT,   0.0)
+	_talent_icons_row.set_anchor(SIDE_RIGHT,  0.0)
+	_talent_icons_row.set_anchor(SIDE_TOP,    0.0)
+	_talent_icons_row.set_anchor(SIDE_BOTTOM, 0.0)
+	_talent_icons_row.offset_left   = 10
+	_talent_icons_row.offset_top    = 92
+	_talent_icons_row.offset_right  = 300
+	_talent_icons_row.offset_bottom = 118   # hauteur 26px
+	_talent_icons_row.add_theme_constant_override("separation", 3)
+	add_child(_talent_icons_row)
+	# Pas d'icônes au démarrage — peuplé dès le premier talent acquis
+	_refresh_talent_icons()
+
+func _refresh_talent_icons() -> void:
+	if not _talent_icons_row:
+		return
+	# Vider les icônes existantes
+	for child in _talent_icons_row.get_children():
+		child.queue_free()
+	# Reconstruire une icône par talent actif
+	for tid in Stats.active_talents:
+		var def = TALENT_ICON_DEFS.get(tid, null)
+		if def == null:
+			continue
+		# Conteneur de l'icône
+		var icon = PanelContainer.new()
+		icon.custom_minimum_size = Vector2(24, 24)
+		icon.tooltip_text = def["full"]
+		var style = StyleBoxFlat.new()
+		style.bg_color = def["color"]
+		style.corner_radius_top_left     = 4
+		style.corner_radius_top_right    = 4
+		style.corner_radius_bottom_left  = 4
+		style.corner_radius_bottom_right = 4
+		style.border_color = Color(1, 1, 1, 0.3)
+		style.set_border_width_all(1)
+		icon.add_theme_stylebox_override("panel", style)
+		# Abréviation centrée
+		var lbl = Label.new()
+		lbl.text = def["abbr"]
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+		lbl.add_theme_font_size_override("font_size", 9)
+		lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.95))
+		lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		icon.add_child(lbl)
+		_talent_icons_row.add_child(icon)
+
+# ============================================================
+#  MINIMAP
+# ============================================================
+
+func _build_minimap() -> void:
+	# Conteneur avec bordure pixel-art
+	var frame = PanelContainer.new()
+	frame.name = "MinimapFrame"
+	frame.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	frame.custom_minimum_size = Vector2(MINIMAP_DISPLAY_SIZE + 8, MINIMAP_DISPLAY_SIZE + 8)
+	frame.offset_left   = -(MINIMAP_DISPLAY_SIZE + 16)
+	frame.offset_top    = 8
+	frame.offset_right  = -8
+	frame.offset_bottom = MINIMAP_DISPLAY_SIZE + 16
+
+	var style = StyleBoxFlat.new()
+	style.bg_color     = Color(0.05, 0.05, 0.05, 0.85)
+	style.border_color = Color(0.5, 0.5, 0.5, 0.9)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(3)
+	frame.add_theme_stylebox_override("panel", style)
+	add_child(frame)
+
+	_minimap_rect = TextureRect.new()
+	_minimap_rect.name = "MinimapTexture"
+	_minimap_rect.custom_minimum_size = Vector2(MINIMAP_DISPLAY_SIZE, MINIMAP_DISPLAY_SIZE)
+	_minimap_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	_minimap_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	_minimap_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	frame.add_child(_minimap_rect)
+
+	# Créer l'image initiale (toute noire)
+	_minimap_image = Image.create(120, 120, false, Image.FORMAT_RGBA8)
+	_minimap_image.fill(Color(0.05, 0.05, 0.05))
+	_minimap_texture = ImageTexture.create_from_image(_minimap_image)
+	_minimap_rect.texture = _minimap_texture
+
+func _update_minimap() -> void:
+	if not _minimap_rect or not _minimap_image or not _minimap_texture:
+		return
+
+	var fog = get_tree().get_first_node_in_group("fog")
+	if not fog:
+		return
+
+	var map_w: int = fog.map_width_tiles
+	var map_h: int = fog.map_height_tiles
+	var img_w: int = _minimap_image.get_width()
+	var img_h: int = _minimap_image.get_height()
+
+	var color_fog      = Color(0.05, 0.05, 0.05)
+	var color_revealed = Color(0.25, 0.45, 0.20)
+	var color_player   = Color(1.0, 1.0, 1.0)
+	var color_enemy    = Color(1.0, 0.2, 0.2)
+
+	# Remplir pixel par pixel en mappant sur les tuiles du fog
+	for py in range(img_h):
+		for px in range(img_w):
+			var tx = int(px * map_w / img_w)
+			var ty = int(py * map_h / img_h)
+			var cell = Vector2i(tx, ty)
+			var alpha = fog.revealed_cells.get(cell, fog.fog_alpha)
+			if alpha < 0.5:
+				_minimap_image.set_pixel(px, py, color_revealed)
+			else:
+				_minimap_image.set_pixel(px, py, color_fog)
+
+	# Point joueur
+	var player = get_tree().get_first_node_in_group("player")
+	if player:
+		var map_origin: Vector2 = fog.map_origin
+		var tile_size: int = fog.tile_size
+		var local = player.global_position - map_origin
+		var px = int(local.x / tile_size * img_w / map_w)
+		var py = int(local.y / tile_size * img_h / map_h)
+		for dx in range(-1, 2):
+			for dy in range(-1, 2):
+				var cx = clamp(px + dx, 0, img_w - 1)
+				var cy = clamp(py + dy, 0, img_h - 1)
+				_minimap_image.set_pixel(cx, cy, color_player)
+
+	# Points ennemis proches (dans le rayon révélé)
+	for enemy in get_tree().get_nodes_in_group("enemy"):
+		if not is_instance_valid(enemy):
+			continue
+		var local = enemy.global_position - fog.map_origin
+		var px = int(local.x / fog.tile_size * img_w / map_w)
+		var py = int(local.y / fog.tile_size * img_h / map_h)
+		var cell = Vector2i(int(local.x / fog.tile_size), int(local.y / fog.tile_size))
+		var alpha = fog.revealed_cells.get(cell, fog.fog_alpha)
+		if alpha < 0.5 and px >= 0 and px < img_w and py >= 0 and py < img_h:
+			_minimap_image.set_pixel(px, py, color_enemy)
+
+	_minimap_texture.update(_minimap_image)

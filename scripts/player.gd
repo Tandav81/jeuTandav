@@ -15,6 +15,17 @@ var _fog_node: Node = null
 # Ordre de cycle pour le changement d'arme (touche Q)
 const WEAPON_LIST = ["Epee en bois", "Epee en fer", "Arc", "Baton magique"]
 
+# ── Esquive / Roulade ────────────────────────────────────────
+const DOUBLE_TAP_WINDOW: float = 0.28   # fenêtre double-tap (secondes)
+const DODGE_COOLDOWN:    float = 1.0    # délai entre deux esquives
+const DODGE_SPEED:       float = 420.0  # vitesse du dash
+const DODGE_DURATION:    float = 0.18   # durée d'invincibilité
+
+var _last_dir_pressed:   Vector2 = Vector2.ZERO
+var _last_dir_time_ms:   int     = 0
+var _is_dodging:         bool    = false
+var _dodge_cooldown_cur: float   = 0.0
+
 signal health_changed(new_health)
 
 func _ready():
@@ -51,8 +62,8 @@ func _add_bow_animations():
 		frames.add_frame("bow_right", atlas)
 
 func take_damage(amount):
-	if is_attacking:
-		return  # invincible pendant l'attaque (optionnel)
+	if is_attacking or _is_dodging:
+		return  # invincible pendant l'attaque ou l'esquive
 	var damage_reduit = max(1, amount - Stats.get_defense())
 	health -= damage_reduit
 	emit_signal("health_changed", health)
@@ -63,7 +74,15 @@ func die():
 	get_tree().reload_current_scene()
 
 func _physics_process(delta):
+	# Cooldown esquive
+	if _dodge_cooldown_cur > 0.0:
+		_dodge_cooldown_cur -= delta
+
 	var current_speed = Stats.get_speed()
+
+	if _is_dodging:
+		move_and_slide()
+		return
 
 	if is_attacking:
 		velocity = Vector2.ZERO
@@ -247,7 +266,41 @@ func heal(amount):
 	emit_signal("health_changed", health)
 	print("❤️ +", amount, " PV ! Vie actuelle : ", health)
 
+func _dodge(dir: Vector2) -> void:
+	if _is_dodging or _dodge_cooldown_cur > 0.0 or is_attacking:
+		return
+	_is_dodging = true
+	_dodge_cooldown_cur = DODGE_COOLDOWN
+	velocity = dir * DODGE_SPEED
+	# Flash semi-transparent pendant le dash
+	var tw = create_tween()
+	tw.tween_property(self, "modulate:a", 0.4, 0.05)
+	tw.tween_property(self, "modulate:a", 1.0, DODGE_DURATION - 0.05)
+	await get_tree().create_timer(DODGE_DURATION).timeout
+	_is_dodging = false
+	velocity = Vector2.ZERO
+	# Talent dash_heal : +3 PV à chaque esquive réussie
+	if Stats.has_talent("dash_heal"):
+		heal(3)
+
 func _input(event):
+	# ── Double-tap directionnel = esquive ───────────────────────
+	if event is InputEventKey and event.pressed and not event.echo:
+		var dir = Vector2.ZERO
+		match event.keycode:
+			KEY_RIGHT: dir = Vector2.RIGHT
+			KEY_LEFT:  dir = Vector2.LEFT
+			KEY_DOWN:  dir = Vector2.DOWN
+			KEY_UP:    dir = Vector2.UP
+		if dir != Vector2.ZERO:
+			var now_ms = Time.get_ticks_msec()
+			if dir == _last_dir_pressed and (now_ms - _last_dir_time_ms) < int(DOUBLE_TAP_WINDOW * 1000):
+				_dodge(dir)
+				_last_dir_pressed = Vector2.ZERO  # reset pour éviter triple-tap
+			else:
+				_last_dir_pressed = dir
+				_last_dir_time_ms = now_ms
+
 	# Changer d'arme avec Q
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_Q:

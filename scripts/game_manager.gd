@@ -54,6 +54,7 @@ func save_game():
 		"fog_revealed": fog_data,
 		"time_of_day": time_of_day,
 		"used_books": used_books,
+		"active_talents": Stats.active_talents,
 	}
 	
 	var file = FileAccess.open("user://save.json", FileAccess.WRITE)
@@ -116,6 +117,11 @@ func load_game():
 		used_books = data["used_books"]
 	else:
 		used_books = []   # compatibilité anciennes sauvegardes
+
+	if data.has("active_talents"):
+		Stats.active_talents = data["active_talents"]
+	else:
+		Stats.active_talents = []   # compatibilité anciennes sauvegardes
 
 	return true
 

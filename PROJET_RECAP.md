@@ -1,7 +1,7 @@
 # 📋 Récapitulatif du projet — testJeu2D
 
 > Godot 4.6 — Jeu 2D RPG (top-down)
-> Dernière mise à jour : 2026-04-04
+> Dernière mise à jour : 2026-04-04 (session 2)
 
 ---
 
@@ -56,8 +56,7 @@ test-jeu-2d/
 │   ├── quest_manager.gd            ← Autoload
 │   ├── stats.gd                    ← Autoload
 │   ├── night_enemy_spawner.gd      ← spawn dynamique ennemis nocturnes
-│   ├── npc_merchant.gd             ← PNJ marchand (extends npc.gd)
-│   └── (minimap.gd)                ← ⏳ à créer
+│   └── npc_merchant.gd             ← PNJ marchand (extends npc.gd)
 └── assets/
 	├── Player/                     ← spritesheets joueur (attaque, arc…)
 	├── Enemies/                    ← Bat/, Golem_1/, flyingMushroom/, etc.
@@ -91,6 +90,7 @@ test-jeu-2d/
 | Sauvegarder | S |
 | Guide d'aide | F1 |
 | Fermer menu | Échap |
+| Minimap on/off | M |
 
 ---
 
@@ -116,6 +116,7 @@ test-jeu-2d/
 - Propriétés configurables : `proj_type`, `direction`, `max_range`, `damage`
 - Déplacement en ligne droite, disparition au-delà de la portée max
 - Détection de collision via `PhysicsShapeQueryParameters2D`
+- **Talent flèches perçantes** : si `piercing_arrows` actif, la flèche traverse les ennemis (liste `_hit_bodies` pour éviter les doubles coups)
 
 ### 🗺️ Monde & Navigation
 - TileMapLayer avec 3 types de terrain : Herbe, Chemin (sable), Ferme
@@ -150,19 +151,36 @@ test-jeu-2d/
 - Animation de mort + respawn automatique
 - Récompense XP + mise à jour des quêtes de type "kill"
 - **Barre de vie flottante** : sprite `redbar_00` (vide) à `redbar_06` (plein), 15×7 px affiché ×2 au-dessus de l'ennemi, visible uniquement quand endommagé
+- **Système Boss** : `@export var is_boss`, `boss_name`, `unique_drops` (tableau `[{name, qty}]`) — drops uniques à la mort, signal vers HUD, respawn configurable
+- Talent `crit_chance` appliqué dans `take_damage()` (20% × 1.5)
+- Talent `regen_on_kill` : le joueur regagne 5 PV à chaque kill
 
 **Ennemis disponibles :**
 | Scène | Type | Contexte |
 |---|---|---|
-| `slime.tscn` | Slime vert | Extérieur |
-| `skeleton.tscn` | Squelette | Extérieur |
+| `slime.tscn` | Slime vert | Extérieur (jour) |
+| `skeleton.tscn` | Squelette | Extérieur (jour + nuit) |
 | `golem.tscn` | Golem (boss) | Extérieur |
-| `bat.tscn` | Chauve-souris | Grotte |
+| `bat.tscn` | Chauve-souris | Grotte + Nuit |
 | `minotaur.tscn` | Minotaure | Extérieur/Grotte |
-| `flyingMushroom.tscn` | Champignon volant | Extérieur |
+| `flyingMushroom.tscn` | Champignon volant | Extérieur (jour) |
+
+**Spawn dynamique diurne (`day_enemy_spawner.gd`) :**
+- Nœud `DayEnemySpawner` ajouté dans `world.tscn` (même architecture que le spawner nocturne)
+- Apparaît à l'aube/jour, disparaît en fondu à la nuit (fade 1.2 s)
+- Placement **aléatoire** sur les tiles herbe (source_id 2, 3)
+- Config dans `DAY_ENEMY_DEFS` : `scene`, `max`, `overrides` — quantité et type entièrement configurables
+- Distance sécurité joueur : 220 px — distance min entre ennemis : 80 px
+
+**Spawn dynamique nocturne (`night_enemy_spawner.gd`) :**
+- Apparaît à la nuit, disparaît à l'aube (fade 1.5 s)
+- Config dans `NIGHT_ENEMY_DEFS` : `scene`, `max`, `overrides`
+- Distance sécurité joueur : 200 px — distance min entre ennemis : 80 px
+- Spawn sur tiles herbe + chemin (source_id 2, 3, 5)
 
 ### 🌿 Ressources (Spawn Dynamique)
 - `ResourceSpawner` spawne automatiquement plantes ET minerais au démarrage
+- **Talent double_loot** : la quantité récoltée est doublée (`final_qty = quantity * 2`)
 - Plantes → tiles herbe (source_id 2 et 3) ; Minerais → tiles chemin (source_id 5)
 - Vérification de l'outil requis avant récolte
 - Respawn après 90 secondes à un **nouvel emplacement aléatoire**
@@ -180,6 +198,32 @@ test-jeu-2d/
 | Minerai d'or | 10 | 2 | Très rare |
 
 Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai).
+
+### 🌳 Arbres (Spawn Dynamique)
+- Intégré dans `ResourceSpawner` (plus de nœud `TreeSpawner` séparé)
+- Positionnement **entièrement aléatoire** à chaque lancement (pas de graine fixe)
+- Nombre configurable via `TREE_COUNT` (défaut : **30**), distance min entre arbres : 48 px
+- Les arbres utilisent `resource.gd` : coupure à la hache, respawn en place après 30 s, donne 2 Bois
+- Support de plusieurs types d'arbres avec système de **poids** (`weight`) pour la fréquence relative
+- Config dans `TREE_DEFS` : `scene`, `weight`, `overrides`
+
+### 💰 Coffres (Spawn Dynamique — Respawnable)
+- Intégré dans `ResourceSpawner` (plus de nœud `ChestSpawner` séparé)
+- Maximum **5 coffres simultanés** sur la carte (`MAX_CHESTS = 5`), placement aléatoire sur les tiles herbe
+- Récompense **entièrement aléatoire** tirée d'une table pondérée (`CHEST_REWARDS`) :
+
+| Récompense | Poids |
+|---|---|
+| Potion × 1 | 35 |
+| 15 pièces d'or | 25 |
+| Minerai de fer × 2 | 20 |
+| 30 pièces d'or | 12 |
+| Grande potion × 1 | 5 |
+| Cristal × 1 | 3 |
+
+- Après ouverture : animation "ouvert" 2 s → `queue_free()` → nouveau coffre spawn après **600 secondes** (10 min)
+- `chest.gd` : nouveau signal `chest_opened` + export `is_respawnable` (true pour les coffres ResourceSpawner, false pour les coffres permanents legacy)
+- Les coffres respawnables sont ajoutés au groupe `"spawned_chest"` (comptage pour le max)
 
 ### 🐄 Animaux (Spawn Dynamique)
 - `AnimalSpawner` spawne les animaux sur les tiles herbe au démarrage
@@ -209,6 +253,54 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
 - Signaux : `mana_changed(current, max)`, `stats_changed`, `level_up(new_level)`
 - Montée en niveau automatique + 3 points à distribuer par niveau
 - 10 équipements définis dans `Stats.equipment_data`
+
+### 🌟 Talents Passifs
+- Tous les 3 niveaux, 3 talents sont proposés (choix parmi ceux non encore acquis)
+- Panneau de sélection bloquant (jeu en pause) avec cartes cliquables
+- Pool de 8 talents :
+
+| ID | Label | Effet |
+|---|---|---|
+| `regen_on_kill` | Vampire | +5 PV à chaque kill ennemi |
+| `speed_boost` | Leste | Vitesse de déplacement +15% |
+| `piercing_arrows` | Flèches perçantes | Les flèches traversent les ennemis |
+| `max_health_up` | Robuste | PV maximum +30 |
+| `crit_chance` | Précision | 20% de chances de coup critique (×1.5) |
+| `mana_regen_up` | Mystique | Régénération de mana ×2 |
+| `double_loot` | Chanceux | Les ressources récoltées donnent ×2 objets |
+| `dash_heal` | Esquiveur | +3 PV à chaque esquive réussie |
+
+- Sauvegardé dans `GameManager` (champ `active_talents`)
+- Talents visibles dans le panneau personnage (section dédiée)
+
+### ⚡ Esquive / Roulade
+- Double-tap sur une flèche directionnelle = dash d'invincibilité (0.18 s)
+- Vitesse de dash : 420 px/s, cooldown : 1 s
+- Flash semi-transparent pendant le dash
+- Immunité aux dégâts (`_is_dodging` flag dans `take_damage()`)
+- Talent `dash_heal` : +3 PV par esquive réussie
+
+### 💀 Boss — Barre de vie dédiée
+- Exports sur `enemy.gd` : `is_boss`, `boss_name`, `unique_drops`
+- Barre de vie stylisée en bas d'écran (fond rouge → fill sombre)
+- Signaux : `boss_health_changed(current, max_hp)`, `boss_died`
+- À la mort : drops uniques distribués via `Inventory.add_item()`, barre disparaît
+- Au respawn : barre réapparaît avec vie pleine
+- **Configuration** : dans `golem.tscn`, cocher `is_boss = true`, renseigner `boss_name` et `unique_drops` dans l'inspecteur Godot
+
+### 🗺️ Minimap
+- Widget `TextureRect` 120×120 px en haut-droite (CanvasLayer)
+- Rendu pixel-par-pixel sur une `Image` mise à jour toutes les 0.5 s
+- Réutilise `fog_of_war.revealed_cells` : zones révélées en vert, brouillard en quasi-noir
+- Point blanc = joueur, points rouges = ennemis dans les zones révélées
+- Toggle avec la touche **M**
+
+### 🏅 Icônes de talents actifs (HUD)
+- Rangée de petits carrés colorés (24×24 px) affichée sous les barres de vie/mana/xp
+- Un carré par talent actif, avec une couleur et une abréviation 2 lettres distinctes par talent
+- Tooltip au survol affichant le nom complet et l'effet
+- Se met à jour automatiquement à l'acquisition d'un talent et au chargement d'une sauvegarde
+- Configuration dans `hud.gd` → constante `TALENT_ICON_DEFS` (id → couleur + abréviation + description)
 
 ### 📜 Quêtes
 - Deux quêtes : "Chasseur de slimes" (tuer 5 slimes) et "Bûcheron débutant" (récolter 10 bois)
@@ -329,170 +421,4 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
 - **Indicateur de l'heure** : afficher jour/nuit avec une icône soleil/lune (l'heure est déjà dans `SunLabel`)
 
 ---
-
-## 🏗️ Plan d'implémentation — Prochaines fonctionnalités
-
-### 1. 🌟 Talents passifs
-
-**Concept** : tous les 3 niveaux, le jeu propose 3 talents aléatoires parmi un pool. Le joueur en choisit un, qui s'applique immédiatement et définitivement.
-
-**Fichiers touchés :** `stats.gd`, `hud.gd`
-
-**Plan détaillé :**
-
-**`stats.gd`**
-- Ajouter `const TALENT_EVERY_N_LEVELS = 3` et `var active_talents: Array = []`
-- Ajouter un nouveau signal `signal talent_available(choices: Array)`
-- Dans `_level_up()` : si `level % TALENT_EVERY_N_LEVELS == 0`, piocher 3 talents aléatoires distincts dans le pool et émettre `talent_available`
-- Ajouter `func apply_talent(talent_id: String)` qui stocke le talent et applique son effet sur les stats (ou sur un dictionnaire de flags)
-- Ajouter `func has_talent(talent_id: String) -> bool`
-
-Pool de talents (exemples) :
-```gdscript
-const TALENT_POOL = [
-    { "id": "regen_on_kill",   "label": "Vampire",          "desc": "+5 PV à chaque kill" },
-    { "id": "speed_boost",     "label": "Leste",            "desc": "Vitesse +15%" },
-    { "id": "piercing_arrows", "label": "Flèches perçantes","desc": "Les flèches traversent les ennemis" },
-    { "id": "max_health_up",   "label": "Robuste",          "desc": "PV max +30" },
-    { "id": "crit_chance",     "label": "Précision",        "desc": "20% de chances de coup critique (×1.5)" },
-    { "id": "mana_regen_up",   "label": "Mystique",         "desc": "Régén mana ×2" },
-    { "id": "double_loot",     "label": "Chanceux",         "desc": "Les ressources donnent ×2 objets" },
-    { "id": "dash_heal",       "label": "Esquiveur",        "desc": "+3 PV à chaque esquive réussie" },
-]
-```
-
-**`hud.gd`**
-- Connecter le signal `Stats.talent_available` dans `_ready()`
-- Ajouter `_build_talent_panel()` et `_show_talent_choices(choices)` : overlay sombre avec 3 grandes cartes cliquables (icône + nom + description)
-- Le panneau est bloquant (pause le temps de la sélection via `get_tree().paused = true`) ou simplement non-fermable
-- À la sélection : `Stats.apply_talent(id)` + fermer + notification dorée "🌟 Talent acquis : ..."
-- Afficher les talents actifs dans le panneau personnage (section dédiée en bas)
-
-**Sauvegarde** : ajouter `active_talents` dans `GameManager.save_game()` et `load_game()`
-
----
-
-### 2. 💀 Boss avec barre de vie dédiée
-
-**Concept** : certains ennemis sont marqués comme "boss". Quand ils sont en vie, une barre de vie stylisée apparaît en bas de l'écran. À la mort, ils droppent des items uniques et ne respawnent pas (ou très longtemps).
-
-**Fichiers touchés :** `enemy.gd`, `hud.gd`
-
-**Plan détaillé :**
-
-**`enemy.gd`**
-- Ajouter les exports :
-```gdscript
-@export var is_boss: bool = false
-@export var boss_name: String = "Boss"
-@export var unique_drops: Array = []
-# Format : [{ "name": "Clé de donjon", "qty": 1 }, { "name": "Minerai d'or", "qty": 3 }]
-```
-- Dans `_ready()` : si `is_boss`, émettre un signal `boss_spawned(self)` vers le groupe "hud"
-- Ajouter un signal `boss_health_changed(current, max_hp)` émis dans `take_damage()` et `respawn()`
-- Dans `die()` : si `is_boss`, distribuer `unique_drops` (via `Inventory.add_item`), émettre `boss_died`, et utiliser un `respawn_time` très long (ou ne pas respawner du tout avec un flag `respawn_enabled = not is_boss`)
-- Les bosses actuels à configurer : `golem.tscn` (is_boss=true, boss_name="Golem de Pierre")
-
-**`hud.gd`**
-- Ajouter `_build_boss_bar()` dans `_ready()` : barre en bas d'écran (CanvasLayer), cachée par défaut
-- La barre contient : nom du boss (Label), barre de progression stylisée (TextureProgressBar ou ColorRect), icône de tête de mort
-- Style : fond noir avec bordure rouge/or, plus grand que la barre de vie joueur
-- Connecter les signaux boss via le groupe "hud" :
-  - `boss_spawned` → afficher la barre, fill = 100%
-  - `boss_health_changed` → mettre à jour le fill
-  - `boss_died` → animation de remplissage à 0 puis disparition progressive
-
----
-
-### 3. ⚡ Esquive / Roulade
-
-**Concept** : double-tap sur une direction directionnelle = dash d'invincibilité court dans cette direction. Cooldown de 1 seconde. Animation de "flash" blanc.
-
-**Fichiers touchés :** `player.gd`
-
-**Plan détaillé :**
-
-```gdscript
-# Variables à ajouter dans player.gd
-var _last_direction_press: Vector2 = Vector2.ZERO
-var _last_direction_time:  float   = 0.0
-const DOUBLE_TAP_WINDOW:   float   = 0.25   # secondes
-var _is_dodging:           bool    = false
-var _dodge_cooldown:       float   = 0.0
-const DODGE_COOLDOWN:      float   = 1.0    # secondes
-const DODGE_SPEED:         float   = 400.0
-const DODGE_DURATION:      float   = 0.18   # secondes d'invincibilité
-```
-
-**Détection du double-tap** dans `_input()` :
-- À chaque `is_action_just_pressed` directionnel, comparer avec `_last_direction_press`
-- Si même direction et `Time.get_ticks_msec() - _last_direction_time < DOUBLE_TAP_WINDOW * 1000` → déclencher le dodge
-- Mémoriser la direction et l'heure à chaque appui
-
-**`_dodge(direction)`** :
-1. Vérifier le cooldown et qu'on n'est pas déjà en train d'attaquer ou de se faire toucher
-2. `_is_dodging = true` → immunité dans `take_damage()` (comme `is_attacking`)
-3. Appliquer `velocity = direction * DODGE_SPEED` pendant `DODGE_DURATION`
-4. Effet visuel : `modulate = Color(1, 1, 1, 0.5)` pendant le dash + retour
-5. Si le talent `dash_heal` est actif : `heal(3)`
-6. Après `DODGE_DURATION` : `_is_dodging = false`, démarrer le cooldown
-7. Le cooldown décrémente dans `_physics_process(delta)`
-
-**Dans `take_damage()`** : ajouter `if _is_dodging: return`
-
-**Touche** : le double-tap sur les flèches directionnelles est naturel. Pas besoin d'une touche dédiée.
-
----
-
-### 4. 🗺️ Minimap
-
-**Concept** : petit widget en coin de l'écran (bas-droite) montrant une version miniature du brouillard de guerre révélé, avec un point blanc pour le joueur.
-
-**Fichiers touchés :** `hud.gd` (ou nouveau `minimap.gd` attaché au HUD)
-
-**Plan détaillé :**
-
-La minimap réutilise directement `fog_of_war.revealed_cells` pour connaître les zones révélées.
-
-**Approche avec `SubViewportContainer`** (la plus propre) :
-- Créer un `SubViewport` qui capture la scène depuis le dessus avec un zoom très réduit — mais complexe à mettre en place.
-
-**Approche recommandée — rendu direct sur `Control`** :
-- Ajouter `_build_minimap()` dans `hud.gd` créant un `TextureRect` en coin bas-droite (taille 120×120 px)
-- Créer une `Image` de `MAP_W × MAP_H` pixels (même dimensions que le fog), reconstruite régulièrement
-- Copier les données de `fog_of_war.revealed_cells` : pixel noir = non révélé, pixel coloré = révélé (herbe = vert foncé, chemin = beige, eau = bleu)
-- Point blanc clignotant = position joueur, points rouges = ennemis proches
-- Mise à jour toutes les 0.5 secondes (pas besoin de frame-perfect)
-- Bordure pixel-art autour du widget
-
-```gdscript
-# Dans hud.gd — variables à ajouter
-var _minimap_rect: TextureRect = null
-var _minimap_image: Image = null
-var _minimap_texture: ImageTexture = null
-var _minimap_timer: float = 0.0
-const MINIMAP_UPDATE_INTERVAL: float = 0.5
-const MINIMAP_SIZE: int = 120  # pixels affichés
-
-# Couleurs de tuile sur la minimap
-const MINIMAP_COLORS = {
-    "revealed":     Color(0.25, 0.45, 0.20),  # vert foncé (herbe révélée)
-    "fog":          Color(0.05, 0.05, 0.05),  # presque noir
-    "player":       Color(1.0, 1.0, 1.0),     # blanc
-    "enemy":        Color(1.0, 0.2, 0.2),     # rouge
-}
-```
-
-**Mise à jour** dans `_process(delta)` du HUD : incrémenter `_minimap_timer`, si > `MINIMAP_UPDATE_INTERVAL`, appeler `_update_minimap()` et remettre à zéro.
-
-**`_update_minimap()`** :
-1. Récupérer le nœud fog via `get_tree().get_first_node_in_group("fog")`
-2. Pour chaque pixel de la minimap : mapper vers les coordonnées du fog, lire l'alpha de `revealed_cells`
-3. Si révélé (alpha < 0.5) → couleur terrain, sinon couleur fog
-4. Poser le point joueur (calculer sa position en pixels de minimap)
-5. Poser les points ennemis visibles
-6. `_minimap_texture.update(_minimap_image)`
-
-**Toggle** : touche **M** pour afficher/masquer (à ajouter dans `_input()` du HUD et dans le guide F1)
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+ 
