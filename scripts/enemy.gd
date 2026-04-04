@@ -153,6 +153,10 @@ func die():
 func respawn():
 	health = max_health
 	is_dying = false
+	is_hurt = false       # réinitialise les flags d'animation au cas où
+	is_attacking = false
+	player_in_range = false
+	damage_timer = 0.0
 
 	$CollisionShape2D.disabled = false
 	set_physics_process(true)
@@ -199,7 +203,9 @@ func _poursuit_joueur(dist: float):
 		velocity = Vector2.ZERO
 		player_in_range = true
 	else:
-		# Encore trop loin : s'approcher
+		# Encore trop loin : s'approcher — réinitialiser le timer si on vient de quitter la portée
+		if player_in_range:
+			damage_timer = 0.0   # Bug fix : évite une attaque instantanée au retour
 		player_in_range = false
 		var dir = (player.global_position - global_position).normalized()
 		velocity = dir * speed
