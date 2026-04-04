@@ -946,7 +946,6 @@ layer = 2
 script = ExtResource("11_e3hyu")
 
 [node name="HealthBar" type="TextureProgressBar" parent="HUD" unique_id=1034229996]
-visible = false
 offset_left = 10.0
 offset_top = 10.0
 offset_right = 99.0

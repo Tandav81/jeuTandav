@@ -109,6 +109,11 @@ func _begin_dialogue() -> void:
 	_waiting_for_choice = false
 	_load_sequence(_resolve_start_key())
 
+	# Bloquer le déplacement du joueur pendant le dialogue
+	var player = get_tree().get_first_node_in_group("player")
+	if player:
+		player.in_dialogue = true
+
 	var hud = _get_hud()
 	if hud:
 		hud.start_npc_dialogue(self, npc_name)
@@ -177,6 +182,10 @@ func _end_dialogue() -> void:
 	_dialogue_active    = false
 	_waiting_for_choice = false
 	update_quest_icon()
+	# Rendre le déplacement au joueur
+	var player = get_tree().get_first_node_in_group("player")
+	if player:
+		player.in_dialogue = false
 	var hud = _get_hud()
 	if hud:
 		hud.end_npc_dialogue()
@@ -217,6 +226,10 @@ func select_choice(index: int) -> void:
 func force_end_dialogue() -> void:
 	_dialogue_active    = false
 	_waiting_for_choice = false
+	# Rendre le déplacement au joueur
+	var player = get_tree().get_first_node_in_group("player")
+	if player:
+		player.in_dialogue = false
 	var hud = _get_hud()
 	if hud:
 		hud.end_npc_dialogue()

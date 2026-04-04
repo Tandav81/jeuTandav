@@ -25,6 +25,7 @@ var _last_dir_pressed:   Vector2 = Vector2.ZERO
 var _last_dir_time_ms:   int     = 0
 var _is_dodging:         bool    = false
 var _dodge_cooldown_cur: float   = 0.0
+var in_dialogue:         bool    = false   # bloque le déplacement pendant un dialogue PNJ
 
 signal health_changed(new_health)
 
@@ -79,6 +80,12 @@ func _physics_process(delta):
 		_dodge_cooldown_cur -= delta
 
 	var current_speed = Stats.get_speed()
+
+	if in_dialogue:
+		velocity = Vector2.ZERO
+		anim.play("idle_down")
+		move_and_slide()
+		return
 
 	if _is_dodging:
 		move_and_slide()

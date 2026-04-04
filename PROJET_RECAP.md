@@ -63,7 +63,7 @@ test-jeu-2d/
 	├── Animals/                    ← Chicken/, etc.
 	├── sprites/                    ← redbar_00 à redbar_06 (barre de vie ennemis)
 	├── Tileset/                    ← spr_tileset_sunnysideworld_16px.png
-	├── menus/                      ← character_panel.png (HUD barres)
+	├── menus/                      ← character_panel.png (HUD barres), Equipment.png (panneau équipement visuel 160×384 px)
 	├── rpgItems.png                ← spritesheet items 16×16
 	└── itemset0.png                ← spritesheet items 16×16
 ```
@@ -86,6 +86,7 @@ test-jeu-2d/
 | Ouvrir inventaire | I |
 | Ouvrir crafting | B |
 | Panneau personnage | P |
+| Équipement visuel | G |
 | Journal de quêtes | C |
 | Sauvegarder | S |
 | Guide d'aide | F1 |
@@ -143,7 +144,8 @@ test-jeu-2d/
 ### 👾 Ennemis
 - Script commun `enemy.gd` — instancié par toutes les scènes d'ennemis
 - Patrouille automatique autour d'un point de départ
-- Détection du joueur → poursuite
+- Détection du joueur → poursuite jusqu'à `attack_range` pixels, puis **arrêt complet** — l'ennemi ne traverse plus le joueur
+- **Portée d'attaque** (`attack_range`, défaut 38 px) : en dessous de cette distance, `player_in_range = true`, vitesse = 0, attaques déclenchées ; au-delà, l'ennemi se remet en mouvement
 - **Animation d'attaque** : `_do_attack()` joue l'animation, inflige les dégâts après 0.3 s, attend la fin de l'animation avant de rejouer
 - Flag `is_attacking` qui bloque l'écrasement d'animation par le mouvement
 - Système de vie — `health` initialisé dans `_ready()` depuis `max_health` (fix appliqué)
@@ -313,6 +315,9 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
 - Scripts spécialisés (`NPCbucheron.gd`, `NPCslime.gd`) qui étendent `npc.gd`
 - Dialogues avec choix multiples (`choices` + `goto`)
 - Action `start_quest` déclenchable depuis le dialogue
+- Navigation clavier complète dans les choix : ↑/↓ pour déplacer le curseur, **E** ou **Entrée** pour valider, **1–9** pour sélection directe rapide
+- Le choix actif est mis en évidence visuellement (bordure dorée épaisse + préfixe ▶ + texte jaune vif)
+- Déplacement du joueur bloqué automatiquement pendant le dialogue (`player.in_dialogue = true`) — rétabli à la fin ou si `force_end_dialogue()` est appelé
 
 ### 💰 Coffres
 - Contenu configurable, persistance de l'état ouvert via `GameManager`
@@ -326,8 +331,35 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
   - Mauvais outil → orange
   - Level up → doré
   - Équipement équipé → vert clair
-- **Guide d'aide (F1)** : overlay plein écran avec toutes les touches classées par section (Déplacement, Combat, Interface, Conseils)
-- Panneau inventaire, personnage, équipements, journal de quêtes, boîte de dialogue PNJ
+- **Guide d'aide (F1)** : overlay plein écran avec toutes les touches classées par section (Déplacement, Combat, Interface, Conseils). Inclut désormais la touche **G** (Équipement visuel).
+- Panneau inventaire, personnage, équipements (texte), journal de quêtes, boîte de dialogue PNJ
+- **Dialogue PNJ** : boîte de dialogue entièrement jouable au clavier — avancer avec **E**, naviguer les choix avec **↑/↓**, valider avec **E** ou **Entrée**, sélection directe via **1–9**
+
+### 🪖 Panneau d'équipement visuel (`equipment_panel.gd`)
+- Ouverture/fermeture via la touche **G** (Gear)
+- Construit entièrement par code, instancié dans `hud.gd` via `_build_equipment_panel()`
+- **Fond visuel** : `assets/menus/Equipment.png` (panneau 1, région `Rect2(0,0,160,88)`) affiché en 640×352 px (×4, `TEXTURE_FILTER_NEAREST`) + barre de détail sombre de 36 px — taille totale : **640×388 px**
+- **Bouton fermer** : zone cliquable transparente (sans texte) superposée au X dessiné dans l'image (natif x=144..150, y=3..9 → ×4 : position=Vector2(576,12), taille=28×28 px) — aucun élément UI visible ajouté
+- **Zone personnage** (section gauche) — 7 slots pixel-perfect sur les cadres dessinés dans l'image :
+  - Positions et tailles déterminées par analyse pixel du PNG (constantes `SLOT_POSITIONS`, `SLOT_SIZES`) :
+    - `casque` : pos=(132,68) taille=56×56 — `bouclier` : pos=(68,132) taille=52×56
+    - `plastron` : pos=(120,132) taille=84×56 — `arme` : pos=(204,132) taille=48×56
+    - `bottes` : pos=(132,196) taille=56×56 — `anneau` : pos=(68,260) taille=48×56
+    - `amulette` : pos=(204,260) taille=48×56
+  - Aucun sprite joueur superposé (le personnage est déjà dessiné dans l'image)
+  - Slot vide : fond totalement transparent (0,0,0,0) — le cadre dessiné est visible
+  - Slot équipé : fond vert semi-transparent + bordure verte + icône via `ItemData` (padding 1 px)
+  - Cliquer un slot équipé → déséquipe l'item
+- **Zone items** (section droite, `ScrollContainer`) :
+  - Grille **4 colonnes** de boutons 68×68 px (ITEMS_X=316, ITEMS_Y=56, ITEMS_W=288, ITEMS_H=280)
+  - Icône grande (2 px de marge, 64×52 px effective) + nom tronqué sur 11 px en bas
+  - Filtre automatique : seuls les items de `Inventory.items` présents dans `Stats.equipment_data`
+  - Chaque bouton : icône + nom + badge ✓ si équipé, quantité si > 1
+  - Cliquer → équipe ou déséquipe
+- **Barre de détails** (36 px sous l'image) : texte dynamique au survol — bonus formatés `[+X FOR, +Y DEF…]`
+- Se synchronise avec `Inventory.inventory_changed` — `_refresh()` appelé aussi depuis `hud.gd._on_inventory_changed()`
+- `Stats.emit_signal("stats_changed")` déclenché à chaque équipement/déséquipement
+- Palette de couleurs issue de `Equipment.png` : brun `(130,92,47)`, beige `(229,214,161)`, teal `(80,169,120)`, etc.
 
 ### 🔨 Crafting
 - Touche B — deux onglets Armes / Potions

@@ -2,6 +2,7 @@ extends CharacterBody2D
 
 @export var speed = 60.0
 @export var detection_range = 100.0
+@export var attack_range = 38.0   # distance à laquelle l'ennemi s'arrête et attaque
 @export var patrol_range = 50.0
 @export var damage_per_second = 10.0
 @export var max_health = 50
@@ -184,16 +185,24 @@ func _physics_process(delta):
 
 	var dist = global_position.distance_to(player.global_position)
 	if dist < detection_range:
-		_poursuit_joueur()
+		_poursuit_joueur(dist)
 	else:
+		player_in_range = false
 		_patrouille(delta)
 
 	move_and_slide()
 	_jouer_animation()
 
-func _poursuit_joueur():
-	var dir = (player.global_position - global_position).normalized()
-	velocity = dir * speed
+func _poursuit_joueur(dist: float):
+	if dist <= attack_range:
+		# À portée d'attaque : s'arrêter et activer le combat
+		velocity = Vector2.ZERO
+		player_in_range = true
+	else:
+		# Encore trop loin : s'approcher
+		player_in_range = false
+		var dir = (player.global_position - global_position).normalized()
+		velocity = dir * speed
 
 func _patrouille(delta):
 	patrol_timer += delta
@@ -224,11 +233,9 @@ func _jouer_animation():
 			anim.play("walk_up")
 
 func _on_area_2d_body_entered(body):
-	if body.is_in_group("player"):
-		player_in_range = true
-		damage_timer = 0.6  # première attaque après 0.4s (pas immédiate)
+	# Géré directement via la distance dans _poursuit_joueur()
+	pass
 
 func _on_area_2d_body_exited(body):
-	if body.is_in_group("player"):
-		player_in_range = false
-		damage_timer = 0.0
+	# Géré directement via la distance dans _poursuit_joueur()
+	pass

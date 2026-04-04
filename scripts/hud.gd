@@ -39,9 +39,13 @@ var _tool_slot: PanelContainer = null
 var _tool_icon: TextureRect   = null
 
 var _active_npc: Node = null
+var _choice_index:   int   = 0      # index du choix actuellement sélectionné
+var _choice_buttons: Array = []     # références aux boutons de choix en cours
+var _choice_labels:  Array = []     # labels originaux (sans le préfixe ▶)
 var _shop_panel: Control = null   # panneau boutique
 var _shop_merchant: Node  = null  # marchand actif
 var _talent_panel: Control = null   # panneau de choix de talent
+var _equip_panel: Control = null    # panneau équipement visuel (touche E)
 var _boss_bar_container: Control = null   # barre boss (bas écran)
 var _boss_bar_fill: ColorRect    = null
 var _boss_bar_label: Label       = null
@@ -116,6 +120,8 @@ func _ready():
 	call_deferred("_build_minimap")
 	# ── Icônes talents actifs (sous les barres) ──────────────────
 	call_deferred("_build_talent_icons")
+	# ── Panneau équipement visuel (touche E) ─────────────────────
+	call_deferred("_build_equipment_panel")
 
 func _input(event: InputEvent) -> void:
 	# Touche B (Bricoler) : ouvre/ferme le panneau de crafting
@@ -131,6 +137,11 @@ func _input(event: InputEvent) -> void:
 		elif event.keycode == KEY_P:
 			_on_btn_personnage_pressed()
 			get_viewport().set_input_as_handled()
+		# Touche G : panneau équipement visuel (G = Gear)
+		elif event.keycode == KEY_G:
+			if _equip_panel:
+				_equip_panel.toggle()
+			get_viewport().set_input_as_handled()
 		# Touche F1 : ouvre/ferme le panneau d'aide
 		elif event.keycode == KEY_F1:
 			if _help_panel:
@@ -143,6 +154,33 @@ func _input(event: InputEvent) -> void:
 				_minimap_rect.get_parent().visible = _minimap_visible
 			get_viewport().set_input_as_handled()
 	
+	# ── Navigation clavier dans les choix de dialogue ────────────────
+	if _active_npc != null and _choice_buttons.size() > 0:
+		# Haut / Bas pour déplacer le curseur
+		if event.is_action_pressed("ui_up"):
+			_choice_index = (_choice_index - 1 + _choice_buttons.size()) % _choice_buttons.size()
+			_highlight_choice(_choice_index)
+			get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("ui_down"):
+			_choice_index = (_choice_index + 1) % _choice_buttons.size()
+			_highlight_choice(_choice_index)
+			get_viewport().set_input_as_handled()
+			return
+		# E ou Entrée pour valider le choix sélectionné
+		if event.is_action_pressed("interact") or event.is_action_pressed("ui_accept"):
+			_on_dialogue_choice_pressed(_choice_index)
+			get_viewport().set_input_as_handled()
+			return
+		# Chiffres 1–9 pour sélection directe rapide
+		if event is InputEventKey and event.pressed and not event.echo:
+			var k: int = int(event.keycode) - int(KEY_1)
+			if k >= 0 and k < _choice_buttons.size():
+				_choice_index = k
+				_on_dialogue_choice_pressed(_choice_index)
+				get_viewport().set_input_as_handled()
+				return
+
 	# ── Avancer dans le dialogue avec E (si dialogue actif) ──────────
 	if event.is_action_pressed("interact") and _active_npc != null:
 		_active_npc.advance()
@@ -171,6 +209,8 @@ func _process(delta: float):
 			crafting_panel_node.hide_panel()
 		if _shop_panel and _shop_panel.visible:
 			_shop_panel.visible = false
+		if _equip_panel and _equip_panel.visible:
+			_equip_panel.visible = false
 		if _talent_panel and _talent_panel.visible:
 			pass  # talent panel non fermable — choix obligatoire
 			
@@ -362,6 +402,9 @@ func _on_inventory_changed():
 	if panneau_perso.visible:
 		_refresh_equipement()
 	_refresh_tool_display()
+	# Panneau équipement visuel : toujours synchronisé si ouvert
+	if _equip_panel and _equip_panel.visible:
+		_equip_panel._refresh()
 
 func _on_btn_inventaire_pressed():
 	panneau.visible = !panneau.visible
@@ -642,6 +685,18 @@ func _refresh_equipement():
 		btn.add_theme_font_size_override("font_size", 13)
 		grid_equip.add_child(btn)
 
+func _build_equipment_panel() -> void:
+	var script = load("res://scripts/equipment_panel.gd")
+	if not script:
+		push_error("HUD : equipment_panel.gd introuvable !")
+		return
+	_equip_panel = Panel.new()
+	_equip_panel.set_script(script)
+	_equip_panel.visible = false
+	# Z-index pour être au-dessus des autres panneaux
+	_equip_panel.z_index = 10
+	add_child(_equip_panel)
+
 func _on_desequiper(slot: String):
 	Inventory.unequip_item(slot)
 	Stats.emit_signal("stats_changed")
@@ -710,17 +765,21 @@ func show_dialogue_line(text: String) -> void:
 ## choices = [{"label": "...", "goto": "..."}, ...]
 func show_dialogue_line_with_choices(text: String, choices: Array) -> void:
 	label_dialogue.text     = text
-	label_continuer.visible = false   # on attend un clic, pas E
+	label_continuer.visible = false   # on attend un clic ou une touche, pas E
 	_clear_choices()
+	_choice_index = 0
 
 	for i in choices.size():
 		var choice: Dictionary = choices[i]
+		var lbl: String = choice.get("label", "...")
+		_choice_labels.append(lbl)
+
 		var btn := Button.new()
-		btn.text              = choice.get("label", "...")
+		btn.text              = lbl
 		btn.focus_mode        = Control.FOCUS_NONE   # évite les conflits avec Espace
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-		# Style facultatif — adapte ou supprime selon ton thème
+		# Style de base
 		var sb := StyleBoxFlat.new()
 		sb.bg_color          = Color(0.15, 0.10, 0.05, 0.85)
 		sb.border_color      = Color(0.7, 0.55, 0.2)
@@ -736,6 +795,11 @@ func show_dialogue_line_with_choices(text: String, choices: Array) -> void:
 		var idx := i   # capture de la variable pour la lambda
 		btn.pressed.connect(func() -> void: _on_dialogue_choice_pressed(idx))
 		choices_container.add_child(btn)
+		_choice_buttons.append(btn)
+
+	# Surligne le premier choix d'emblée
+	if _choice_buttons.size() > 0:
+		_highlight_choice(0)
 
 ## Ferme la boîte de dialogue.
 func end_npc_dialogue() -> void:
@@ -747,6 +811,41 @@ func end_npc_dialogue() -> void:
 func _clear_choices() -> void:
 	for child in choices_container.get_children():
 		child.queue_free()
+	_choice_buttons.clear()
+	_choice_labels.clear()
+	_choice_index = 0
+
+## Met en évidence le choix à l'index donné (▶ préfixe + couleur vive).
+func _highlight_choice(index: int) -> void:
+	for i in _choice_buttons.size():
+		var btn: Button = _choice_buttons[i]
+		var orig: String = _choice_labels[i] if i < _choice_labels.size() else btn.text
+		if i == index:
+			btn.text = "▶  " + orig
+			btn.add_theme_color_override("font_color", Color(1.0, 1.0, 0.35))  # jaune vif
+			var sb_sel := StyleBoxFlat.new()
+			sb_sel.bg_color     = Color(0.28, 0.18, 0.05, 0.95)
+			sb_sel.border_color = Color(1.0, 0.85, 0.3)
+			sb_sel.set_border_width_all(2)
+			sb_sel.set_corner_radius_all(4)
+			sb_sel.content_margin_left   = 8.0
+			sb_sel.content_margin_right  = 8.0
+			sb_sel.content_margin_top    = 4.0
+			sb_sel.content_margin_bottom = 4.0
+			btn.add_theme_stylebox_override("normal", sb_sel)
+		else:
+			btn.text = orig
+			btn.add_theme_color_override("font_color", Color(0.95, 0.85, 0.5))
+			var sb_norm := StyleBoxFlat.new()
+			sb_norm.bg_color     = Color(0.15, 0.10, 0.05, 0.85)
+			sb_norm.border_color = Color(0.7, 0.55, 0.2)
+			sb_norm.set_border_width_all(1)
+			sb_norm.set_corner_radius_all(4)
+			sb_norm.content_margin_left   = 8.0
+			sb_norm.content_margin_right  = 8.0
+			sb_norm.content_margin_top    = 4.0
+			sb_norm.content_margin_bottom = 4.0
+			btn.add_theme_stylebox_override("normal", sb_norm)
 
 ## Transmet le choix sélectionné au NPC.
 func _on_dialogue_choice_pressed(index: int) -> void:
@@ -815,6 +914,7 @@ func _build_help_panel() -> void:
 		["Interface", [
 			["I",              "Inventaire"],
 			["P",              "Fiche personnage"],
+			["G",              "Équipement visuel (Gear)"],
 			["C",              "Journal de quêtes"],
 			["B",              "Atelier de craft"],
 			["S",              "Sauvegarder"],
@@ -1210,6 +1310,7 @@ func _build_talent_panel() -> void:
 	overlay.color = Color(0, 0, 0, 0.80)
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.process_mode = Node.PROCESS_MODE_ALWAYS   # reste interactif quand le jeu est en pause
 	overlay.visible = false
 	add_child(overlay)
 	_talent_panel = overlay
@@ -1534,3 +1635,4 @@ func _update_minimap() -> void:
 			_minimap_image.set_pixel(px, py, color_enemy)
 
 	_minimap_texture.update(_minimap_image)
+	

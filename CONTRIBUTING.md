@@ -214,8 +214,8 @@ Dupliquez une scène existante (ex. `scenes/skeleton.tscn`), renommez-la, et con
 | `speed` | Vitesse de déplacement |
 | `damage_per_second` | Dégâts infligés au joueur |
 | `xp_reward` | XP donné à la mort |
-| `detection_range` | Rayon de détection du joueur |
-| `attack_range` | Distance à laquelle il attaque |
+| `detection_range` | Rayon de détection du joueur (poursuite déclenchée) |
+| `attack_range` | Distance (px) à laquelle l'ennemi **s'arrête** et attaque — défaut 38 px. En dessous : immobile + dégâts. Au-dessus : poursuite. |
 | `enemy_type` | Identifiant pour les quêtes (ex. `"zombie"`) |
 
 **Étape 2 — Ajouter au groupe `enemy`**
@@ -485,7 +485,7 @@ var equipment_data = {
 }
 ```
 
-Ajoutez ensuite l'icône dans `item_data.gd` (section 1). L'item peut alors être placé dans un coffre, droppé par un boss, ou vendu par un marchand — il sera équipable automatiquement depuis l'inventaire.
+Ajoutez ensuite l'icône dans `item_data.gd` (section 1). L'item peut alors être placé dans un coffre, droppé par un boss, ou vendu par un marchand — il sera équipable automatiquement depuis l'inventaire **et apparaîtra dans le panneau d'équipement visuel (G)** dès qu'il est dans l'inventaire du joueur.
 
 ---
 
@@ -507,4 +507,4 @@ Ajoutez ensuite l'icône dans `item_data.gd` (section 1). L'item peut alors êtr
 | Quête | `scripts/quest_manager.gd` + script PNJ |
 | PNJ marchand | Scène Godot + inspecteur |
 | Talent passif | `scripts/stats.gd` + script(s) concerné(s) + `hud.gd` (`TALENT_ICON_DEFS`) |
-| Équipement | `scripts/stats.gd` + `item_data.gd` |
+| Équipement | `scripts/stats.gd` + `item_data.gd` (apparaît automatiquement dans le panneau G) |
