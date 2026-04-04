@@ -22,12 +22,12 @@ extends Node2D
 const DAY_ENEMY_DEFS: Array = [
 	{
 		"scene":     "res://scenes/slime.tscn",
-		"max":       6,
+		"max":       18,
 		"overrides": {}   # valeurs par défaut de slime.tscn
 	},
 	{
 		"scene":     "res://scenes/skeleton.tscn",
-		"max":       4,
+		"max":       18,
 		"overrides": {
 			"speed":             55.0,
 			"damage_per_second": 10.0,

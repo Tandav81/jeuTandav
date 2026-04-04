@@ -47,9 +47,9 @@ const MINERAL_DEFS = [
 
 # ── ✏️  ARBRES ──────────────────────────────────────────────
 ## Nombre total d'arbres à placer aléatoirement sur l'herbe
-const TREE_COUNT: int = 30
+const TREE_COUNT: int = 60
 ## Distance minimale entre deux arbres (pixels)
-const TREE_MIN_DIST: float = 48.0
+const TREE_MIN_DIST: float = 32.0
 ## Types d'arbres (weight = fréquence relative, overrides = props resource.gd)
 const TREE_DEFS: Array = [
 	{
