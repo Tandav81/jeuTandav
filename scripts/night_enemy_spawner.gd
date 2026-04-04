@@ -22,12 +22,12 @@ extends Node2D
 const NIGHT_ENEMY_DEFS: Array = [
 	{
 		"scene":     "res://scenes/bat.tscn",
-		"max":       5,
+		"max":       10,
 		"overrides": {}  # valeurs par défaut de bat.tscn
 	},
 	{
 		"scene":     "res://scenes/skeleton.tscn",
-		"max":       3,
+		"max":       8,
 		"overrides": {
 			"speed":             70.0,
 			"damage_per_second": 12.0,

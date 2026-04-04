@@ -1,7 +1,7 @@
 # 📋 Récapitulatif du projet — testJeu2D
 
 > Godot 4.6 — Jeu 2D RPG (top-down)
-> Dernière mise à jour : 2026-04-03
+> Dernière mise à jour : 2026-04-04
 
 ---
 
@@ -54,7 +54,10 @@ test-jeu-2d/
 │   ├── game_manager.gd             ← Autoload
 │   ├── inventory.gd                ← Autoload
 │   ├── quest_manager.gd            ← Autoload
-│   └── stats.gd                    ← Autoload
+│   ├── stats.gd                    ← Autoload
+│   ├── night_enemy_spawner.gd      ← spawn dynamique ennemis nocturnes
+│   ├── npc_merchant.gd             ← PNJ marchand (extends npc.gd)
+│   └── (minimap.gd)                ← ⏳ à créer
 └── assets/
 	├── Player/                     ← spritesheets joueur (attaque, arc…)
 	├── Enemies/                    ← Bat/, Golem_1/, flyingMushroom/, etc.
@@ -294,20 +297,14 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
 
 **Combat & ennemis**
 - Ennemis à distance : archer squelette ou mage — `projectile.gd` existe déjà côté joueur, il suffit de l'utiliser côté ennemi
-- Boss avec barre de vie dédiée en bas d'écran (CanvasLayer HUD) et drops uniques
-- Esquive/roulade : dash d'invincibilité sur double-tap directionnel
-- Comportements nocturnes : ennemis plus rapides/agressifs la nuit (le signal `time_of_day_changed` est déjà émis)
 
 **Spawns & monde**
-- Spawns nocturnes exclusifs : ennemis qui n'apparaissent qu'entre 18h et 6h
 - ResourceSpawner dans la grotte (actuellement rochers statiques)
 - Nouvelles zones accessibles via portail (donjon, village, désert…)
 
 **Crafting & économie**
-- PNJ marchand : achète/vend des items — dialogue PNJ + inventaire existent déjà
 - Nouvelles recettes utilisant Pierre brute, Cristal, Or
 - Amélioration d'équipements : dépenser des minerais pour upgrader une arme (+1, +2…)
-- Recettes à débloquer via livres de recettes dans des coffres
 
 **Quêtes**
 - Type "deliver" : apporter X items à un PNJ (trivial à ajouter dans `quest_manager.gd`)
@@ -317,7 +314,6 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
 ### 🧠 Profondeur RPG
 
 - **Classes au démarrage** : Guerrier / Archer / Mage — stats de départ et arme initiale différentes
-- **Talents passifs** : tous les N niveaux, choisir parmi 3 bonus (ex: "regain 1 PV par kill", "flèches traversantes", "vitesse +10%")
 - **Statuts** : empoisonné (dégâts sur la durée), ralenti, régénération — le système de dégâts continus des ennemis est déjà en place, c'est le même principe inversé
 
 ### 🔊 Audio (fort impact, effort moyen)
@@ -328,15 +324,175 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
 
 ### 🖥️ QoL interface
 
-- **Minimap** : les données du brouillard sont déjà disponibles dans `fog_of_war.gd`
 - **Tooltips** : hover sur un équipement → stats + comparaison avec l'équipé
 - **Barre de raccourcis consommables** : 1-4 pour potions/viande sans ouvrir l'inventaire
 - **Indicateur de l'heure** : afficher jour/nuit avec une icône soleil/lune (l'heure est déjà dans `SunLabel`)
 
-### 💡 Priorité suggérée
+---
 
-Si 3 choses pouvaient avoir le plus d'impact sur le ressenti du jeu en ce moment :
+## 🏗️ Plan d'implémentation — Prochaines fonctionnalités
 
-1. **Audio** — même des sons basiques changent complètement l'immersion
-2. **Spawns nocturnes** — exploite le cycle jour/nuit déjà en place, fort impact gameplay pour peu de code
-3. **PNJ marchand** — donne un objectif à l'or accumulé et une raison de farmer les ressources
+### 1. 🌟 Talents passifs
+
+**Concept** : tous les 3 niveaux, le jeu propose 3 talents aléatoires parmi un pool. Le joueur en choisit un, qui s'applique immédiatement et définitivement.
+
+**Fichiers touchés :** `stats.gd`, `hud.gd`
+
+**Plan détaillé :**
+
+**`stats.gd`**
+- Ajouter `const TALENT_EVERY_N_LEVELS = 3` et `var active_talents: Array = []`
+- Ajouter un nouveau signal `signal talent_available(choices: Array)`
+- Dans `_level_up()` : si `level % TALENT_EVERY_N_LEVELS == 0`, piocher 3 talents aléatoires distincts dans le pool et émettre `talent_available`
+- Ajouter `func apply_talent(talent_id: String)` qui stocke le talent et applique son effet sur les stats (ou sur un dictionnaire de flags)
+- Ajouter `func has_talent(talent_id: String) -> bool`
+
+Pool de talents (exemples) :
+```gdscript
+const TALENT_POOL = [
+    { "id": "regen_on_kill",   "label": "Vampire",          "desc": "+5 PV à chaque kill" },
+    { "id": "speed_boost",     "label": "Leste",            "desc": "Vitesse +15%" },
+    { "id": "piercing_arrows", "label": "Flèches perçantes","desc": "Les flèches traversent les ennemis" },
+    { "id": "max_health_up",   "label": "Robuste",          "desc": "PV max +30" },
+    { "id": "crit_chance",     "label": "Précision",        "desc": "20% de chances de coup critique (×1.5)" },
+    { "id": "mana_regen_up",   "label": "Mystique",         "desc": "Régén mana ×2" },
+    { "id": "double_loot",     "label": "Chanceux",         "desc": "Les ressources donnent ×2 objets" },
+    { "id": "dash_heal",       "label": "Esquiveur",        "desc": "+3 PV à chaque esquive réussie" },
+]
+```
+
+**`hud.gd`**
+- Connecter le signal `Stats.talent_available` dans `_ready()`
+- Ajouter `_build_talent_panel()` et `_show_talent_choices(choices)` : overlay sombre avec 3 grandes cartes cliquables (icône + nom + description)
+- Le panneau est bloquant (pause le temps de la sélection via `get_tree().paused = true`) ou simplement non-fermable
+- À la sélection : `Stats.apply_talent(id)` + fermer + notification dorée "🌟 Talent acquis : ..."
+- Afficher les talents actifs dans le panneau personnage (section dédiée en bas)
+
+**Sauvegarde** : ajouter `active_talents` dans `GameManager.save_game()` et `load_game()`
+
+---
+
+### 2. 💀 Boss avec barre de vie dédiée
+
+**Concept** : certains ennemis sont marqués comme "boss". Quand ils sont en vie, une barre de vie stylisée apparaît en bas de l'écran. À la mort, ils droppent des items uniques et ne respawnent pas (ou très longtemps).
+
+**Fichiers touchés :** `enemy.gd`, `hud.gd`
+
+**Plan détaillé :**
+
+**`enemy.gd`**
+- Ajouter les exports :
+```gdscript
+@export var is_boss: bool = false
+@export var boss_name: String = "Boss"
+@export var unique_drops: Array = []
+# Format : [{ "name": "Clé de donjon", "qty": 1 }, { "name": "Minerai d'or", "qty": 3 }]
+```
+- Dans `_ready()` : si `is_boss`, émettre un signal `boss_spawned(self)` vers le groupe "hud"
+- Ajouter un signal `boss_health_changed(current, max_hp)` émis dans `take_damage()` et `respawn()`
+- Dans `die()` : si `is_boss`, distribuer `unique_drops` (via `Inventory.add_item`), émettre `boss_died`, et utiliser un `respawn_time` très long (ou ne pas respawner du tout avec un flag `respawn_enabled = not is_boss`)
+- Les bosses actuels à configurer : `golem.tscn` (is_boss=true, boss_name="Golem de Pierre")
+
+**`hud.gd`**
+- Ajouter `_build_boss_bar()` dans `_ready()` : barre en bas d'écran (CanvasLayer), cachée par défaut
+- La barre contient : nom du boss (Label), barre de progression stylisée (TextureProgressBar ou ColorRect), icône de tête de mort
+- Style : fond noir avec bordure rouge/or, plus grand que la barre de vie joueur
+- Connecter les signaux boss via le groupe "hud" :
+  - `boss_spawned` → afficher la barre, fill = 100%
+  - `boss_health_changed` → mettre à jour le fill
+  - `boss_died` → animation de remplissage à 0 puis disparition progressive
+
+---
+
+### 3. ⚡ Esquive / Roulade
+
+**Concept** : double-tap sur une direction directionnelle = dash d'invincibilité court dans cette direction. Cooldown de 1 seconde. Animation de "flash" blanc.
+
+**Fichiers touchés :** `player.gd`
+
+**Plan détaillé :**
+
+```gdscript
+# Variables à ajouter dans player.gd
+var _last_direction_press: Vector2 = Vector2.ZERO
+var _last_direction_time:  float   = 0.0
+const DOUBLE_TAP_WINDOW:   float   = 0.25   # secondes
+var _is_dodging:           bool    = false
+var _dodge_cooldown:       float   = 0.0
+const DODGE_COOLDOWN:      float   = 1.0    # secondes
+const DODGE_SPEED:         float   = 400.0
+const DODGE_DURATION:      float   = 0.18   # secondes d'invincibilité
+```
+
+**Détection du double-tap** dans `_input()` :
+- À chaque `is_action_just_pressed` directionnel, comparer avec `_last_direction_press`
+- Si même direction et `Time.get_ticks_msec() - _last_direction_time < DOUBLE_TAP_WINDOW * 1000` → déclencher le dodge
+- Mémoriser la direction et l'heure à chaque appui
+
+**`_dodge(direction)`** :
+1. Vérifier le cooldown et qu'on n'est pas déjà en train d'attaquer ou de se faire toucher
+2. `_is_dodging = true` → immunité dans `take_damage()` (comme `is_attacking`)
+3. Appliquer `velocity = direction * DODGE_SPEED` pendant `DODGE_DURATION`
+4. Effet visuel : `modulate = Color(1, 1, 1, 0.5)` pendant le dash + retour
+5. Si le talent `dash_heal` est actif : `heal(3)`
+6. Après `DODGE_DURATION` : `_is_dodging = false`, démarrer le cooldown
+7. Le cooldown décrémente dans `_physics_process(delta)`
+
+**Dans `take_damage()`** : ajouter `if _is_dodging: return`
+
+**Touche** : le double-tap sur les flèches directionnelles est naturel. Pas besoin d'une touche dédiée.
+
+---
+
+### 4. 🗺️ Minimap
+
+**Concept** : petit widget en coin de l'écran (bas-droite) montrant une version miniature du brouillard de guerre révélé, avec un point blanc pour le joueur.
+
+**Fichiers touchés :** `hud.gd` (ou nouveau `minimap.gd` attaché au HUD)
+
+**Plan détaillé :**
+
+La minimap réutilise directement `fog_of_war.revealed_cells` pour connaître les zones révélées.
+
+**Approche avec `SubViewportContainer`** (la plus propre) :
+- Créer un `SubViewport` qui capture la scène depuis le dessus avec un zoom très réduit — mais complexe à mettre en place.
+
+**Approche recommandée — rendu direct sur `Control`** :
+- Ajouter `_build_minimap()` dans `hud.gd` créant un `TextureRect` en coin bas-droite (taille 120×120 px)
+- Créer une `Image` de `MAP_W × MAP_H` pixels (même dimensions que le fog), reconstruite régulièrement
+- Copier les données de `fog_of_war.revealed_cells` : pixel noir = non révélé, pixel coloré = révélé (herbe = vert foncé, chemin = beige, eau = bleu)
+- Point blanc clignotant = position joueur, points rouges = ennemis proches
+- Mise à jour toutes les 0.5 secondes (pas besoin de frame-perfect)
+- Bordure pixel-art autour du widget
+
+```gdscript
+# Dans hud.gd — variables à ajouter
+var _minimap_rect: TextureRect = null
+var _minimap_image: Image = null
+var _minimap_texture: ImageTexture = null
+var _minimap_timer: float = 0.0
+const MINIMAP_UPDATE_INTERVAL: float = 0.5
+const MINIMAP_SIZE: int = 120  # pixels affichés
+
+# Couleurs de tuile sur la minimap
+const MINIMAP_COLORS = {
+    "revealed":     Color(0.25, 0.45, 0.20),  # vert foncé (herbe révélée)
+    "fog":          Color(0.05, 0.05, 0.05),  # presque noir
+    "player":       Color(1.0, 1.0, 1.0),     # blanc
+    "enemy":        Color(1.0, 0.2, 0.2),     # rouge
+}
+```
+
+**Mise à jour** dans `_process(delta)` du HUD : incrémenter `_minimap_timer`, si > `MINIMAP_UPDATE_INTERVAL`, appeler `_update_minimap()` et remettre à zéro.
+
+**`_update_minimap()`** :
+1. Récupérer le nœud fog via `get_tree().get_first_node_in_group("fog")`
+2. Pour chaque pixel de la minimap : mapper vers les coordonnées du fog, lire l'alpha de `revealed_cells`
+3. Si révélé (alpha < 0.5) → couleur terrain, sinon couleur fog
+4. Poser le point joueur (calculer sa position en pixels de minimap)
+5. Poser les points ennemis visibles
+6. `_minimap_texture.update(_minimap_image)`
+
+**Toggle** : touche **M** pour afficher/masquer (à ajouter dans `_input()` du HUD et dans le guide F1)
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
