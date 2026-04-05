@@ -1,0 +1,101 @@
+[gd_scene format=3 uid="uid://ci8c8x6o8qyel"]
+
+[ext_resource type="Script" uid="uid://csvqn6ffg06q1" path="res://scripts/chest.gd" id="1_2w40u"]
+[ext_resource type="Texture2D" uid="uid://cp05bpuvtm3r1" path="res://assets/RPG Chests.png" id="2_v14uw"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_r0q60"]
+atlas = ExtResource("2_v14uw")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nfdfs"]
+atlas = ExtResource("2_v14uw")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1rt7i"]
+atlas = ExtResource("2_v14uw")
+region = Rect2(64, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hcgne"]
+atlas = ExtResource("2_v14uw")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xmtup"]
+atlas = ExtResource("2_v14uw")
+region = Rect2(64, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cwdy4"]
+atlas = ExtResource("2_v14uw")
+region = Rect2(64, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ycr78"]
+atlas = ExtResource("2_v14uw")
+region = Rect2(64, 96, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_8me8i"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_r0q60")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nfdfs")
+}],
+"loop": false,
+"name": &"ferme",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1rt7i")
+}],
+"loop": false,
+"name": &"ouvert",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hcgne")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xmtup")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cwdy4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ycr78")
+}],
+"loop": false,
+"name": &"ouverture",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gqd3d"]
+size = Vector2(16, 9)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_yue2o"]
+radius = 12.0
+
+[node name="GoldChest" type="StaticBody2D" unique_id=781992566]
+script = ExtResource("1_2w40u")
+contenu = "Epee en or"
+gold_amount = 200
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=782152187]
+position = Vector2(0, -8)
+sprite_frames = SubResource("SpriteFrames_8me8i")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2037467175]
+position = Vector2(0, -4.5)
+shape = SubResource("RectangleShape2D_gqd3d")
+
+[node name="InteractionZone" type="Area2D" parent="." unique_id=632925473]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionZone" unique_id=828461077]
+position = Vector2(0, -8)
+shape = SubResource("CircleShape2D_yue2o")
