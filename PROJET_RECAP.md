@@ -122,7 +122,7 @@ test-jeu-2d/
 ### 🗺️ Monde & Navigation
 - TileMapLayer avec 3 types de terrain : Herbe, Chemin (sable), Ferme
 - **Portails de transition** (`portal.gd` + `SceneTransition`) : fondu noir 0.5 s → changement de scène → fondu retour
-- **Scène Grotte** (`cave.tscn`) : environnement séparé avec ennemis dédiés (Chauve-souris) et portail de retour
+- **Scène Grotte** (`cave.tscn`) : environnement séparé avec spawners dédiés (ressources + ennemis) et portail de retour
 - Position de spawn configurable par portail
 - Sauvegarde du brouillard par scène dans `GameManager.fog_data`
 
@@ -163,7 +163,7 @@ test-jeu-2d/
 | `slime.tscn` | Slime vert | Extérieur (jour) |
 | `skeleton.tscn` | Squelette | Extérieur (jour + nuit) |
 | `golem.tscn` | Golem (boss) | Extérieur |
-| `bat.tscn` | Chauve-souris | Grotte + Nuit |
+| `bat.tscn` | Chauve-souris | Grotte (permanent) + Nuit (extérieur) |
 | `minotaur.tscn` | Minotaure | Extérieur/Grotte |
 | `flyingMushroom.tscn` | Champignon volant | Extérieur (jour) |
 
@@ -179,6 +179,32 @@ test-jeu-2d/
 - Config dans `NIGHT_ENEMY_DEFS` : `scene`, `max`, `overrides`
 - Distance sécurité joueur : 200 px — distance min entre ennemis : 80 px
 - Spawn sur tiles herbe + chemin (source_id 2, 3, 5)
+
+### 🦇 Spawners de la Grotte (Permanents)
+
+- `CaveEnemySpawner` (`cave_enemy_spawner.gd`) : spawne des ennemis **en permanence** dans `cave.tscn` (pas de cycle jour/nuit)
+- `CaveResourceSpawner` (`cave_resource_spawner.gd`) : spawne minerais et champignons dans la grotte
+- Tiles valides : **source_id = 13, atlas_coords = (2, 2)** (sol de grotte)
+- Les ennemis réapparaissent **30 secondes** après leur mort à un nouvel emplacement
+- Les ressources réapparaissent **90 secondes** après récolte à un nouvel emplacement
+
+**Ennemis de grotte (permanents) :**
+| Scène | Max | Notes |
+|---|---|---|
+| `bat.tscn` | 12 | — |
+| `skeleton.tscn` | 10 | speed=65, damage=12 |
+| `slime.tscn` | 8 | — |
+| `flyingMushroom.tscn` | 5 | — |
+
+**Ressources de grotte :**
+| Ressource | Max | Outil requis |
+|---|---|---|
+| Champignon | 8 | — |
+| Pierre brute | 10 | Pioche |
+| Minerai de fer | 6 | Pioche |
+| Charbon | 6 | Pioche |
+| Cristal | 4 | Pioche |
+| Minerai d'or | 3 | Pioche |
 
 ### 🌿 Ressources (Spawn Dynamique)
 - `ResourceSpawner` spawne automatiquement plantes ET minerais au démarrage
@@ -342,10 +368,10 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
 - **Bouton fermer** : zone cliquable transparente (sans texte) superposée au X dessiné dans l'image (natif x=144..150, y=3..9 → ×4 : position=Vector2(576,12), taille=28×28 px) — aucun élément UI visible ajouté
 - **Zone personnage** (section gauche) — 7 slots pixel-perfect sur les cadres dessinés dans l'image :
   - Positions et tailles déterminées par analyse pixel du PNG (constantes `SLOT_POSITIONS`, `SLOT_SIZES`) :
-    - `casque` : pos=(132,68) taille=56×56 — `bouclier` : pos=(68,132) taille=52×56
-    - `plastron` : pos=(120,132) taille=84×56 — `arme` : pos=(204,132) taille=48×56
-    - `bottes` : pos=(132,196) taille=56×56 — `anneau` : pos=(68,260) taille=48×56
-    - `amulette` : pos=(204,260) taille=48×56
+	- `casque` : pos=(132,68) taille=56×56 — `bouclier` : pos=(68,132) taille=52×56
+	- `plastron` : pos=(120,132) taille=84×56 — `arme` : pos=(204,132) taille=48×56
+	- `bottes` : pos=(132,196) taille=56×56 — `anneau` : pos=(68,260) taille=48×56
+	- `amulette` : pos=(204,260) taille=48×56
   - Aucun sprite joueur superposé (le personnage est déjà dessiné dans l'image)
   - Slot vide : fond totalement transparent (0,0,0,0) — le cadre dessiné est visible
   - Slot équipé : fond vert semi-transparent + bordure verte + icône via `ItemData` (padding 1 px)
@@ -423,7 +449,6 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
 - Ennemis à distance : archer squelette ou mage — `projectile.gd` existe déjà côté joueur, il suffit de l'utiliser côté ennemi
 
 **Spawns & monde**
-- ResourceSpawner dans la grotte (actuellement rochers statiques)
 - Nouvelles zones accessibles via portail (donjon, village, désert…)
 
 **Crafting & économie**
@@ -453,4 +478,3 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
 - **Indicateur de l'heure** : afficher jour/nuit avec une icône soleil/lune (l'heure est déjà dans `SunLabel`)
 
 ---
- 

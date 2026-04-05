@@ -47,6 +47,7 @@ var _shop_merchant: Node  = null  # marchand actif
 var _talent_panel: Control = null   # panneau de choix de talent
 var _equip_panel: Control = null    # panneau équipement visuel (touche E)
 var _boss_bar_container: Control = null   # barre boss (bas écran)
+var _boss_bar_bg: Control        = null   # fond de la barre (Panel, pas PanelContainer)
 var _boss_bar_fill: ColorRect    = null
 var _boss_bar_label: Label       = null
 var _boss_max_hp: int = 1
@@ -1436,21 +1437,22 @@ func _build_boss_bar() -> void:
 	_boss_bar_label.add_theme_color_override("font_color", Color(1.0, 0.4, 0.3))
 	vb.add_child(_boss_bar_label)
 
-	# Fond de la barre
-	var bar_bg = PanelContainer.new()
+	# Fond de la barre — Panel (pas PanelContainer : ne force pas le resize des enfants)
+	var bar_bg = Panel.new()
 	var bar_style = StyleBoxFlat.new()
 	bar_style.bg_color = Color(0.15, 0.05, 0.05)
 	bar_style.set_corner_radius_all(4)
 	bar_bg.add_theme_stylebox_override("panel", bar_style)
 	bar_bg.custom_minimum_size = Vector2(0, 14)
 	bar_bg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar_bg.clip_contents = true
 	vb.add_child(bar_bg)
+	_boss_bar_bg = bar_bg
 
-	# Remplissage rouge
+	# Remplissage rouge — dimensionné manuellement via size.x dans _on_boss_health_changed
 	_boss_bar_fill = ColorRect.new()
 	_boss_bar_fill.color = Color(0.85, 0.15, 0.10)
 	_boss_bar_fill.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_boss_bar_fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bar_bg.add_child(_boss_bar_fill)
 
 func on_boss_spawned(boss: Node) -> void:
@@ -1465,18 +1467,19 @@ func on_boss_spawned(boss: Node) -> void:
 		boss.boss_health_changed.connect(_on_boss_health_changed)
 
 func _on_boss_health_changed(current_hp: int, max_hp: int) -> void:
-	if not _boss_bar_fill:
+	if not _boss_bar_fill or not _boss_bar_bg:
 		return
 	_boss_max_hp = max_hp
 	var pct = clamp(float(current_hp) / float(max_hp), 0.0, 1.0)
-	_boss_bar_fill.anchor_right = pct
+	# On utilise size.x car Panel ne gère pas le layout de ses enfants (contrairement à PanelContainer)
+	_boss_bar_fill.size = Vector2(_boss_bar_bg.size.x * pct, _boss_bar_bg.size.y)
 
 func on_boss_died() -> void:
 	if not _boss_bar_container:
 		return
 	# Animer la barre à zéro puis cacher
 	var tw = create_tween()
-	tw.tween_property(_boss_bar_fill, "anchor_right", 0.0, 0.6)
+	tw.tween_property(_boss_bar_fill, "size:x", 0.0, 0.6)
 	tw.tween_interval(0.4)
 	tw.tween_property(_boss_bar_container, "modulate:a", 0.0, 0.5)
 	tw.tween_callback(func():

@@ -306,6 +306,56 @@ const NIGHT_ENEMY_DEFS: Array = [
 - `overrides` est optionnel : sans lui, les valeurs exportées de la scène sont utilisées telles quelles
 - La distance minimale entre spawns et la distance de sécurité joueur sont contrôlées par `MIN_DIST` et `PLAYER_SAFE_DIST`
 
+## 9. Configurer les spawners de la grotte
+
+La grotte possède deux spawners dédiés, indépendants du cycle jour/nuit. Ils scannent uniquement les tiles **source_id = 13, atlas_coords = (2, 2)**.
+
+### Ennemis de grotte — `scripts/cave_enemy_spawner.gd`
+
+Modifier la constante `CAVE_ENEMY_DEFS` :
+
+```gdscript
+const CAVE_ENEMY_DEFS: Array = [
+    {
+        "scene":  "res://scenes/bat.tscn",  # scène de l'ennemi
+        "max":    12,                        # nombre maximum simultané en grotte
+        "overrides": {}                      # propriétés à écraser (optionnel)
+    },
+    {
+        "scene":  "res://scenes/skeleton.tscn",
+        "max":    10,
+        "overrides": {
+            "speed":             65.0,
+            "damage_per_second": 12.0,
+        }
+    },
+]
+```
+
+- Les ennemis sont présents **en permanence** (pas de dépop jour/nuit)
+- Réapparition **30 secondes** après la mort (`RESPAWN_DELAY`)
+- Requiert que la scène émette le signal `died` pour déclencher le respawn
+
+### Ressources de grotte — `scripts/cave_resource_spawner.gd`
+
+**Ajouter un minerai :** modifier `MINERAL_DEFS` :
+
+```gdscript
+const MINERAL_DEFS = [
+    {"name": "Pierre brute",   "qty": 3, "health": 3,  "tool": "pioche", "max": 10},
+    # Ajouter ici :
+    {"name": "Mon Minerai",    "qty": 1, "health": 6,  "tool": "pioche", "max": 3},
+]
+```
+
+- Le `name` doit correspondre exactement à la clé dans `ItemData`
+- Pour ajouter le sprite visuel dans le monde, ajouter une entrée dans `MINERAL_MAP_SPRITES` (Rect2 dans le tileset sunnyside)
+- Sans entrée dans `MINERAL_MAP_SPRITES`, le sprite fallback est l'icône de l'inventaire
+
+**Modifier le champignon** : changer `MUSHROOM_DEF` (quantité, coups, max simultané).
+
+**Pas de plantes ni d'arbres en grotte** (pas de soleil — intentionnel).
+
 La scène doit exister et son nœud racine doit être dans le groupe `enemy`.
 
 ---
@@ -503,6 +553,9 @@ Ajoutez ensuite l'icône dans `item_data.gd` (section 1). L'item peut alors êtr
 | Nouvel ennemi | Scène Godot uniquement (groupe `enemy` requis) |
 | Boss | Inspecteur Godot uniquement (`is_boss`, `unique_drops`) |
 | Spawn diurne | `scripts/day_enemy_spawner.gd` |
+| Spawn nocturne | `scripts/night_enemy_spawner.gd` |
+| Ennemi de grotte | `scripts/cave_enemy_spawner.gd` |
+| Ressource de grotte | `scripts/cave_resource_spawner.gd` + `item_data.gd` |
 | Spawn nocturne | `scripts/night_enemy_spawner.gd` |
 | Nouvel arbre | `scripts/resource_spawner.gd` (`TREE_DEFS`) |
 | Récompenses coffres | `scripts/resource_spawner.gd` (`CHEST_REWARDS`) |

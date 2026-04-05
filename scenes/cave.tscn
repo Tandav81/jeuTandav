@@ -4,16 +4,14 @@
 [ext_resource type="Texture2D" uid="uid://c6b017a0jgdc0" path="res://assets/Tileset/spr_tileset_sunnysideworld_16px.png" id="3_4geow"]
 [ext_resource type="Script" uid="uid://bf8r5076gbada" path="res://scripts/fog_of_war.gd" id="4_koeun"]
 [ext_resource type="Texture2D" uid="uid://ba2m1ft0hwk45" path="res://assets/Tiles/Water_Middle.png" id="6_jsr7t"]
-[ext_resource type="PackedScene" uid="uid://1oa8b1bin2pd" path="res://scenes/rock.tscn" id="7_5h2uv"]
-[ext_resource type="PackedScene" uid="uid://gtjeymerd5r5" path="res://scenes/bat.tscn" id="11_koeun"]
 [ext_resource type="Script" uid="uid://iskjl4gwv8og" path="res://scripts/hud.gd" id="15_ipis6"]
 [ext_resource type="Texture2D" uid="uid://b3h2i0n3gp78i" path="res://assets/menus/character_panel.png" id="16_di1c4"]
 [ext_resource type="PackedScene" path="res://scenes/portal.tscn" id="16_do11t"]
 [ext_resource type="PackedScene" uid="uid://b0v3u01kinh6p" path="res://scenes/player.tscn" id="17_xh268"]
-[ext_resource type="PackedScene" uid="uid://nwdvquapayba" path="res://scenes/slime.tscn" id="23_yy0ho"]
 [ext_resource type="PackedScene" uid="uid://bq8my2d0nr4x1" path="res://scenes/golem.tscn" id="24_ymy7y"]
-[ext_resource type="PackedScene" uid="uid://cg2erk14uqu3s" path="res://scenes/skeleton.tscn" id="25_0ewke"]
 [ext_resource type="PackedScene" uid="uid://dxd05iqr1cp8n" path="res://scenes/chest.tscn" id="26_vmllt"]
+[ext_resource type="Script" uid="uid://oygi3wjplp5t" path="res://scripts/cave_resource_spawner.gd" id="90_caveres"]
+[ext_resource type="Script" uid="uid://c4u0v7alcm28p" path="res://scripts/cave_enemy_spawner.gd" id="91_cavenem"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_do11t"]
 atlas = ExtResource("3_4geow")
@@ -2008,7 +2006,6 @@ tile_set = SubResource("TileSet_tlwt5")
 
 [node name="Decorations" type="TileMapLayer" parent="." unique_id=154160014]
 position = Vector2(-7, -4)
-tile_map_data = PackedByteArray("AACP/yEABQArABAAAACP/yIABQArABEAAACQ/yAABQArABEAAACQ/yEABQAsABAAAACQ/yIABQAsABEAAACR/yAABQArABEAAACS/yEABQAuABAAAACS/yIABQAuABEAAACT/yAABQArABEAAACT/yEABQArABAAAACT/yIABQAvABEAAACQ/x8ABQAsAA8AAACR/x0ABQArABAAAACR/x4ABQArABEAAACR/x8ABQAuAA8AAACS/x0ABQAuABAAAACS/x4ABQArABEAAACT/x0ABQAtABAAAACT/x4ABQArABEAAACT/x8ABQArABAAAAC1/x4ABQAxAAcAAAC1/x8ABQAxAAgAAAC1/yAABQAxAAcAAAC2/x4ABQAyAAcAAAC2/x8ABQAyAAgAAAC2/yAABQAyAAcAAAC5/zQABQAxAAcAAAC5/zUABQAxAAcAAAC6/zQABQAyAAcAAAC6/zUABQAyAAcAAAC7/zQABQAxAAcAAACN/ycABQAxAAcAAACO/ycABQAxAAcAAACP/ykABQAxAAcAAAC6/xgABQAxAAcAAAC6/xkABQAxAAgAAAC7/xgABQAyAAcAAAC7/xkABQAyAAgAAACP/x0ABQArABAAAACP/x4ABQArABEAAACV/x8ABQAuABAAAACV/yAABQAsABEAAACU/yEABQAsABAAAACU/yIABQAsABEAAAC1/yEABQAxAAgAAAC2/yEABQAyAAgAAAC5/zYABQAxAAgAAAC6/zYABQAyAAgAAAC6/zIABQAxAAcAAAC6/zMABQAxAAgAAAC7/zIABQAyAAcAAAC7/zMABQAyAAgAAAC3/zIABQAnAB0AAAC4/zcABQAxAAcAAAC2/zUABQAyAAgAAAC6/y8ABQAyAAgAAACe/zYABQAyAAgAAACc/y4ABQAyAAgAAACa/zMABQAyAAgAAACo/y0ABQAyAAgAAACx/ysABQAyAAgAAACu/zMABQAyAAgAAACi/zAABQAyAAcAAACc/yoABQAyAAcAAACu/zcABQAyAAcAAACT/ysABQAxAAcAAACW/ykABQAxAAcAAACO/yYABQAxAAcAAACP/ygABQAyAAgAAACY/y4ABQAxAAgAAACs/ycABQAxAAgAAACf/yIABQAxAAgAAACt/x0ABQAyAAcAAACb/xsABQAyAAcAAACp/yAABQAyAAgAAACk/xwABQAyAAgAAACL/xoABQAyAAgAAACP/yAABQAyAAgAAACU/x4ABQAxAAgAAACI/xwABQAyAAcAAACc/xMABQAyAAgAAACO/wsABQAyAAgAAACp/woABQAyAAgAAACQ/wQABQAyAAgAAACu/wIABQAyAAgAAACf/wIABQAyAAgAAACx//P/BQAyAAgAAACN//D/BQAyAAgAAACL//j/BQAyAAgAAACm//L/BQAyAAgAAACa/+n/BQAyAAgAAACs/+b/BQAyAAgAAACS/9v/BQAyAAgAAACn/9b/BQAyAAgAAACN/+P/BQAyAAgAAACM/8T/BQAyAAgAAACh/8L/BQAyAAgAAACf/8v/BQAyAAgAAACV/8v/BQAyAAgAAACp/8H/BQAyAAgAAACM/6X/BQAyAAgAAACa/63/BQAyAAgAAACg/7r/BQAyAAgAAACq/6b/BQAyAAgAAACN/7P/BQAyAAgAAACM/7T/BQAyAAgAAACm/7H/BQAxAAgAAACW/8X/BQAxAAgAAACK/7v/BQAxAAgAAACb/9j/BQAxAAgAAACH/9P/BQAxAAgAAACs/+z/BQAxAAgAAACg/wcABQAxAAgAAACg/wYABQAxAAgAAACV//v/BQAxAAgAAACR/xIABQAxAAgAAACS/57/BQAxAAgAAACv/4v/BQAxAAgAAADa/4H/BQAxAAgAAADi/5P/BQAxAAgAAADP/53/BQAxAAgAAAAyAHv/BQAxAAgAAAASAH3/BQAxAAgAAAAPAJP/BQAxAAgAAAApAJj/BQAyAAgAAABmAJn/BQAxAAgAAABoAIH/BQAxAAgAAAA+AIH/BQAyAAcAAABDAI//BQAxAAgAAAChAHr/BQAxAAgAAACHAIn/BQAxAAgAAACRALH/BQAxAAgAAACVANL/BQAxAAgAAACUANL/BQAxAAgAAACJAMf/BQAxAAgAAACPAJj/BQAxAAgAAACMAOP/BQAxAAgAAACCAPL/BQAxAAgAAACMAAIABQAxAAgAAACSAB0ABQAxAAgAAACcAB0ABQAxAAgAAABoACIABQAxAAgAAABRABwABQAxAAgAAAAsAA8ABQAxAAgAAAASACQABQAxAAgAAAAqADEABQAxAAgAAABiADIABQAxAAgAAABSADQABQAxAAgAAABvACgABQAyAAcAAACQACgABQAyAAcA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")
 tile_set = SubResource("TileSet_0nbtd")
 
 [node name="FogOfWar" type="Node2D" parent="." unique_id=346440377 groups=["fog"]]
@@ -2285,50 +2282,13 @@ motion_mode = 1
 position = Vector2(-0.5, -3.5)
 shape = SubResource("RectangleShape2D_7t5mc")
 
-[node name="Animaux" type="Node2D" parent="." unique_id=1218620349]
-
-[node name="Ressources" type="Node2D" parent="." unique_id=1857122905]
-
-[node name="Rock" parent="Ressources" unique_id=1212851096 instance=ExtResource("7_5h2uv")]
-position = Vector2(-1255, 260)
-
-[node name="Rock2" parent="Ressources" unique_id=3158605 instance=ExtResource("7_5h2uv")]
-position = Vector2(-1299, 251)
-
-[node name="Rock3" parent="Ressources" unique_id=689809939 instance=ExtResource("7_5h2uv")]
-position = Vector2(-1272, 230)
-
-[node name="Rock4" parent="Ressources" unique_id=403701984 instance=ExtResource("7_5h2uv")]
-position = Vector2(-1235, 231)
-
-[node name="Rock5" parent="Ressources" unique_id=1757186018 instance=ExtResource("7_5h2uv")]
-position = Vector2(-1299, 214)
-
 [node name="Ennemis" type="Node2D" parent="." unique_id=1341981110]
 
-[node name="Slime" parent="Ennemis" unique_id=2145179066 instance=ExtResource("23_yy0ho")]
-position = Vector2(1027, 881)
-
-[node name="Slime2" parent="Ennemis" unique_id=1106417163 instance=ExtResource("23_yy0ho")]
-position = Vector2(-1650, 135)
-
-[node name="Slime3" parent="Ennemis" unique_id=2045340841 instance=ExtResource("23_yy0ho")]
-position = Vector2(-1452, -510)
-
-[node name="Slime4" parent="Ennemis" unique_id=1763523272 instance=ExtResource("23_yy0ho")]
-position = Vector2(-1723, -1103)
-
-[node name="Golem" parent="Ennemis" unique_id=1325374603 instance=ExtResource("24_ymy7y")]
-position = Vector2(507, 446)
-
-[node name="Skeleton" parent="Ennemis" unique_id=1678694204 instance=ExtResource("25_0ewke")]
-position = Vector2(2024, 839)
-
-[node name="Bat" parent="Ennemis" unique_id=843673683 instance=ExtResource("11_koeun")]
-position = Vector2(-1469, -64)
-
-[node name="Bat2" parent="Ennemis" unique_id=700837349 instance=ExtResource("11_koeun")]
-position = Vector2(-1653, -124)
+[node name="Golem" parent="Ennemis" unique_id=1106417163 instance=ExtResource("24_ymy7y")]
+position = Vector2(600, 405)
+unique_drops = Array[Dictionary]([{
+"name": "Cle de donjon"
+}])
 
 [node name="Coffres" type="Node2D" parent="." unique_id=544727082]
 
@@ -2343,16 +2303,22 @@ quantite = 0
 gold_amount = 100
 
 [node name="Chest3" parent="Coffres" unique_id=1835836748 instance=ExtResource("26_vmllt")]
-position = Vector2(814, 66)
-contenu = "or"
-quantite = 0
-gold_amount = 100
+position = Vector2(587, -59)
+contenu = "Grande potion"
+quantite = 2
+gold_amount = 200
 
 [node name="Portal" parent="." unique_id=501337225 instance=ExtResource("16_do11t")]
 position = Vector2(-1424, 901)
 target_scene = "res://scenes/world.tscn"
 target_spawn = Vector2(-1373, 124)
 portal_label = "Sortir"
+
+[node name="CaveResourceSpawner" type="Node2D" parent="." unique_id=701234567]
+script = ExtResource("90_caveres")
+
+[node name="CaveEnemySpawner" type="Node2D" parent="." unique_id=701234568]
+script = ExtResource("91_cavenem")
 
 [connection signal="pressed" from="HUD/BtnInventaire" to="HUD" method="_on_btn_inventaire_pressed"]
 [connection signal="pressed" from="HUD/BtnPersonnage" to="HUD" method="_on_btn_personnage_pressed"]

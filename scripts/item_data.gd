@@ -12,14 +12,12 @@ const _TEX_WORLD    = "res://assets/Tileset/spr_tileset_sunnysideworld_16px.png"
 # Images PNG dédiées (items sans spritesheet)
 const _IMAGES = {
 	"Bois": "res://assets/sprites/wood/wood.png",
+	"Epee en or":  "res://assets/10swords/goldsword.png",  # grande épée
 }
 
 # Régions dans rpgItems.png
 const _REG_RPG = {
 	# Consommables
-	"Potion":         Rect2(0,   0,   16, 16),  # fiole rouge
-	"Grande potion":  Rect2(48,  0,   16, 16),  # fiole jaune (soin ×2)
-	"Potion de force":Rect2(16,  0,   16, 16),  # fiole verte
 	"Viande":         Rect2(16,  64,  16, 16),
 	"Cle de donjon":  Rect2(32,  112,  16, 16),
 	# Outils
@@ -28,12 +26,15 @@ const _REG_RPG = {
 	# Armes
 	"Epee en bois":   Rect2(80,  64,  16, 16),
 	"Epee en fer":    Rect2(112, 64,  16, 16),
-	"Epee en or":     Rect2(112, 112, 16, 16),  # grande épée
 	"Arc":            Rect2(64,  96,  16, 16),
 	"Arc en fer":     Rect2(96,  96,  16, 16),
 	# Armures métal
 	"Casque en fer":  Rect2(96,  0,   16, 16),  # heaume métal
 	"Bottes en fer":  Rect2(112, 16,  16, 16),  # bottes métal
+	"Plastron en fer":Rect2(112,  0,  16, 16),
+	# Magie
+	"Anneau de feu":  Rect2(0,  112,  16, 16),
+	"Anneau de glace":Rect2(16,  112,  16, 16),
 }
 
 # Régions dans spr_tileset_sunnysideworld_16px.png
@@ -60,6 +61,9 @@ const _REG_WORLD = {
 # Régions dans itemset0.png
 const _REG_SET0 = {
 	# Consommables
+	"Potion":            Rect2(160,   32,   16, 16),  # fiole rouge
+	"Grande potion":     Rect2(16,  0,   16, 16),  # fiole jaune (soin ×2)
+	"Potion de force":   Rect2(48,  0,   16, 16),  # fiole verte
 	"Potion de mana":    Rect2(32,  0,   16, 16),  # fiole bleue
 	# Ressources
 	"Plante":            Rect2(160, 0,   16, 16),
@@ -71,9 +75,10 @@ const _REG_SET0 = {
 	"Bouclier en bois":  Rect2(96,  96,  16, 16),
 	"Bouclier en fer":   Rect2(112, 96,  16, 16),
 	"Baton magique":  	 Rect2(0,  96,  16, 16),
+	"Baton magique feu": Rect2(32,  96,  16, 16),
+	"Baton magique glace": Rect2(16,  96,  16, 16),
 	# Armures
 	"Casque en cuir":    Rect2(112, 112, 16, 16),
-	"Plastron en fer":   Rect2(96,  80,  16, 16),
 	"Bottes légères":    Rect2(96,  48,  16, 16),
 }
 

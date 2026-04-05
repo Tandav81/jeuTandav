@@ -13,8 +13,8 @@ extends CharacterBody2D
 # ── Boss ─────────────────────────────────────────────────────
 @export var is_boss: bool = false
 @export var boss_name: String = "Boss"
-## Items droppés à la mort : [{ "name": "Cle de donjon", "qty": 1 }, …]
-@export var unique_drops: Array = []
+## Items droppés à la mort : chaque entrée = Dictionary { "name": "...", "qty": N }
+@export var unique_drops: Array[Dictionary] = []
 
 signal boss_health_changed(current_hp: int, max_hp: int)
 signal boss_died
@@ -129,7 +129,10 @@ func die():
 	# Boss : drops uniques + signal HUD
 	if is_boss:
 		for drop in unique_drops:
-			Inventory.add_item(drop["name"], drop.get("qty", 1))
+			if drop is Dictionary and drop.has("name"):
+				Inventory.add_item(drop["name"], drop.get("qty", 1))
+			else:
+				push_warning("unique_drops: élément invalide ignoré — doit être {name, qty}")
 		boss_died.emit()
 		var hud = get_tree().get_first_node_in_group("hud")
 		if hud:
@@ -238,10 +241,10 @@ func _jouer_animation():
 		else:
 			anim.play("walk_up")
 
-func _on_area_2d_body_entered(body):
+func _on_area_2d_body_entered(_body):
 	# Géré directement via la distance dans _poursuit_joueur()
 	pass
 
-func _on_area_2d_body_exited(body):
+func _on_area_2d_body_exited(_body):
 	# Géré directement via la distance dans _poursuit_joueur()
 	pass

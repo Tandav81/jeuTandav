@@ -540,7 +540,7 @@ xp_reward = 100
 respawn_time = 1000.0
 enemy_type = "golem"
 is_boss = true
-unique_drops = [["{ \"name\": \"Cle de donjon\", \"qty\": 1 }"]]
+unique_drops = Array[Dictionary]([{"name": "Cle de donjon", "qty": 1}])
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=182257883]
 position = Vector2(0, -64)
