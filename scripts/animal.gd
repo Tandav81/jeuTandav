@@ -90,5 +90,5 @@ func die():
 		tween.tween_property(self, "modulate:a", 0.0, 0.5)
 		await tween.finished
 
-	emit_signal("died", animal_name)
+	died.emit(animal_name)
 	queue_free()

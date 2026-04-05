@@ -66,11 +66,11 @@ func start_quest(quest_id):
 			return
 	var quest = QUESTS[quest_id].duplicate(true)
 	active_quests.append(quest)
-	emit_signal("quest_updated")
+	quest_updated.emit()
 
 func complete_quest(quest):
 	quest.completed = true
-	emit_signal("quest_updated")
+	quest_updated.emit()
 
 func give_reward(quest):
 	if quest.reward_xp > 0:
@@ -95,7 +95,7 @@ func update_kill(enemy_type):
 			if quest.progress >= quest.required:
 				complete_quest(quest)
 
-	emit_signal("quest_updated")
+	quest_updated.emit()
 
 func update_collect(item_name):
 	for quest in active_quests:
@@ -105,7 +105,7 @@ func update_collect(item_name):
 			if quest.progress >= quest.required:
 				complete_quest(quest)
 
-	emit_signal("quest_updated")
+	quest_updated.emit()
 
 func claim_reward(quest_id):
 	for quest in active_quests:
@@ -115,8 +115,8 @@ func claim_reward(quest_id):
 			completed_quests.append(quest)
 			active_quests.erase(quest)
 
-			emit_signal("quest_completed", quest_id)
-			emit_signal("quest_updated")
+			quest_completed.emit(quest_id)
+			quest_updated.emit()
 
 func get_quest_state(quest_id: String) -> String:
 	# Vérifier si la quête est en cours

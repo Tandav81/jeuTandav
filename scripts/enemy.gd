@@ -45,14 +45,18 @@ var is_dying = false
 var is_hurt     = false
 var is_attacking = false   # true pendant l'animation d'attaque
 var _health_bar: Sprite2D = null
+var _health_bar_textures_cache: Array[Texture2D] = []
 
 func _ready():
 	health = max_health   # Fix : applique la valeur exportée (ex. golem 500)
 	start_position = global_position
+	for path in HEALTH_BAR_TEXTURES:
+		_health_bar_textures_cache.append(load(path))
 	_build_health_bar()
 	await get_tree().process_frame
 	player = get_tree().get_first_node_in_group("player")
-	add_collision_exception_with(player)
+	if player:
+		add_collision_exception_with(player)
 	# Notifier le HUD si c'est un boss
 	if is_boss:
 		var hud = get_tree().get_first_node_in_group("hud")
@@ -74,7 +78,7 @@ func _update_health_bar() -> void:
 		return
 	var pct = float(health) / float(max_health)
 	var idx = clamp(int(round(pct * 6)), 0, 6)
-	_health_bar.texture = load(HEALTH_BAR_TEXTURES[idx])
+	_health_bar.texture = _health_bar_textures_cache[idx]
 	_health_bar.visible = health < max_health and not is_dying
 
 func take_damage(amount):

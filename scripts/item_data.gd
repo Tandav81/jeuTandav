@@ -83,8 +83,64 @@ const _REG_SET0 = {
 }
 
 # ------------------------------------------------------------
+#  Descriptions des items (tooltip inventaire)
+# ------------------------------------------------------------
+
+const ITEM_DESCRIPTIONS: Dictionary = {
+	# ── Consommables ────────────────────────────────────────────
+	"Potion":          "Consommable\n+30 PV",
+	"Grande potion":   "Consommable\n+60 PV",
+	"Potion de mana":  "Consommable\n+40 mana",
+	"Potion de force": "Consommable\n+20 PV  +20 mana",
+	"Viande":          "Consommable\n+15 PV",
+	"Champignon":      "Consommable\n+8 PV",
+	"Baie":            "Consommable\n+5 PV",
+	# ── Outils ──────────────────────────────────────────────────
+	"Hache":           "Outil\nCoupe les arbres (touche Espace près d'un arbre)",
+	"Pioche":          "Outil\nExtrait les minerais (touche Espace près d'un gisement)",
+	# ── Livres ──────────────────────────────────────────────────
+	"Livre du forgeron": "Livre\nDébloque de nouvelles recettes de craft",
+	"Livre du mage":     "Livre\nDébloque de nouvelles recettes de craft",
+	# ── Ressources ──────────────────────────────────────────────
+	"Bois":            "Ressource\nUtilisé en craft : Épée en bois",
+	"Plante":          "Ressource\nUtilisée en craft : Potion",
+	"Tournesol":       "Ressource\nPlante (vendu chez le marchand)",
+	"Peau":            "Ressource\nObtenue en chassant les animaux",
+	"Pierre brute":    "Minerai commun",
+	"Minerai de fer":  "Minerai\nUtilisé en craft : Épée en fer",
+	"Charbon":         "Minerai peu rare",
+	"Cristal":         "Minerai rare",
+	"Minerai d'or":    "Minerai très rare",
+	# ── Clés / objets spéciaux ──────────────────────────────────
+	"Cle de donjon":   "Objet spécial\nDrop du boss Golem",
+}
+
+# Effets des consommables : hp et mana restaurés
+const CONSUMABLE_EFFECTS: Dictionary = {
+	"Potion":          {"hp": 30, "mana": 0},
+	"Grande potion":   {"hp": 60, "mana": 0},
+	"Potion de mana":  {"hp": 0,  "mana": 40},
+	"Potion de force": {"hp": 20, "mana": 20},
+	"Viande":          {"hp": 15, "mana": 0},
+	"Champignon":      {"hp": 8,  "mana": 0},
+	"Baie":            {"hp": 5,  "mana": 0},
+}
+
+# ------------------------------------------------------------
 #  API publique
 # ------------------------------------------------------------
+
+## Retourne la description de l'item pour le tooltip, ou "" si inconnu.
+func get_description(item_name: String) -> String:
+	return ITEM_DESCRIPTIONS.get(item_name, "")
+
+## Retourne les effets consommables {hp, mana} de l'item, ou {hp:0, mana:0}.
+func get_consumable_effect(item_name: String) -> Dictionary:
+	return CONSUMABLE_EFFECTS.get(item_name, {"hp": 0, "mana": 0})
+
+## Retourne true si l'item est un consommable connu.
+func is_consumable(item_name: String) -> bool:
+	return CONSUMABLE_EFFECTS.has(item_name)
 
 ## Retourne la Texture2D pour l'item donné, ou null si inconnu.
 func get_texture(item_name: String) -> Texture2D:

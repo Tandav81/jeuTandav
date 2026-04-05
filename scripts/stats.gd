@@ -139,20 +139,22 @@ func get_mana_cost_sort() -> int:
 
 func restore_mana(amount: float) -> void:
 	current_mana = min(float(get_max_mana()), current_mana + amount)
-	emit_signal("mana_changed", current_mana, float(get_max_mana()))
+	mana_changed.emit(current_mana, float(get_max_mana()))
 
 func use_mana(amount: float) -> bool:
 	if current_mana < amount:
 		return false
 	current_mana -= amount
-	emit_signal("mana_changed", current_mana, float(get_max_mana()))
+	mana_changed.emit(current_mana, float(get_max_mana()))
 	return true
 
 func _regen_mana(delta: float) -> void:
+	if current_mana >= float(get_max_mana()):
+		return
 	var new_mana = min(float(get_max_mana()), current_mana + get_mana_regen() * delta)
 	if new_mana != current_mana:
 		current_mana = new_mana
-		emit_signal("mana_changed", current_mana, float(get_max_mana()))
+		mana_changed.emit(current_mana, float(get_max_mana()))
 
 # Stats totales (base + équipements)
 func get_force() -> int:
@@ -195,18 +197,16 @@ func _get_equipment_bonus(stat: String) -> int:
 
 func add_xp(amount: int):
 	xp += amount
-	print("XP : ", xp, "/", xp_next_level)
 	while xp >= xp_next_level:
 		_level_up()
-	emit_signal("stats_changed")
+	stats_changed.emit()
 
 func _level_up():
 	xp -= xp_next_level
 	level += 1
 	stat_points += 3  # 3 points à distribuer par niveau
 	xp_next_level = int(xp_next_level * 1.5)  # XP nécessaire augmente
-	emit_signal("level_up", level)
-	print("NIVEAU ", level, " ! Tu as ", stat_points, " points à distribuer !")
+	level_up.emit(level)
 	# Proposition de talent tous les N niveaux
 	if level % TALENT_EVERY_N_LEVELS == 0:
 		_propose_talents()
@@ -218,13 +218,13 @@ func _propose_talents() -> void:
 	var choices = pool.slice(0, min(3, pool.size()))
 	if choices.is_empty():
 		return
-	emit_signal("talent_available", choices)
+	talent_available.emit(choices)
 
 func apply_talent(talent_id: String) -> void:
 	if has_talent(talent_id):
 		return
 	active_talents.append(talent_id)
-	emit_signal("stats_changed")
+	stats_changed.emit()
 
 func has_talent(talent_id: String) -> bool:
 	return active_talents.has(talent_id)
@@ -244,5 +244,5 @@ func spend_point(stat: String) -> bool:
 		"defense":
 			base_defense += 1
 	stat_points -= 1
-	emit_signal("stats_changed")
+	stats_changed.emit()
 	return true

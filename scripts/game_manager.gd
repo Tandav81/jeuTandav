@@ -60,7 +60,6 @@ func save_game():
 	var file = FileAccess.open("user://save.json", FileAccess.WRITE)
 	file.store_string(JSON.stringify(save_data))
 	file.close()
-	print("Jeu sauvegardé !")
 
 func load_game():
 	if not FileAccess.file_exists("user://save.json"):
@@ -70,7 +69,10 @@ func load_game():
 	var file = FileAccess.open("user://save.json", FileAccess.READ)
 	var data = JSON.parse_string(file.get_as_text())
 	file.close()
-	
+	if data == null or not data is Dictionary:
+		push_error("Sauvegarde corrompue ou invalide — impossible de charger")
+		return false
+
 	spawn_position = Vector2(data["position_x"], data["position_y"])
 	player_health = data["health"]
 	current_scene = data["scene"]

@@ -23,15 +23,6 @@ const CONSUMABLES = [
 	"Potion de force", "Viande", "Champignon", "Baie",
 ]
 
-const HEAL_VALUES = {
-	"Potion":          {"hp": 30, "mana": 0},
-	"Grande potion":   {"hp": 60, "mana": 0},
-	"Potion de mana":  {"hp": 0,  "mana": 40},
-	"Potion de force": {"hp": 20, "mana": 20},
-	"Viande":          {"hp": 15, "mana": 0},
-	"Champignon":      {"hp": 8,  "mana": 0},
-	"Baie":            {"hp": 5,  "mana": 0},
-}
 
 # ─── Données des slots ─────────────────────────────────────
 # Chaque entrée : { "item": String, "icon": TextureRect, "qty_lbl": Label, "style": StyleBoxFlat }
@@ -203,7 +194,7 @@ func _cycle_assign(idx: int) -> void:
 # ============================================================
 
 func _use_item(item_name: String) -> void:
-	if not HEAL_VALUES.has(item_name):
+	if not ItemData.is_consumable(item_name):
 		return
 	var player = get_tree().get_first_node_in_group("player")
 	if not is_instance_valid(player):
@@ -211,7 +202,7 @@ func _use_item(item_name: String) -> void:
 	if not Inventory.remove_item(item_name, 1):
 		return
 
-	var vals: Dictionary = HEAL_VALUES[item_name]
+	var vals: Dictionary = ItemData.get_consumable_effect(item_name)
 	if vals["hp"] > 0:
 		player.heal(vals["hp"])
 	if vals["mana"] > 0:
