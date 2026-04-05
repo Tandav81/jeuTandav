@@ -61,7 +61,7 @@ const _REG_WORLD = {
 # Régions dans itemset0.png
 const _REG_SET0 = {
 	# Consommables
-	"Potion":            Rect2(160,   32,   16, 16),  # fiole rouge
+	"Potion":            Rect2(32,   160,   16, 16),  # fiole rouge
 	"Grande potion":     Rect2(16,  0,   16, 16),  # fiole jaune (soin ×2)
 	"Potion de force":   Rect2(48,  0,   16, 16),  # fiole verte
 	"Potion de mana":    Rect2(32,  0,   16, 16),  # fiole bleue

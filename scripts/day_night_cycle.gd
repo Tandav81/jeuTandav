@@ -70,12 +70,20 @@ func _apply_color():
 func _update_label():
 	if not is_instance_valid(sun_label):
 		return
-# Convertit le temps normalisé en heure lisible
+	# Convertit le temps normalisé en heure lisible
 	var total_minutes = int(current_time * 24 * 60)
 	@warning_ignore("integer_division")
 	var hours = total_minutes / 60
 	var minutes = total_minutes % 60
-	sun_label.text = "%02d:%02d" % [hours, minutes]
+	var icon = _get_period_icon()
+	sun_label.text = "%s %02d:%02d" % [icon, hours, minutes]
+
+func _get_period_icon() -> String:
+	match get_period():
+		"day":  return "☀"
+		"dawn": return "🌅"
+		"dusk": return "🌆"
+		_:      return "🌙"
 
 func _check_period():
 	var period = get_period()

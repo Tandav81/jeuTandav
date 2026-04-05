@@ -18,6 +18,7 @@
 9. [Ajouter un PNJ marchand](#9-ajouter-un-pnj-marchand)
 10. [Ajouter un talent passif](#10-ajouter-un-talent-passif)
 11. [Ajouter un équipement](#11-ajouter-un-équipement)
+14. [Ajouter un consommable à la Hotbar](#14-ajouter-un-consommable-à-la-hotbar)
 
 ---
 
@@ -542,6 +543,45 @@ Ajoutez ensuite l'icône dans `item_data.gd` (section 1). L'item peut alors êtr
 
 ---
 
+## 14. Ajouter un consommable à la Hotbar
+
+**Fichier :** `scripts/hotbar.gd`
+
+La hotbar affiche 4 slots (touches **1–4**) pour utiliser rapidement des consommables sans ouvrir l'inventaire. Pour qu'un item puisse être assigné à la hotbar, deux étapes sont nécessaires :
+
+**Étape 1 — Déclarer l'item comme consommable**
+
+Ajoutez le nom de l'item à la constante `CONSUMABLES` :
+
+```gdscript
+const CONSUMABLES = [
+    "Potion", "Grande potion", "Potion de mana",
+    "Potion de force", "Viande", "Champignon", "Baie",
+    "Mon nouveau consommable",  # ← ajouter ici
+]
+```
+
+> Le nom doit correspondre **exactement** à celui utilisé dans `Inventory.items` et `ItemData`.
+
+**Étape 2 — Déclarer ses valeurs de soin**
+
+Ajoutez une entrée dans `HEAL_VALUES` :
+
+```gdscript
+const HEAL_VALUES = {
+    # …items existants…
+    "Mon nouveau consommable": {"hp": 25, "mana": 10},
+    # hp   = PV restaurés (0 si aucun)
+    # mana = Mana restaurée (0 si aucun)
+}
+```
+
+> Si l'item est dans `CONSUMABLES` mais absent de `HEAL_VALUES`, il ne fera rien à l'utilisation.
+
+L'item apparaîtra automatiquement dans la rotation du clic-droit dès qu'il sera en inventaire.
+
+---
+
 ## Récapitulatif des fichiers à modifier selon la tâche
 
 | Ce que vous voulez ajouter | Fichier(s) à modifier |
@@ -564,3 +604,4 @@ Ajoutez ensuite l'icône dans `item_data.gd` (section 1). L'item peut alors êtr
 | PNJ marchand | Scène Godot + inspecteur |
 | Talent passif | `scripts/stats.gd` + script(s) concerné(s) + `hud.gd` (`TALENT_ICON_DEFS`) |
 | Équipement | `scripts/stats.gd` + `item_data.gd` (apparaît automatiquement dans le panneau G) |
+| Consommable hotbar | `scripts/hotbar.gd` (`CONSUMABLES` + `HEAL_VALUES`) |

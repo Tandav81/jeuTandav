@@ -46,7 +46,42 @@ var _shop_panel: Control = null   # panneau boutique
 var _shop_merchant: Node  = null  # marchand actif
 var _talent_panel: Control = null   # panneau de choix de talent
 var _equip_panel: Control = null    # panneau équipement visuel (touche E)
+var _hotbar: Control = null         # barre de raccourcis consommables (touches 1–4)
 var _boss_bar_container: Control = null   # barre boss (bas écran)
+
+# ── Tooltip inventaire ───────────────────────────────────────────────────────
+var _inv_tooltip: PanelContainer = null
+var _inv_tip_title: Label = null
+var _inv_tip_desc:  Label = null
+
+const ITEM_DESCRIPTIONS: Dictionary = {
+	# ── Consommables ────────────────────────────────────────────
+	"Potion":          "Consommable\n+30 PV",
+	"Grande potion":   "Consommable\n+60 PV",
+	"Potion de mana":  "Consommable\n+40 mana",
+	"Potion de force": "Consommable\n+20 PV  +20 mana",
+	"Viande":          "Consommable\n+15 PV",
+	"Champignon":      "Consommable\n+8 PV",
+	"Baie":            "Consommable\n+5 PV",
+	# ── Outils ──────────────────────────────────────────────────
+	"Hache":           "Outil\nCoupe les arbres (touche Espace près d'un arbre)",
+	"Pioche":          "Outil\nExtrait les minerais (touche Espace près d'un gisement)",
+	# ── Livres ──────────────────────────────────────────────────
+	"Livre du forgeron": "Livre\nDébloque de nouvelles recettes de craft",
+	"Livre du mage":     "Livre\nDébloque de nouvelles recettes de craft",
+	# ── Ressources ──────────────────────────────────────────────
+	"Bois":            "Ressource\nUtilisé en craft : Épée en bois",
+	"Plante":          "Ressource\nUtilisée en craft : Potion",
+	"Tournesol":       "Ressource\nPlante (vendu chez le marchand)",
+	"Peau":            "Ressource\nObtenue en chassant les animaux",
+	"Pierre brute":    "Minerai commun",
+	"Minerai de fer":  "Minerai\nUtilisé en craft : Épée en fer",
+	"Charbon":         "Minerai peu rare",
+	"Cristal":         "Minerai rare",
+	"Minerai d'or":    "Minerai très rare",
+	# ── Clés / objets spéciaux ──────────────────────────────────
+	"Cle de donjon":   "Objet spécial\nDrop du boss Golem",
+}
 var _boss_bar_bg: Control        = null   # fond de la barre (Panel, pas PanelContainer)
 var _boss_bar_fill: ColorRect    = null
 var _boss_bar_label: Label       = null
@@ -123,6 +158,10 @@ func _ready():
 	call_deferred("_build_talent_icons")
 	# ── Panneau équipement visuel (touche E) ─────────────────────
 	call_deferred("_build_equipment_panel")
+	# ── Hotbar consommables (touches 1–4) ────────────────────────
+	call_deferred("_build_hotbar")
+	# ── Tooltip inventaire ───────────────────────────────────────
+	call_deferred("_build_inv_tooltip")
 
 func _input(event: InputEvent) -> void:
 	# Touche B (Bricoler) : ouvre/ferme le panneau de crafting
@@ -195,6 +234,13 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
+	# ── Touches 1–4 : hotbar consommables (hors dialogue) ────────────
+	if _active_npc == null and event is InputEventKey and event.pressed and not event.echo:
+		var k: int = int(event.keycode) - int(KEY_1)
+		if k >= 0 and k <= 3 and _hotbar:
+			_hotbar.use_slot(k)
+			get_viewport().set_input_as_handled()
+
 func _process(delta: float):
 	if Input.is_action_just_pressed("ui_cancel"):
 		if _help_panel and _help_panel.visible:
@@ -225,6 +271,14 @@ func _process(delta: float):
 	if _minimap_timer >= MINIMAP_UPDATE_INTERVAL:
 		_minimap_timer = 0.0
 		_update_minimap()
+	# ── Tooltip inventaire : suit le curseur ──────────────────
+	if _inv_tooltip and _inv_tooltip.visible:
+		var mp := get_viewport().get_mouse_position()
+		var tp := mp + Vector2(16, -_inv_tooltip.size.y - 4)
+		var vs := get_viewport().get_visible_rect().size
+		tp.x = clamp(tp.x, 2.0, vs.x - _inv_tooltip.size.x - 2.0)
+		tp.y = clamp(tp.y, 2.0, vs.y - _inv_tooltip.size.y - 2.0)
+		_inv_tooltip.position = tp
 
 func _build_tool_display():
 	# Petit slot pixel-art positionné juste sous les barres de vie/mana/xp
@@ -241,11 +295,11 @@ func _build_tool_display():
 	_tool_slot.set_anchor(SIDE_RIGHT,  0.0)
 	_tool_slot.set_anchor(SIDE_TOP,    0.0)
 	_tool_slot.set_anchor(SIDE_BOTTOM, 0.0)
-	# Positionné sous les barres (barres : top=10, hauteur 72px*scale=2 → ~82px + marge)
+	# Positionné sous les icônes de talents (talents : top=92, bottom=118 → outil à partir de 124)
 	_tool_slot.offset_left   = 10
-	_tool_slot.offset_top    = 88
+	_tool_slot.offset_top    = 124
 	_tool_slot.offset_right  = 58   # 48px de large
-	_tool_slot.offset_bottom = 136  # 48px de haut
+	_tool_slot.offset_bottom = 172  # 48px de haut
 
 	_tool_icon = TextureRect.new()
 	_tool_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH
@@ -395,6 +449,72 @@ func _on_mana_changed(current: float, max_val: float):
 		mana_bar.max_value = max_val
 		mana_bar.value = current
 
+# ===== TOOLTIP INVENTAIRE =====
+
+func _build_inv_tooltip() -> void:
+	_inv_tooltip = PanelContainer.new()
+	_inv_tooltip.visible = false
+	_inv_tooltip.z_index = 50
+	_inv_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var style = StyleBoxFlat.new()
+	style.bg_color     = Color(0.08, 0.05, 0.03, 0.96)
+	style.border_color = Color(0.80, 0.65, 0.47, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(5)
+	style.content_margin_left   = 10
+	style.content_margin_right  = 10
+	style.content_margin_top    = 7
+	style.content_margin_bottom = 7
+	_inv_tooltip.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	_inv_tooltip.add_child(vbox)
+
+	_inv_tip_title = Label.new()
+	_inv_tip_title.add_theme_color_override("font_color", Color("#FFD700"))
+	_inv_tip_title.add_theme_font_size_override("font_size", 13)
+	vbox.add_child(_inv_tip_title)
+
+	_inv_tip_desc = Label.new()
+	_inv_tip_desc.add_theme_color_override("font_color", Color("#cccccc"))
+	_inv_tip_desc.add_theme_font_size_override("font_size", 11)
+	vbox.add_child(_inv_tip_desc)
+
+	add_child(_inv_tooltip)
+
+func _show_inv_tooltip(item_name: String) -> void:
+	_inv_tip_title.text = item_name
+
+	if Stats.equipment_data.has(item_name):
+		var data = Stats.equipment_data[item_name]
+		var slot_labels = {
+			"casque": "Casque", "plastron": "Plastron", "bottes": "Bottes",
+			"arme": "Arme", "bouclier": "Bouclier",
+			"anneau": "Anneau", "amulette": "Amulette",
+		}
+		var slot_id  = data.get("slot", "")
+		var slot_lbl = slot_labels.get(slot_id, slot_id.capitalize())
+		var stat_map = {"force": "FOR", "endurance": "END",
+						"agilite": "AGI", "magie": "MAG", "defense": "DEF"}
+		var parts: Array = ["Équipement — %s" % slot_lbl]
+		for stat in stat_map.keys():
+			var val: int = data.get(stat, 0)
+			if val != 0:
+				parts.append("%s%d %s" % ["+" if val > 0 else "", val, stat_map[stat]])
+		_inv_tip_desc.text = "\n".join(parts)
+	elif ITEM_DESCRIPTIONS.has(item_name):
+		_inv_tip_desc.text = ITEM_DESCRIPTIONS[item_name]
+	else:
+		_inv_tip_desc.text = "—"
+
+	_inv_tooltip.visible = true
+
+func _hide_inv_tooltip() -> void:
+	if _inv_tooltip:
+		_inv_tooltip.visible = false
+
 # ===== INVENTAIRE =====
 
 func _on_inventory_changed():
@@ -467,6 +587,8 @@ func _refresh_inventaire():
 		btn.size = container.size
 		container.add_child(btn)
 		btn.pressed.connect(_on_item_pressed.bind(item_name))
+		btn.mouse_entered.connect(_show_inv_tooltip.bind(item_name))
+		btn.mouse_exited.connect(_hide_inv_tooltip)
 		grid.add_child(container)
 
 func _on_item_pressed(item_name: String):
@@ -697,6 +819,16 @@ func _build_equipment_panel() -> void:
 	# Z-index pour être au-dessus des autres panneaux
 	_equip_panel.z_index = 10
 	add_child(_equip_panel)
+
+func _build_hotbar() -> void:
+	var script = load("res://scripts/hotbar.gd")
+	if not script:
+		push_error("HUD : hotbar.gd introuvable !")
+		return
+	_hotbar = Control.new()
+	_hotbar.set_script(script)
+	_hotbar.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_hotbar)
 
 func _on_desequiper(slot: String):
 	Inventory.unequip_item(slot)
@@ -1494,6 +1626,7 @@ func on_boss_died() -> void:
 func _build_talent_icons() -> void:
 	_talent_icons_row = HBoxContainer.new()
 	_talent_icons_row.name = "TalentIconsRow"
+	_talent_icons_row.z_index = -1   # passe sous les panneaux inventaire, quêtes, personnage
 	# Positionnée en haut-gauche, sous les barres de vie/mana/xp
 	# Les barres occupent environ y=10 à y=82 (72px × scale 2 + marge)
 	_talent_icons_row.set_anchor(SIDE_LEFT,   0.0)

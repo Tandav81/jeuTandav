@@ -1,7 +1,7 @@
 # 📋 Récapitulatif du projet — testJeu2D
 
 > Godot 4.6 — Jeu 2D RPG (top-down)
-> Dernière mise à jour : 2026-04-04 (session 2)
+> Dernière mise à jour : 2026-04-05 (session 3)
 
 ---
 
@@ -56,7 +56,8 @@ test-jeu-2d/
 │   ├── quest_manager.gd            ← Autoload
 │   ├── stats.gd                    ← Autoload
 │   ├── night_enemy_spawner.gd      ← spawn dynamique ennemis nocturnes
-│   └── npc_merchant.gd             ← PNJ marchand (extends npc.gd)
+│   ├── npc_merchant.gd             ← PNJ marchand (extends npc.gd)
+│   └── hotbar.gd                   ← barre de raccourcis consommables (touches 1–4)
 └── assets/
 	├── Player/                     ← spritesheets joueur (attaque, arc…)
 	├── Enemies/                    ← Bat/, Golem_1/, flyingMushroom/, etc.
@@ -87,6 +88,7 @@ test-jeu-2d/
 | Ouvrir crafting | B |
 | Panneau personnage | P |
 | Équipement visuel | G |
+| Hotbar slot 1–4 | Touches 1, 2, 3, 4 |
 | Journal de quêtes | C |
 | Sauvegarder | S |
 | Guide d'aide | F1 |
@@ -131,7 +133,8 @@ test-jeu-2d/
 - Durée d'un cycle : **20 minutes** réelles (1200 secondes)
 - Plages horaires : Aube (6h–9h), Plein jour (9h–15h), Crépuscule (16h48–18h), Nuit (18h–6h)
 - Nuits jouables (alpha 0.55 — assombri sans être noir complet)
-- Horloge en temps réel affichée sur le HUD (format HH:MM)
+- Horloge en temps réel affichée sur le HUD (format `☀ HH:MM` / `🌅` / `🌆` / `🌙` selon la période)
+- Icône dynamique préfixée à l'heure : ☀ (jour), 🌅 (aube), 🌆 (crépuscule), 🌙 (nuit)
 - Signal `time_of_day_changed` (valeurs: `"day"`, `"night"`, `"dawn"`, `"dusk"`)
 - L'heure courante est sauvegardée et restaurée via `GameManager`
 
@@ -383,9 +386,38 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
   - Chaque bouton : icône + nom + badge ✓ si équipé, quantité si > 1
   - Cliquer → équipe ou déséquipe
 - **Barre de détails** (36 px sous l'image) : texte dynamique au survol — bonus formatés `[+X FOR, +Y DEF…]`
+- **Tooltip flottant** : PanelContainer au survol d'un slot ou d'un item, positionné près du curseur (z_index=100)
+  - Titre doré (nom + ✅ si équipé), stats en vert
+  - Section comparaison si un autre item est déjà équipé dans le même slot : `FOR +2 → +5 (+3) ▲` par stat
+  - Se masque à la sortie du survol (`_on_hover_exit`)
+  - Position recalculée chaque frame (`_process`) pour suivre le curseur, clampée dans le panneau
 - Se synchronise avec `Inventory.inventory_changed` — `_refresh()` appelé aussi depuis `hud.gd._on_inventory_changed()`
 - `Stats.emit_signal("stats_changed")` déclenché à chaque équipement/déséquipement
 - Palette de couleurs issue de `Equipment.png` : brun `(130,92,47)`, beige `(229,214,161)`, teal `(80,169,120)`, etc.
+
+### 🎒 Barre de raccourcis consommables (Hotbar)
+
+- Script `hotbar.gd`, instancié dans `hud.gd` via `_build_hotbar()`, affiché en bas-centre d'écran
+- **4 slots** (touches **1–4**) pour affecter des consommables et les utiliser sans ouvrir l'inventaire
+- **Clic gauche / Touche 1–4** : utilise l'item du slot (consomme 1 unité, soigne HP et/ou mana)
+- **Clic droit sur un slot** : cycle à travers les consommables disponibles dans l'inventaire pour en assigner un
+- Un slot se vide automatiquement si l'item est épuisé (détecté via `Inventory.inventory_changed`)
+- Indicateur quantité (×N) en bas-droite du slot ; bordure dorée si item assigné
+
+**Consommables supportés et valeurs de soin :**
+| Item | HP restaurés | Mana restaurée |
+|---|---|---|
+| Potion | +30 | — |
+| Grande potion | +60 | — |
+| Potion de mana | — | +40 |
+| Potion de force | +20 | +20 |
+| Viande | +15 | — |
+| Champignon | +8 | — |
+| Baie | +5 | — |
+
+- Constantes : `SLOT_COUNT = 4`, `SLOT_SIZE = 52 px`, `SLOT_GAP = 6 px`
+- Valeurs de soin définies dans `HEAL_VALUES` (dictionnaire `{hp, mana}` par item)
+- Les touches 1–4 sont désactivées pendant un dialogue actif (`_active_npc != null`)
 
 ### 🔨 Crafting
 - Touche B — deux onglets Armes / Potions
@@ -478,3 +510,4 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
 - **Indicateur de l'heure** : afficher jour/nuit avec une icône soleil/lune (l'heure est déjà dans `SunLabel`)
 
 ---
+             

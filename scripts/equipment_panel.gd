@@ -85,6 +85,14 @@ var _slot_data: Dictionary = {}
 var _item_grid: GridContainer = null
 var _detail_label: Label = null
 
+# ── Tooltip flottant ──────────────────────────────────────────
+var _tooltip: PanelContainer   = null
+var _tooltip_title:   Label    = null
+var _tooltip_stats:   Label    = null
+var _tooltip_sep:     ColorRect = null
+var _tooltip_cmp_lbl: Label    = null
+var _tooltip_compare: Label    = null
+
 # ============================================================
 func _ready() -> void:
 	_build_panel()
@@ -176,6 +184,122 @@ func _build_panel() -> void:
 	_detail_label.size     = Vector2(PANEL_W - 16, DETAIL_H - 6)
 	_detail_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	add_child(_detail_label)
+
+	# ── Tooltip flottant (au-dessus de tout) ─────────────────
+	_build_tooltip()
+
+# ── Tooltip flottant ─────────────────────────────────────────
+
+func _build_tooltip() -> void:
+	_tooltip = PanelContainer.new()
+	_tooltip.visible = false
+	_tooltip.z_index = 100
+	_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var style = StyleBoxFlat.new()
+	style.bg_color     = Color(0.08, 0.05, 0.03, 0.96)
+	style.border_color = COL_TAN
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(5)
+	style.content_margin_left   = 10
+	style.content_margin_right  = 10
+	style.content_margin_top    = 7
+	style.content_margin_bottom = 7
+	_tooltip.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	_tooltip.add_child(vbox)
+
+	# Titre (nom de l'item)
+	_tooltip_title = Label.new()
+	_tooltip_title.add_theme_color_override("font_color", COL_GOLD)
+	_tooltip_title.add_theme_font_size_override("font_size", 13)
+	vbox.add_child(_tooltip_title)
+
+	# Bonus de stats de l'item survolé
+	_tooltip_stats = Label.new()
+	_tooltip_stats.add_theme_color_override("font_color", Color("#88ff88"))
+	_tooltip_stats.add_theme_font_size_override("font_size", 11)
+	vbox.add_child(_tooltip_stats)
+
+	# Séparateur (masqué quand pas de comparaison)
+	_tooltip_sep = ColorRect.new()
+	_tooltip_sep.color = COL_TAN
+	_tooltip_sep.custom_minimum_size = Vector2(120, 1)
+	vbox.add_child(_tooltip_sep)
+
+	# Titre de comparaison "vs [équipé]"
+	_tooltip_cmp_lbl = Label.new()
+	_tooltip_cmp_lbl.add_theme_color_override("font_color", Color("#aaddff"))
+	_tooltip_cmp_lbl.add_theme_font_size_override("font_size", 10)
+	vbox.add_child(_tooltip_cmp_lbl)
+
+	# Lignes de diff stat par stat
+	_tooltip_compare = Label.new()
+	_tooltip_compare.add_theme_color_override("font_color", Color("#cccccc"))
+	_tooltip_compare.add_theme_font_size_override("font_size", 11)
+	vbox.add_child(_tooltip_compare)
+
+	add_child(_tooltip)
+
+func _show_item_tooltip(item_name: String, slot_id: String, is_eq: bool) -> void:
+	var data    = Stats.equipment_data.get(item_name, {})
+	var bonuses = _format_bonuses(data)
+
+	_tooltip_title.text = ("✅ " if is_eq else "") + item_name
+	_tooltip_stats.text = bonuses if bonuses != "" else "Aucun bonus"
+
+	# Comparaison avec l'item actuellement équipé dans ce slot
+	var cur_eq_raw = Inventory.equipped.get(slot_id, null)
+	var cur_eq: String = "" if cur_eq_raw == null else str(cur_eq_raw)
+	var has_compare = cur_eq != "" and cur_eq != item_name
+	_tooltip_sep.visible      = has_compare
+	_tooltip_cmp_lbl.visible  = has_compare
+	_tooltip_compare.visible  = has_compare
+
+	if has_compare:
+		_tooltip_cmp_lbl.text = "vs équipé : %s" % cur_eq
+		_tooltip_compare.text = _format_comparison(data, Stats.equipment_data.get(cur_eq, {}))
+
+	_tooltip.visible = true
+	_reposition_tooltip()
+
+func _show_slot_tooltip(slot_id: String) -> void:
+	var eq_raw = Inventory.equipped.get(slot_id, null)
+	var eq: String = "" if eq_raw == null else str(eq_raw)
+	if eq == "":
+		_tooltip_title.text = "[%s] — vide" % SLOT_LABELS[slot_id]
+		_tooltip_stats.text = "Cliquez sur un item pour équiper"
+	else:
+		var data    = Stats.equipment_data.get(eq, {})
+		var bonuses = _format_bonuses(data)
+		_tooltip_title.text = "✅ %s" % eq
+		_tooltip_stats.text = bonuses if bonuses != "" else "Aucun bonus"
+	_tooltip_sep.visible     = false
+	_tooltip_cmp_lbl.visible = false
+	_tooltip_compare.visible = false
+	_tooltip.visible = true
+	_reposition_tooltip()
+
+func _hide_tooltip() -> void:
+	if _tooltip:
+		_tooltip.visible = false
+
+func _reposition_tooltip() -> void:
+	if not _tooltip:
+		return
+	var mouse = get_local_mouse_position()
+	var offset = Vector2(18, -_tooltip.size.y - 4)
+	var tp = mouse + offset
+	# Garder dans les limites du panneau
+	tp.x = clamp(tp.x, 2, PANEL_W  - _tooltip.size.x - 2)
+	tp.y = clamp(tp.y, 2, PANEL_H  - _tooltip.size.y - 2)
+	_tooltip.position = tp
+
+func _process(_delta: float) -> void:
+	if _tooltip and _tooltip.visible:
+		_reposition_tooltip()
 
 # ── Slot bouton superposé au cadre dessiné dans l'image ─────
 
@@ -418,6 +542,7 @@ func _on_slot_hover(slot_id: String) -> void:
 	else:
 		_detail_label.text = "[%s] — vide  (cliquer un item ci-contre pour équiper)" % SLOT_LABELS[slot_id]
 		_detail_label.add_theme_color_override("font_color", COL_TAN)
+	_show_slot_tooltip(slot_id)
 
 func _on_item_hover(item_name: String, slot_id: String, is_eq: bool) -> void:
 	var data    = Stats.equipment_data.get(item_name, {})
@@ -427,10 +552,12 @@ func _on_item_hover(item_name: String, slot_id: String, is_eq: bool) -> void:
 	_detail_label.text = item_name + bonuses + state
 	_detail_label.add_theme_color_override("font_color",
 		Color("#88ff88") if is_eq else COL_GOLD)
+	_show_item_tooltip(item_name, slot_id, is_eq)
 
 func _on_hover_exit() -> void:
 	_detail_label.text = "Survolez un emplacement ou un item pour voir ses détails"
 	_detail_label.add_theme_color_override("font_color", Color("#a09070"))
+	_hide_tooltip()
 
 func _format_bonuses(data: Dictionary) -> String:
 	if data.is_empty():
@@ -445,6 +572,20 @@ func _format_bonuses(data: Dictionary) -> String:
 		elif val < 0:
 			parts.append("%d %s" % [val, stat_map[stat]])
 	return "" if parts.is_empty() else "  [" + ", ".join(parts) + "]"
+
+func _format_comparison(new_data: Dictionary, old_data: Dictionary) -> String:
+	var stat_map = {"force": "FOR", "endurance": "END",
+					"agilite": "AGI", "magie": "MAG", "defense": "DEF"}
+	var parts: Array = []
+	for stat in stat_map.keys():
+		var nv: int = new_data.get(stat, 0)
+		var ov: int = old_data.get(stat, 0)
+		if nv == 0 and ov == 0:
+			continue
+		var diff = nv - ov
+		var arrow = "▲" if diff > 0 else ("▼" if diff < 0 else "=")
+		parts.append("%s  %+d → %+d  (%+d) %s" % [stat_map[stat], ov, nv, diff, arrow])
+	return "\n".join(parts) if not parts.is_empty() else "Aucune différence"
 
 # ============================================================
 #  TOGGLE
