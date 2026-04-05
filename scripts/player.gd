@@ -1,5 +1,6 @@
 extends CharacterBody2D
 
+const ProjectileScript = preload("res://scripts/projectile.gd")
 const SPEED = 150.0
 @onready var anim = $AnimatedSprite2D
 @onready var attack_zone = $AttackZone
@@ -36,8 +37,8 @@ func _ready():
 		global_position = GameManager.spawn_position
 	if GameManager.player_health > 0:
 		health = GameManager.player_health
-		emit_signal("health_changed", health)
-	Inventory.emit_signal("inventory_changed")
+		health_changed.emit(health)
+	Inventory.inventory_changed.emit()
 	_add_bow_animations()
 	_fog_node = get_tree().get_first_node_in_group("fog")
 	# Révéler immédiatement au spawn
@@ -67,7 +68,7 @@ func take_damage(amount):
 		return  # invincible pendant l'attaque ou l'esquive
 	var damage_reduit = max(1, amount - Stats.get_defense())
 	health -= damage_reduit
-	emit_signal("health_changed", health)
+	health_changed.emit(health)
 	if health <= 0:
 		die()
 
@@ -187,7 +188,7 @@ func _attaquer():
 	elif type == "magie":
 		var cout = Stats.get_mana_cost_sort()
 		if not Stats.use_mana(cout):
-			print("Pas assez de mana ! (", int(Stats.current_mana), "/", cout, ")")
+			push_warning("Pas assez de mana ! (%d/%d)" % [int(Stats.current_mana), cout])
 			return
 		_lancer_projectile("magie")
 	else:
@@ -225,7 +226,6 @@ func _lancer_projectile(type: String):
 		await get_tree().create_timer(0.5).timeout
 
 	# Lancer le projectile au moment du relâchement
-	var ProjectileScript = load("res://scripts/projectile.gd")
 	var proj = ProjectileScript.new()
 	proj.proj_type = type
 	proj.direction = attack_direction
@@ -260,7 +260,6 @@ func _changer_arme():
 	var idx = dispo.find(actuelle)
 	var prochaine = dispo[(idx + 1) % dispo.size()]
 	Inventory.equip_item("arme", prochaine)
-	print("Arme équipée : ", prochaine)
 
 # ---- Callbacks -------------------------------------------------------
 
@@ -269,9 +268,8 @@ func _on_attack_zone_body_entered(body):
 		body.take_damage(Stats.get_damage())
 
 func heal(amount):
-	health = min(health + amount, max_health)
-	emit_signal("health_changed", health)
-	print("❤️ +", amount, " PV ! Vie actuelle : ", health)
+	health = min(health + amount, Stats.get_max_health())
+	health_changed.emit(health)
 
 func _dodge(dir: Vector2) -> void:
 	if _is_dodging or _dodge_cooldown_cur > 0.0 or is_attacking:

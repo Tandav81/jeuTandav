@@ -54,34 +54,6 @@ var _inv_tooltip: PanelContainer = null
 var _inv_tip_title: Label = null
 var _inv_tip_desc:  Label = null
 
-const ITEM_DESCRIPTIONS: Dictionary = {
-	# ── Consommables ────────────────────────────────────────────
-	"Potion":          "Consommable\n+30 PV",
-	"Grande potion":   "Consommable\n+60 PV",
-	"Potion de mana":  "Consommable\n+40 mana",
-	"Potion de force": "Consommable\n+20 PV  +20 mana",
-	"Viande":          "Consommable\n+15 PV",
-	"Champignon":      "Consommable\n+8 PV",
-	"Baie":            "Consommable\n+5 PV",
-	# ── Outils ──────────────────────────────────────────────────
-	"Hache":           "Outil\nCoupe les arbres (touche Espace près d'un arbre)",
-	"Pioche":          "Outil\nExtrait les minerais (touche Espace près d'un gisement)",
-	# ── Livres ──────────────────────────────────────────────────
-	"Livre du forgeron": "Livre\nDébloque de nouvelles recettes de craft",
-	"Livre du mage":     "Livre\nDébloque de nouvelles recettes de craft",
-	# ── Ressources ──────────────────────────────────────────────
-	"Bois":            "Ressource\nUtilisé en craft : Épée en bois",
-	"Plante":          "Ressource\nUtilisée en craft : Potion",
-	"Tournesol":       "Ressource\nPlante (vendu chez le marchand)",
-	"Peau":            "Ressource\nObtenue en chassant les animaux",
-	"Pierre brute":    "Minerai commun",
-	"Minerai de fer":  "Minerai\nUtilisé en craft : Épée en fer",
-	"Charbon":         "Minerai peu rare",
-	"Cristal":         "Minerai rare",
-	"Minerai d'or":    "Minerai très rare",
-	# ── Clés / objets spéciaux ──────────────────────────────────
-	"Cle de donjon":   "Objet spécial\nDrop du boss Golem",
-}
 var _boss_bar_bg: Control        = null   # fond de la barre (Panel, pas PanelContainer)
 var _boss_bar_fill: ColorRect    = null
 var _boss_bar_label: Label       = null
@@ -120,7 +92,8 @@ const TOOL_ICONS = {
 func _ready():
 	add_to_group("hud")
 	var player = get_tree().get_first_node_in_group("player")
-	player.health_changed.connect(_on_health_changed)
+	if player:
+		player.health_changed.connect(_on_health_changed)
 	Inventory.inventory_changed.connect(_on_inventory_changed)
 	Stats.stats_changed.connect(_on_stats_changed)
 	Stats.level_up.connect(_on_level_up)
@@ -504,10 +477,9 @@ func _show_inv_tooltip(item_name: String) -> void:
 			if val != 0:
 				parts.append("%s%d %s" % ["+" if val > 0 else "", val, stat_map[stat]])
 		_inv_tip_desc.text = "\n".join(parts)
-	elif ITEM_DESCRIPTIONS.has(item_name):
-		_inv_tip_desc.text = ITEM_DESCRIPTIONS[item_name]
 	else:
-		_inv_tip_desc.text = "—"
+		var desc = ItemData.get_description(item_name)
+		_inv_tip_desc.text = desc if desc != "" else "—"
 
 	_inv_tooltip.visible = true
 
@@ -637,7 +609,7 @@ func _on_item_pressed(item_name: String):
 			if Stats.equipment_data.has(item_name):
 				var slot = Stats.equipment_data[item_name]["slot"]
 				Inventory.equip_item(slot, item_name)
-				Stats.emit_signal("stats_changed")
+				Stats.stats_changed.emit()
 				show_notification("✅  " + item_name + " équipé(e)", Color("#aaffaa"))
 				_refresh_inventaire()
 				if panneau_perso.visible:
@@ -646,6 +618,11 @@ func _on_item_pressed(item_name: String):
 # ===== PERSONNAGE =====
 
 func _on_stats_changed():
+	var player = get_tree().get_first_node_in_group("player")
+	if player:
+		player.max_health = Stats.get_max_health()
+	if health_bar:
+		health_bar.max_value = Stats.get_max_health()
 	if panneau_perso.visible:
 		_refresh_stats()
 	# La magie affecte le mana max : mettre à jour la barre
@@ -769,9 +746,6 @@ func _refresh_stats():
 func _on_stat_plus(stat_name: String):
 	if Stats.spend_point(stat_name):
 		_refresh_stats()
-		if stat_name == "endurance":
-			var player = get_tree().get_first_node_in_group("player")
-			player.max_health = Stats.get_max_health()
 
 func _refresh_equipement():
 	for child in grid_equip.get_children():
@@ -832,7 +806,7 @@ func _build_hotbar() -> void:
 
 func _on_desequiper(slot: String):
 	Inventory.unequip_item(slot)
-	Stats.emit_signal("stats_changed")
+	Stats.stats_changed.emit()
 	_refresh_equipement()
 	_refresh_stats()
 

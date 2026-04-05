@@ -22,7 +22,7 @@ func add_item(item_name: String, quantity: int):
 		items[item_name] += quantity
 	else:
 		items[item_name] = quantity
-	emit_signal("inventory_changed")
+	inventory_changed.emit()
 
 func remove_item(item_name: String, quantity: int) -> bool:
 	if not items.has(item_name) or items[item_name] < quantity:
@@ -30,7 +30,7 @@ func remove_item(item_name: String, quantity: int) -> bool:
 	items[item_name] -= quantity
 	if items[item_name] <= 0:
 		items.erase(item_name)
-	emit_signal("inventory_changed")
+	inventory_changed.emit()
 	return true
 
 func has_item(item_name: String, quantity: int = 1) -> bool:
@@ -38,16 +38,16 @@ func has_item(item_name: String, quantity: int = 1) -> bool:
 
 func equip_tool(tool_name: String):
 	equipped_tool = tool_name
-	emit_signal("inventory_changed")
+	inventory_changed.emit()
 
 func add_gold(amount: int):
 	gold += amount
-	emit_signal("inventory_changed")
+	inventory_changed.emit()
 
 func equip_item(slot: String, item_name: String):
 	equipped[slot] = item_name
-	emit_signal("inventory_changed")
+	inventory_changed.emit()
 
 func unequip_item(slot: String):
 	equipped[slot] = null
-	emit_signal("inventory_changed")
+	inventory_changed.emit()

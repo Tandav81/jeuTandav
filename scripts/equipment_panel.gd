@@ -520,12 +520,12 @@ func _on_slot_clicked(slot_id: String) -> void:
 
 func _on_equip(item_name: String, slot_id: String) -> void:
 	Inventory.equip_item(slot_id, item_name)
-	Stats.emit_signal("stats_changed")
+	Stats.stats_changed.emit()
 	_refresh()
 
 func _on_desequip(slot_id: String) -> void:
 	Inventory.unequip_item(slot_id)
-	Stats.emit_signal("stats_changed")
+	Stats.stats_changed.emit()
 	_refresh()
 
 # ============================================================
