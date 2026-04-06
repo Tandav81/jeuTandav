@@ -2289,9 +2289,16 @@ shape = SubResource("RectangleShape2D_7t5mc")
 
 [node name="Golem" parent="Ennemis" unique_id=1106417163 instance=ExtResource("24_ymy7y")]
 position = Vector2(600, 405)
+attack_range = 45.0
+patrol_range = 60.0
+damage_per_second = 49.0
+max_health = 1000
+xp_reward = 150
+respawn_time = 9999.0
 unique_drops = Array[Dictionary]([{
 "name": "Cle de donjon"
 }])
+triggers_world_cinematic = true
 
 [node name="Coffres" type="Node2D" parent="." unique_id=544727082]
 

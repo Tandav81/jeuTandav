@@ -8,6 +8,10 @@ var fog_data: Dictionary = {}
 var time_of_day: float = 0.25
 var used_books: Array = []   # livres de recettes déjà lus
 
+## true = cinématique à déclencher au prochain chargement de world.tscn
+## (posé à true quand un boss avec triggers_world_cinematic=true est tué)
+var dungeon_key_pending: bool = false
+
 ## Retourne true si ce livre a déjà été utilisé (recettes débloquées).
 func is_book_used(book_name: String) -> bool:
 	return used_books.has(book_name)

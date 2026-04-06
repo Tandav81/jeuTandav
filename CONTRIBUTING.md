@@ -19,6 +19,8 @@
 10. [Ajouter un talent passif](#10-ajouter-un-talent-passif)
 11. [Ajouter un équipement](#11-ajouter-un-équipement)
 14. [Ajouter un consommable à la Hotbar](#14-ajouter-un-consommable-à-la-hotbar)
+15. [Ajouter un portail verrouillé](#15-ajouter-un-portail-verrouillé)
+16. [Configurer la cinématique de révélation](#16-configurer-la-cinématique-de-révélation)
 
 ---
 
@@ -243,12 +245,13 @@ Ouvrez la scène de l'ennemi (ex. `golem.tscn`), sélectionnez le nœud racine, 
 | `is_boss` | `true` | Active la barre de vie dédiée en bas d'écran |
 | `boss_name` | `"Golem de Pierre"` | Nom affiché dans la barre |
 | `unique_drops` | voir ci-dessous | Items donnés à la mort |
+| `triggers_world_cinematic` | `true` | Déclenche la cinématique de révélation dans world.tscn au retour du joueur (voir section 16) |
 
 **Format de `unique_drops`** (tableau de dictionnaires) :
 
 ```
 [
-  { "name": "Cle de donjon", "qty": 1 },
+  { "name": "Clé du donjon", "qty": 1 },
   { "name": "Minerai d'or",  "qty": 3 }
 ]
 ```
@@ -582,6 +585,70 @@ L'item apparaîtra automatiquement dans la rotation du clic-droit dès qu'il ser
 
 ---
 
+## 15. Ajouter un portail verrouillé
+
+**Script :** `scripts/locked_portal.gd`
+
+Un portail verrouillé bloque l'accès jusqu'à ce que le joueur possède un item-clé précis dans son inventaire. Il s'affiche en teinte bleue (verrouillé) et revient à blanc (ouvert) une fois la clé obtenue.
+
+**Étape 1 — Créer le nœud dans l'éditeur Godot**
+
+Dans la scène cible (ex. `world.tscn`) :
+1. Créer un nœud `Area2D`, renommer en `LockedPortal`
+2. Ajouter un enfant `CollisionShape2D` (RectangleShape2D 32×32 recommandé)
+3. Ajouter un enfant `Label` (renommer en `Label`)
+4. Assigner le script `res://scripts/locked_portal.gd`
+
+**Étape 2 — Configurer dans l'inspecteur**
+
+| Export | Valeur exemple | Rôle |
+|---|---|---|
+| `target_scene` | `"res://scenes/secret_room.tscn"` | Scène de destination |
+| `target_spawn` | `Vector2(100, 100)` | Position de spawn dans la destination |
+| `portal_label` | `"🔒 Salle secrète"` | Texte affiché au-dessus |
+| `required_key` | `"Clé du donjon"` | Nom exact de l'item-clé dans l'inventaire |
+
+> Le `required_key` doit correspondre **exactement** au champ `name` du drop dans `unique_drops` du boss.
+
+Le portail s'ouvre automatiquement si le joueur a déjà la clé (ex. après rechargement d'une sauvegarde). Il peut aussi être ouvert manuellement via `open_portal()`.
+
+---
+
+## 16. Configurer la cinématique de révélation
+
+**Script :** `scripts/dungeon_cinematic.gd`
+
+Ce nœud doit être placé dans `world.tscn`. Il surveille `GameManager.dungeon_key_pending` et déclenche une cinématique (pan + zoom de la caméra) vers le portail verrouillé quand le joueur revient dans la scène après avoir tué le boss concerné.
+
+**Étape 1 — Ajouter dans world.tscn**
+
+1. Créer un nœud `Node` dans `world.tscn`, renommer en `DungeonCinematic`
+2. Assigner le script `res://scripts/dungeon_cinematic.gd`
+
+**Étape 2 — Configurer dans l'inspecteur**
+
+| Export | Valeur | Rôle |
+|---|---|---|
+| `locked_portal_path` | NodePath du LockedPortal | Cible de la cinématique (clic → sélectionner le nœud) |
+| `cinematic_zoom` | `2.0` | Niveau de zoom à l'arrivée (×2 = zoom ×2) |
+| `pan_duration` | `1.5` | Durée du déplacement vers la cible (s) |
+| `hold_duration` | `2.0` | Pause sur la cible avant retour (s) |
+| `return_duration` | `1.2` | Durée du retour au joueur (s) |
+
+**Étape 3 — Activer le déclencheur sur le boss**
+
+Dans l'inspecteur du boss (scène dans le donjon) : cocher `triggers_world_cinematic = true`.
+
+**Flow complet :**
+1. Boss tué (`triggers_world_cinematic = true`) → `GameManager.dungeon_key_pending = true`
+2. Joueur ressort du donjon → `world.tscn` se charge
+3. `DungeonCinematic._ready()` détecte le flag → cinématique automatique
+4. Caméra pan vers le `LockedPortal`, flash doré, portail ouvert, retour joueur
+
+> Pour tester sans tuer le boss : appeler `$DungeonCinematic.play_cinematic()` depuis la console Godot.
+
+---
+
 ## Récapitulatif des fichiers à modifier selon la tâche
 
 | Ce que vous voulez ajouter | Fichier(s) à modifier |
@@ -605,3 +672,6 @@ L'item apparaîtra automatiquement dans la rotation du clic-droit dès qu'il ser
 | Talent passif | `scripts/stats.gd` + script(s) concerné(s) + `hud.gd` (`TALENT_ICON_DEFS`) |
 | Équipement | `scripts/stats.gd` + `item_data.gd` (apparaît automatiquement dans le panneau G) |
 | Consommable hotbar | `scripts/hotbar.gd` (`CONSUMABLES` + `HEAL_VALUES`) |
+| Portail verrouillé | Nœud `Area2D` + `scripts/locked_portal.gd` (voir §15) |
+| Cinématique révélation | Nœud `Node` + `scripts/dungeon_cinematic.gd` dans `world.tscn` + boss `triggers_world_cinematic=true` (voir §16) |
+| Boss avec cinématique | Inspecteur Godot (`is_boss`, `unique_drops`, `triggers_world_cinematic`) |

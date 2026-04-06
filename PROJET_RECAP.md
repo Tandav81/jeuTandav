@@ -13,6 +13,7 @@ test-jeu-2d/
 ├── scenes/
 │   ├── world.tscn                  ← scène principale (extérieur)
 │   ├── cave.tscn                   ← scène grotte (accessible via portail)
+│   ├── dungeon.tscn                ← donjon (à créer — voir GUIDE_DONJON.md)
 │   ├── main_menu.tscn              ← menu principal
 │   ├── player.tscn                 ← personnage joueur
 │   ├── npc.tscn                    ← PNJ base
@@ -43,6 +44,8 @@ test-jeu-2d/
 │   ├── day_night_cycle.gd          ← cycle jour/nuit avec overlay
 │   ├── fog_of_war.gd               ← brouillard de guerre par scène
 │   ├── portal.gd                   ← portail de transition
+│   ├── locked_portal.gd            ← portail verrouillé (clé requise)
+│   ├── dungeon_cinematic.gd        ← cinématique zoom caméra (world.tscn)
 │   ├── scene_transition.gd         ← Autoload fondu noir entre scènes
 │   ├── chest.gd
 │   ├── item.gd
@@ -312,12 +315,22 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
 - Talent `dash_heal` : +3 PV par esquive réussie
 
 ### 💀 Boss — Barre de vie dédiée
-- Exports sur `enemy.gd` : `is_boss`, `boss_name`, `unique_drops`
+- Exports sur `enemy.gd` : `is_boss`, `boss_name`, `unique_drops`, `triggers_world_cinematic`
 - Barre de vie stylisée en bas d'écran (fond rouge → fill sombre)
 - Signaux : `boss_health_changed(current, max_hp)`, `boss_died`
 - À la mort : drops uniques distribués via `Inventory.add_item()`, barre disparaît
 - Au respawn : barre réapparaît avec vie pleine
-- **Configuration** : dans `golem.tscn`, cocher `is_boss = true`, renseigner `boss_name` et `unique_drops` dans l'inspecteur Godot
+- `triggers_world_cinematic = true` → pose `GameManager.dungeon_key_pending = true` à la mort (déclenche la cinématique au retour dans world.tscn)
+- **Configuration** : dans la scène boss, cocher `is_boss = true`, renseigner `boss_name`, `unique_drops` et optionnellement `triggers_world_cinematic` dans l'inspecteur Godot
+
+### 🏰 Donjon & Cinématique de révélation
+- `dungeon.tscn` — scène de donjon (à créer par duplication de `cave.tscn`)
+- `locked_portal.gd` — portail verrouillé : `@export var required_key` vérifie l'inventaire avant d'autoriser le passage ; teinte bleue = verrouillé, blanc = ouvert
+- `dungeon_cinematic.gd` — nœud à placer dans `world.tscn` :
+  - Au chargement : vérifie `GameManager.dungeon_key_pending`
+  - Si actif : pan + zoom caméra vers le `LockedPortal`, flash doré, ouverture, retour joueur
+  - Exports configurables : `locked_portal_path`, `cinematic_zoom`, `pan_duration`, `hold_duration`, `return_duration`
+- Voir `GUIDE_DONJON.md` pour les étapes complètes d'intégration dans l'éditeur Godot
 
 ### 🗺️ Minimap
 - Widget `TextureRect` 120×120 px en haut-droite (CanvasLayer)

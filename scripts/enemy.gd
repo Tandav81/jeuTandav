@@ -15,6 +15,8 @@ extends CharacterBody2D
 @export var boss_name: String = "Boss"
 ## Items droppés à la mort : chaque entrée = Dictionary { "name": "...", "qty": N }
 @export var unique_drops: Array[Dictionary] = []
+## Si true, déclenche la cinématique de révélation dans world.tscn à la mort du boss
+@export var triggers_world_cinematic: bool = false
 
 signal boss_health_changed(current_hp: int, max_hp: int)
 signal boss_died
@@ -137,6 +139,8 @@ func die():
 				Inventory.add_item(drop["name"], drop.get("qty", 1))
 			else:
 				push_warning("unique_drops: élément invalide ignoré — doit être {name, qty}")
+		if triggers_world_cinematic:
+			GameManager.dungeon_key_pending = true
 		boss_died.emit()
 		var hud = get_tree().get_first_node_in_group("hud")
 		if hud:

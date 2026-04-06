@@ -166,7 +166,7 @@ func _input(event: InputEvent) -> void:
 			if _minimap_rect:
 				_minimap_rect.get_parent().visible = _minimap_visible
 			get_viewport().set_input_as_handled()
-	
+
 	# ── Navigation clavier dans les choix de dialogue ────────────────
 	if _active_npc != null and _choice_buttons.size() > 0:
 		# Haut / Bas pour déplacer le curseur
@@ -233,10 +233,10 @@ func _process(delta: float):
 			_equip_panel.visible = false
 		if _talent_panel and _talent_panel.visible:
 			pass  # talent panel non fermable — choix obligatoire
-			
+
 	if dialogue_box.visible and Input.is_action_just_pressed("ui_accept"):
 		hide_dialogue()
-	
+
 	if Input.is_action_just_pressed("personnage"): # ou une nouvelle touche
 		toggle_journal()
 	# Minimap — mise à jour périodique
@@ -818,7 +818,7 @@ func get_item_texture(item_name: String) -> Texture2D:
 func show_dialogue(text):
 	dialogue_box.visible = true
 	label_dialogue.text = text
-	
+
 func hide_dialogue():
 	dialogue_box.visible = false
 
@@ -1745,4 +1745,3 @@ func _update_minimap() -> void:
 			_minimap_image.set_pixel(px, py, color_enemy)
 
 	_minimap_texture.update(_minimap_image)
-	

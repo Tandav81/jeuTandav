@@ -1,6 +1,6 @@
 extends Area2D
 
-@export var item_type = "potion"
+@export var item_type = "Potion"
 @export var heal_amount = 30
 
 func _on_body_entered(body):
@@ -8,7 +8,7 @@ func _on_body_entered(body):
 	if body.is_in_group("player"):
 		print("C'est le joueur !")
 		match item_type:
-			"potion":
+			"Potion":
 				body.heal(heal_amount)
 		_ramasser()
 

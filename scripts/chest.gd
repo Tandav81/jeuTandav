@@ -1,6 +1,6 @@
 extends StaticBody2D
 
-@export var contenu = "potion"
+@export var contenu = "Potion"
 @export var quantite = 1
 @export var gold_amount = 0
 ## Si true : le coffre disparaît après ouverture et réapparaît ailleurs (géré par ResourceSpawner).
