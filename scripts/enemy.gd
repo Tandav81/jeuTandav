@@ -10,13 +10,17 @@ extends CharacterBody2D
 @export var respawn_time = 5.0  # secondes avant respawn
 @export var enemy_type = "slime"
 
-# ── Boss ─────────────────────────────────────────────────────
+@export_group("Boss")
 @export var is_boss: bool = false
 @export var boss_name: String = "Boss"
 ## Items droppés à la mort : chaque entrée = Dictionary { "name": "...", "qty": N }
 @export var unique_drops: Array[Dictionary] = []
-## Si true, déclenche la cinématique de révélation dans world.tscn à la mort du boss
-@export var triggers_world_cinematic: bool = false
+## Nom de la clé qui déclenchera la cinématique dans world.tscn (ex: "Clé du donjon").
+## Laisser vide pour désactiver. Correspond au "watched_key" d'un nœud DungeonCinematic.
+@export var cinematic_key: String = ""
+## Si true, le boss ne respawn pas après sa mort (queue_free)
+@export var respawn_once: bool = false
+@export_group("")
 
 signal boss_health_changed(current_hp: int, max_hp: int)
 signal boss_died
@@ -139,8 +143,8 @@ func die():
 				Inventory.add_item(drop["name"], drop.get("qty", 1))
 			else:
 				push_warning("unique_drops: élément invalide ignoré — doit être {name, qty}")
-		if triggers_world_cinematic:
-			GameManager.dungeon_key_pending = true
+		if cinematic_key != "":
+			GameManager.pending_cinematics.append(cinematic_key)
 		boss_died.emit()
 		var hud = get_tree().get_first_node_in_group("hud")
 		if hud:
@@ -155,6 +159,11 @@ func die():
 	visible = false
 	$CollisionShape2D.disabled = true
 	set_physics_process(false)
+
+	# Si l'ennemi ne doit apparaître qu'une fois, on le supprime définitivement
+	if respawn_once:
+		queue_free()
+		return
 
 	# attendre avant respawn
 	await get_tree().create_timer(respawn_time).timeout

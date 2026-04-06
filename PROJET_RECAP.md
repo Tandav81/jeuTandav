@@ -1,7 +1,7 @@
 # 📋 Récapitulatif du projet — testJeu2D
 
 > Godot 4.6 — Jeu 2D RPG (top-down)
-> Dernière mise à jour : 2026-04-05 (session 3)
+> Dernière mise à jour : 2026-04-06 (session 4)
 
 ---
 
@@ -60,7 +60,9 @@ test-jeu-2d/
 │   ├── stats.gd                    ← Autoload
 │   ├── night_enemy_spawner.gd      ← spawn dynamique ennemis nocturnes
 │   ├── npc_merchant.gd             ← PNJ marchand (extends npc.gd)
-│   └── hotbar.gd                   ← barre de raccourcis consommables (touches 1–4)
+│   ├── hotbar.gd                   ← barre de raccourcis consommables (touches 1–4)
+│   ├── audio_manager.gd            ← Autoload musique d'ambiance (crossfade)
+│   └── boss_room_gate.gd           ← barrière de salle de boss (StaticBody2D)
 └── assets/
 	├── Player/                     ← spritesheets joueur (attaque, arc…)
 	├── Enemies/                    ← Bat/, Golem_1/, flyingMushroom/, etc.
@@ -79,6 +81,7 @@ test-jeu-2d/
 - `Stats` — niveau, XP, statistiques, mana, données d'équipements
 - `ItemData` — textures des items (sprites depuis les tilesets)
 - `SceneTransition` — fondu noir entre les scènes
+- `AudioManager` — musique d'ambiance avec fondus enchaînés (crossfade)
 
 **Touches configurées :**
 | Action | Touche |
@@ -315,28 +318,54 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
 - Talent `dash_heal` : +3 PV par esquive réussie
 
 ### 💀 Boss — Barre de vie dédiée
-- Exports sur `enemy.gd` : `is_boss`, `boss_name`, `unique_drops`, `triggers_world_cinematic`
+- Exports sur `enemy.gd` (groupe `"Boss"` dans l'inspecteur) : `is_boss`, `boss_name`, `unique_drops`, `cinematic_key`, `respawn_once`
 - Barre de vie stylisée en bas d'écran (fond rouge → fill sombre)
 - Signaux : `boss_health_changed(current, max_hp)`, `boss_died`
 - À la mort : drops uniques distribués via `Inventory.add_item()`, barre disparaît
-- Au respawn : barre réapparaît avec vie pleine
-- `triggers_world_cinematic = true` → pose `GameManager.dungeon_key_pending = true` à la mort (déclenche la cinématique au retour dans world.tscn)
-- **Configuration** : dans la scène boss, cocher `is_boss = true`, renseigner `boss_name`, `unique_drops` et optionnellement `triggers_world_cinematic` dans l'inspecteur Godot
+- Au respawn : barre réapparaît avec vie pleine ; si `respawn_once = true`, l'ennemi est détruit définitivement après la première mort
+- `cinematic_key` (ex: `"Clé du donjon"`) → ajoute la clé dans `GameManager.pending_cinematics` à la mort, déclenche la cinématique correspondante au retour dans world.tscn
+- **Configuration** : dans la scène boss, cocher `is_boss = true`, renseigner `boss_name`, `unique_drops`, `cinematic_key` (= valeur du `required_key` du LockedPortal cible) et optionnellement `respawn_once` dans l'inspecteur
 
 ### 🏰 Donjon & Cinématique de révélation
 - `dungeon.tscn` — scène de donjon (à créer par duplication de `cave.tscn`)
-- `locked_portal.gd` — portail verrouillé : `@export var required_key` vérifie l'inventaire avant d'autoriser le passage ; teinte bleue = verrouillé, blanc = ouvert
-- `dungeon_cinematic.gd` — nœud à placer dans `world.tscn` :
-  - Au chargement : vérifie `GameManager.dungeon_key_pending`
-  - Si actif : pan + zoom caméra vers le `LockedPortal`, flash doré, ouverture, retour joueur
-  - Exports configurables : `locked_portal_path`, `cinematic_zoom`, `pan_duration`, `hold_duration`, `return_duration`
+- `locked_portal.gd` — portail verrouillé :
+  - `required_key` : nom d'item à posséder (ex: `"Clé du donjon"`) — laisser vide = ignoré
+  - `required_quest` : ID de quête devant être `"completed"` — laisser vide = ignoré
+  - Les deux conditions doivent être remplies si les deux sont définies
+  - `ambient_music` : stream audio joué à l'entrée (optionnel via AudioManager)
+  - Teinte bleue = verrouillé, blanc = ouvert ; s'ajoute au groupe `"locked_portal"`
+- `dungeon_cinematic.gd` — nœud à placer dans `world.tscn` (un nœud par boss/donjon) :
+  - `watched_key` : correspond au `cinematic_key` du boss ET au `required_key` du LockedPortal
+  - Au chargement : vérifie `GameManager.pending_cinematics` pour sa clé
+  - Si actif : pan + zoom caméra vers le LockedPortal correspondant, flash doré, ouverture, retour joueur
+  - Le LockedPortal est découvert automatiquement par groupe `"locked_portal"` (pas de NodePath)
+  - Exports : `cinematic_zoom` (déf. 2.0), `pan_duration` (1.5s), `hold_duration` (2.0s), `return_duration` (1.2s), `debug_mode` (false)
+  - Groupe `"dungeon_cinematic"` → appelable via console pour test : `get_tree().get_first_node_in_group("dungeon_cinematic").play_cinematic()`
+- **Support multi-donjons** : placer autant de nœuds `DungeonCinematic` que de boss, chacun avec son propre `watched_key`
+- `pending_cinematics` persisté dans la sauvegarde (`save.json`) — la cinématique se déclenche même si le jeu est fermé puis rouvert entre la mort du boss et le retour dans world.tscn
 - Voir `GUIDE_DONJON.md` pour les étapes complètes d'intégration dans l'éditeur Godot
+
+### 🔊 Musique d'ambiance (AudioManager)
+- Autoload `AudioManager` (`scripts/audio_manager.gd`) — **à enregistrer dans Project → Project Settings → Autoload**
+- Deux `AudioStreamPlayer` en crossfade (fondu de 1.2 s par défaut)
+- API publique :
+  - `AudioManager.play_ambient(stream)` — joue un stream, crossfade si un autre est en cours
+  - `AudioManager.stop_ambient()` — arrête en fondu
+  - `AudioManager.is_playing()` → bool
+- Utilisé automatiquement par `portal.gd` et `locked_portal.gd` via l'export `ambient_music`
+
+### 🚪 Barrière de salle de boss (BossRoomGate)
+- Script `boss_room_gate.gd` à appliquer sur un `StaticBody2D` avec `CollisionShape2D`
+- Se connecte au signal `boss_died` du boss via l'export `boss_node_path`
+- À la mort du boss : collision désactivée immédiatement, fondu de disparition (`fade_duration` défaut 0.8 s), puis `queue_free()`
+- Export `debug_mode` pour les logs console
 
 ### 🗺️ Minimap
 - Widget `TextureRect` 120×120 px en haut-droite (CanvasLayer)
 - Rendu pixel-par-pixel sur une `Image` mise à jour toutes les 0.5 s
 - Réutilise `fog_of_war.revealed_cells` : zones révélées en vert, brouillard en quasi-noir
 - Point blanc = joueur, points rouges = ennemis dans les zones révélées
+- **Point jaune** = portail libre (groupe `"portal"`) — **Point bleu** = portail verrouillé (groupe `"locked_portal"`)
 - Toggle avec la touche **M**
 
 ### 🏅 Icônes de talents actifs (HUD)
@@ -345,6 +374,12 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
 - Tooltip au survol affichant le nom complet et l'effet
 - Se met à jour automatiquement à l'acquisition d'un talent et au chargement d'une sauvegarde
 - Configuration dans `hud.gd` → constante `TALENT_ICON_DEFS` (id → couleur + abréviation + description)
+
+### 🗝️ Icônes de clés collectées (HUD)
+- Rangée de carrés dorés (24×24 px, emoji 🗝) sous la rangée des talents
+- Un carré par item-clé présent dans l'inventaire
+- Se met à jour automatiquement via `Inventory.inventory_changed`
+- Configuration dans `hud.gd` → constante `KEY_ITEMS: Array[String]` — ajouter tout nouvel item-clé à cette liste
 
 ### 📜 Quêtes
 - Deux quêtes : "Chasseur de slimes" (tuer 5 slimes) et "Bûcheron débutant" (récolter 10 bois)
@@ -446,7 +481,7 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
 
 ### 💾 Sauvegarde / Chargement
 - JSON dans `user://save.json`
-- Données : position, vie, inventaire, or, outil, coffres, stats, équipements, niveau/XP, **heure du jour**, **brouillard par scène**
+- Données : position, vie, inventaire, or, outil, coffres, stats, équipements, niveau/XP, **heure du jour**, **brouillard par scène**, **pending_cinematics** (cinématiques boss en attente)
 - Compatibilité avec anciennes sauvegardes (vérification des clés)
 
 ### 🎨 Menu Principal
@@ -512,8 +547,8 @@ Sprites 32×32 extraits du tileset sunnyside (3 variantes visuelles par minerai)
 
 ### 🔊 Audio (fort impact, effort moyen)
 
-- Sons d'attaque, récolte, pas selon le sol
-- Musique d'ambiance différente extérieur/grotte, fondu enchaîné
+- Sons d'attaque, récolte, pas selon le sol (effets sonores ponctuels)
+- ~~Musique d'ambiance avec crossfade~~ ✅ Implémenté (AudioManager)
 - Son de level up, notification, ouverture de coffre
 
 ### 🖥️ QoL interface

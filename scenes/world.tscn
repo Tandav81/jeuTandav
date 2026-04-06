@@ -931,12 +931,16 @@ target_scene = "res://scenes/cave.tscn"
 target_spawn = Vector2(-1485, 861)
 portal_label = "Entrée de la grotte"
 
+[node name="Cinematic" type="Node2D" parent="." unique_id=1026173636 groups=["dungeon_cinematic"]]
+script = ExtResource("33_rup4s")
+
 [node name="LockedPortal" parent="." unique_id=587002710 instance=ExtResource("27_0nbtd")]
 position = Vector2(2770, -1203)
 script = ExtResource("16_fh13f")
 target_scene = "res://scenes/highlands.tscn"
 portal_label = "Entrée verrouillée"
 required_key = "Cle de donjon"
+required_quest = ""
 
 [node name="DayNightCycle" type="CanvasLayer" parent="." unique_id=128201196 groups=["day_night"]]
 script = ExtResource("16_navra")
@@ -1295,9 +1299,6 @@ script = ExtResource("100_nspawn")
 
 [node name="DayEnemySpawner" type="Node2D" parent="." unique_id=20240404]
 script = ExtResource("101_dspawn")
-
-[node name="Cinematic" type="Node2D" parent="." unique_id=1026173636]
-script = ExtResource("33_rup4s")
 
 [connection signal="pressed" from="HUD/BtnInventaire" to="HUD" method="_on_btn_inventaire_pressed"]
 [connection signal="pressed" from="HUD/BtnPersonnage" to="HUD" method="_on_btn_personnage_pressed"]

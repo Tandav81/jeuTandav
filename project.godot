@@ -22,6 +22,7 @@ QuestManager="*uid://cyc4qcuwfvvgo"
 Stats="*uid://boffexw3fcbqt"
 SceneTransition="*uid://dalw42nwp6enu"
 ItemData="*uid://ccuasspjv3n6o"
+AudioManager="*uid://d4m01x30882v4"
 
 [global_group]
 

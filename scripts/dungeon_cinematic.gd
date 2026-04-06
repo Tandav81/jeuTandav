@@ -4,23 +4,33 @@ extends Node
 #  DungeonCinematic — nœud à placer dans world.tscn
 #
 #  Déclenche automatiquement une cinématique (pan + zoom de la caméra)
-#  vers le portail verrouillé quand le joueur revient dans world.tscn
-#  après avoir tué un boss portant triggers_world_cinematic = true.
+#  vers le portail verrouillé associé, quand le joueur revient dans world.tscn
+#  après avoir tué le boss dont le cinematic_key correspond à watched_key.
 #
-#  Le LockedPortal est trouvé par groupe ("locked_portal") — pas besoin
-#  de configurer un NodePath manuellement.
+#  Supporte plusieurs boss / donjons : placer autant de DungeonCinematic que
+#  de boss, chacun avec son propre watched_key pointant vers son LockedPortal.
 #
-#  Exports optionnels (inspecteur) :
-#    • cinematic_zoom   → niveau de zoom à l'arrivée (défaut 2.0)
-#    • pan_duration     → durée du déplacement vers la cible (défaut 1.5s)
-#    • hold_duration    → temps de pause sur la cible (défaut 2.0s)
-#    • return_duration  → durée du retour au joueur (défaut 1.2s)
+#  Le LockedPortal cible est trouvé parmi les nœuds du groupe "locked_portal"
+#  dont le required_key correspond à watched_key.
+#
+#  Exports (inspecteur) :
+#    • watched_key     → nom de la clé boss qui déclenche CETTE cinématique
+#    • cinematic_zoom  → niveau de zoom à l'arrivée (défaut 2.0)
+#    • pan_duration    → durée du déplacement vers la cible (défaut 1.5s)
+#    • hold_duration   → temps de pause sur la cible (défaut 2.0s)
+#    • return_duration → durée du retour au joueur (défaut 1.2s)
+#    • debug_mode      → logs console (défaut false)
 # ─────────────────────────────────────────────────────────────────────────────
 
-@export var cinematic_zoom:    float = 2.0
-@export var pan_duration:      float = 1.5
-@export var hold_duration:     float = 2.0
-@export var return_duration:   float = 1.2
+## Nom de la clé boss que cette cinématique surveille (ex: "Clé du donjon").
+## Doit correspondre au cinematic_key du boss ET au required_key du LockedPortal.
+@export var watched_key:       String = ""
+@export var cinematic_zoom:    float  = 2.0
+@export var pan_duration:      float  = 1.5
+@export var hold_duration:     float  = 2.0
+@export var return_duration:   float  = 1.2
+## Activer pour afficher les logs de debug dans la console Godot
+@export var debug_mode:        bool   = false
 
 var _locked_portal: Node = null
 
@@ -29,30 +39,33 @@ func _ready() -> void:
 	# Laisser la scène se charger entièrement avant d'agir
 	await get_tree().process_frame
 
-	# ── Chercher le LockedPortal par groupe (plus fiable que NodePath) ────────
-	var portals = get_tree().get_nodes_in_group("locked_portal")
-	if portals.size() > 0:
-		_locked_portal = portals[0]
-		print("[DungeonCinematic] LockedPortal trouvé : ", _locked_portal.name)
+	# ── Chercher le LockedPortal dont le required_key correspond à watched_key ──
+	if watched_key != "":
+		for p in get_tree().get_nodes_in_group("locked_portal"):
+			if p.get("required_key") == watched_key:
+				_locked_portal = p
+				break
+	if is_instance_valid(_locked_portal):
+		if debug_mode: print("[DungeonCinematic] LockedPortal trouvé : ", _locked_portal.name)
 	else:
-		print("[DungeonCinematic] ⚠ Aucun nœud dans le groupe 'locked_portal' — la cinématique jouera sans flash de portail.")
+		if debug_mode: print("[DungeonCinematic] ⚠ Aucun LockedPortal avec required_key='", watched_key, "' — cinématique sans flash.")
 
-	# ── Vérifier le flag ──────────────────────────────────────────────────────
-	print("[DungeonCinematic] dungeon_key_pending = ", GameManager.dungeon_key_pending)
+	# ── Vérifier si notre clé est en attente ─────────────────────────────────
+	if debug_mode: print("[DungeonCinematic] pending_cinematics = ", GameManager.pending_cinematics)
 
-	if GameManager.dungeon_key_pending:
-		GameManager.dungeon_key_pending = false
+	if watched_key != "" and GameManager.pending_cinematics.has(watched_key):
+		GameManager.pending_cinematics.erase(watched_key)
 		# Attendre la fin du fondu de SceneTransition (environ 0.75s)
 		await get_tree().create_timer(0.9).timeout
 		play_cinematic()
 	else:
-		print("[DungeonCinematic] Pas de cinématique à déclencher.")
+		if debug_mode: print("[DungeonCinematic] Pas de cinématique à déclencher pour '", watched_key, "'.")
 
 # ─── Cinématique publique ─────────────────────────────────────────────────────
 ## Peut être appelée manuellement depuis la console Godot pour tester :
 ##   get_tree().get_first_node_in_group("dungeon_cinematic").play_cinematic()
 func play_cinematic() -> void:
-	print("[DungeonCinematic] ▶ Démarrage de la cinématique...")
+	if debug_mode: print("[DungeonCinematic] ▶ Démarrage de la cinématique...")
 
 	var player = get_tree().get_first_node_in_group("player")
 	if not player:
@@ -82,15 +95,13 @@ func play_cinematic() -> void:
 	var target_offset: Vector2
 	if is_instance_valid(_locked_portal):
 		target_offset = _locked_portal.global_position - player.global_position
-		print("[DungeonCinematic] Pan vers ", _locked_portal.global_position,
-			" | offset = ", target_offset)
+		if debug_mode: print("[DungeonCinematic] Pan vers ", _locked_portal.global_position, " | offset = ", target_offset)
 	else:
 		target_offset = Vector2.ZERO   # zoom sur le joueur si pas de portail
-		print("[DungeonCinematic] Pas de portail — zoom sur place.")
+		if debug_mode: print("[DungeonCinematic] Pas de portail — zoom sur place.")
 
 	# ── Tween principal ───────────────────────────────────────────────────────
 	var tween = create_tween()
-	tween.set_parallel(false)
 
 	# Phase 1 — Pan + zoom vers la cible
 	tween.tween_property(cam, "offset", target_offset, pan_duration) \
@@ -114,7 +125,7 @@ func play_cinematic() -> void:
 	# ── Restaurer ─────────────────────────────────────────────────────────────
 	cam.position_smoothing_enabled = smooth_was_on
 	player.in_dialogue = false
-	print("[DungeonCinematic] ✓ Cinématique terminée.")
+	if debug_mode: print("[DungeonCinematic] ✓ Cinématique terminée.")
 
 # ─── Flash + ouverture du portail ────────────────────────────────────────────
 func _flash_and_open_portal() -> void:
@@ -128,14 +139,6 @@ func _flash_and_open_portal() -> void:
 	flash.tween_property(_locked_portal, "modulate", Color.WHITE, 0.7) \
 		.set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
 
-# ─── Cherche la Camera2D dans les enfants du joueur ──────────────────────────
+# ─── Cherche la Camera2D dans les enfants du joueur (récursif) ───────────────
 func _find_camera(player: Node) -> Camera2D:
-	for child in player.get_children():
-		if child is Camera2D:
-			return child
-	# Cherche récursivement si la caméra est enfant d'un enfant
-	for child in player.get_children():
-		for sub in child.get_children():
-			if sub is Camera2D:
-				return sub
-	return null
+	return player.find_child("Camera2D", true, false) as Camera2D

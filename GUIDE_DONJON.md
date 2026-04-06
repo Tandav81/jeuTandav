@@ -4,14 +4,21 @@
 
 ```
 world.tscn
-  ├── Portal (entrée donjon)          → dungeon.tscn
-  └── LockedPortal (entrée secrète)   → rewards.tscn (ou autre zone)
-        ↑ s'ouvre via cinématique après mort du boss
+  ├── Portal (entrée donjon)            → dungeon.tscn
+  ├── LockedPortal (entrée secrète)     → récompense (zone secrète, trésor…)
+  │     ↑ s'ouvre via cinématique après mort du boss
+  ├── DungeonCinematic (Node)           ← gère la cinématique d'ouverture
+  └── BossRoomGate (StaticBody2D)       ← bloque l'accès avant mort du boss (optionnel)
 
 dungeon.tscn
-  ├── Boss (is_boss=true, triggers_world_cinematic=true, unique_drops=[{name:"Clé du donjon"}])
-  └── Portal (sortie)                 → world.tscn
+  ├── Boss (is_boss=true, cinematic_key="Clé du donjon", unique_drops=[{name:"Clé du donjon"}])
+  └── Portal (sortie)                   → world.tscn
 ```
+
+La clé de liaison entre les trois éléments est une chaîne de texte identique :
+- `cinematic_key` sur le boss
+- `required_key` sur le LockedPortal
+- `watched_key` sur le nœud DungeonCinematic
 
 ---
 
@@ -30,11 +37,11 @@ dungeon.tscn
 2. Sélectionner le nœud boss → **Inspecteur** :
    - `is_boss` → ✅ cocher
    - `boss_name` → `"Gardien du donjon"` (ou ce que tu veux)
-   - `triggers_world_cinematic` → ✅ cocher ← **IMPORTANT pour la cinématique**
+   - `cinematic_key` → `"Clé du donjon"` ← **IMPORTANT — doit correspondre aux étapes 4 et 5**
+   - `respawn_once` → ✅ cocher (le boss ne réapparaît pas après la première mort)
    - `unique_drops` → cliquer `+ Add Element` :
      - `name` : `"Clé du donjon"`
      - `qty` : `1`
-   - `respawn_time` → `999` (ou très grand pour qu'il ne respawn pas)
 3. Positionner le boss dans le donjon
 
 ---
@@ -46,6 +53,7 @@ dungeon.tscn
    - `target_scene` → `"res://scenes/world.tscn"`
    - `target_spawn` → coordonnées de spawn dans world.tscn (ex: `Vector2(300, 400)`)
    - `portal_label` → `"Retour au monde"`
+   - `ambient_music` → stream audio du monde extérieur (optionnel)
 
 ---
 
@@ -57,6 +65,7 @@ dungeon.tscn
    - `target_scene` → `"res://scenes/dungeon.tscn"`
    - `target_spawn` → coordonnées d'apparition dans le donjon (ex: `Vector2(100, 100)`)
    - `portal_label` → `"Entrée du donjon"`
+   - `ambient_music` → stream audio du donjon (optionnel)
 
 ---
 
@@ -74,8 +83,9 @@ dungeon.tscn
    - `target_scene` → scène de destination (ex: `"res://scenes/cave.tscn"` ou une nouvelle scène)
    - `target_spawn` → position de spawn
    - `portal_label` → `"🔒 Entrée secrète"`
-   - `required_key` → `"Clé du donjon"` ← doit correspondre exactement au nom dans `unique_drops`
-6. **Noter la position du nœud LockedPortal** (tu en auras besoin à l'étape 6)
+   - `required_key` → `"Clé du donjon"` ← doit correspondre **exactement** à `cinematic_key` du boss
+   - `required_quest` → laisser vide (ou mettre un ID de quête si tu veux conditionner aussi à une quête)
+   - `ambient_music` → stream audio de la zone secrète (optionnel)
 
 ---
 
@@ -85,18 +95,49 @@ dungeon.tscn
 2. Renommer en `DungeonCinematic`
 3. **Script** → `res://scripts/dungeon_cinematic.gd`
 4. Inspecteur :
-   - `locked_portal_path` → **cliquer l'icône de sélection de nœud** → sélectionner le `LockedPortal` ajouté à l'étape 5
+   - `watched_key` → `"Clé du donjon"` ← doit correspondre à `cinematic_key` et `required_key`
    - `cinematic_zoom` → `2.0` (ajustable)
    - `pan_duration` → `1.5`
    - `hold_duration` → `2.0`
    - `return_duration` → `1.2`
+   - `debug_mode` → activer pour voir les logs en console si la cinématique ne se déclenche pas
+
+> 💡 Pour plusieurs boss/donjons : dupliquer autant de nœuds `DungeonCinematic`, chacun avec son propre `watched_key`.
+
+---
+
+## ÉTAPE 7 — (Optionnel) Barrière de salle de boss
+
+1. Dans `dungeon.tscn` : **Créer un nœud** `StaticBody2D` à l'entrée de la salle du boss
+2. Ajouter un `CollisionShape2D` enfant (couvrant le passage)
+3. Ajouter un `Sprite2D` enfant pour le visuel (barrière, grille, etc.)
+4. **Script** → `res://scripts/boss_room_gate.gd`
+5. Inspecteur :
+   - `boss_node_path` → sélectionner le nœud boss (via l'icône NodePath)
+   - `fade_duration` → `0.8` (ajustable)
+
+La barrière disparaît automatiquement à la mort du boss.
+
+---
+
+## ÉTAPE 8 — Enregistrer AudioManager comme Autoload
+
+> À faire **une seule fois** si ce n'est pas encore fait.
+
+1. **Project → Project Settings → Autoload**
+2. Cliquer `+` :
+   - Chemin : `res://scripts/audio_manager.gd`
+   - Nom : `AudioManager`
+3. Valider
+
+Sans cette étape, les portails avec `ambient_music` lèveront une erreur.
 
 ---
 
 ## Résumé du flow final
 
 1. Joueur entre dans le donjon (portail normal)
-2. Tue le boss → `"Clé du donjon"` ajoutée à l'inventaire automatiquement
+2. Tue le boss → `"Clé du donjon"` ajoutée à l'inventaire + `pending_cinematics` mis à jour
 3. Joueur ressort via le portail de sortie → retour dans `world.tscn`
 4. **Cinématique automatique** :
    - Notification dorée : *"✨ Une entrée secrète vient de s'ouvrir !"*
@@ -108,10 +149,25 @@ dungeon.tscn
 
 ---
 
-## Notes
+## Dépannage
 
-- Le `LockedPortal` reste ouvert après la cinématique, même après rechargement de la scène
-  (car `_check_open_state()` vérifie l'inventaire au `_ready`)
-- Pour tester la cinématique sans tuer le boss : dans le script `dungeon_cinematic.gd`,
-  appeler `$DungeonCinematic.play_cinematic()` depuis la console Godot
-- L'item `"Clé du donjon"` doit correspondre **exactement** entre `unique_drops` du boss et `required_key` du portail
+| Symptôme | Cause probable | Solution |
+|---|---|---|
+| Cinématique ne se déclenche pas | `watched_key` ne correspond pas à `cinematic_key` | Vérifier que les 3 chaînes sont identiques |
+| Cinématique se déclenche mais ne va nulle part | Aucun `LockedPortal` dans le groupe | Vérifier que `add_to_group("locked_portal")` est appelé dans `locked_portal.gd` |
+| Portail reste verrouillé | Item dans l'inventaire mais `required_key` incorrect | Vérifier l'orthographe exacte (sensible à la casse) |
+| Erreur `AudioManager` | Autoload non enregistré | Suivre l'étape 8 |
+| Cinématique ne se déclenche pas après rechargement du jeu | `pending_cinematics` non persisté | Vérifier `game_manager.gd` → `save_data` et `load_game` |
+
+### Tester manuellement la cinématique
+
+Depuis la console Godot (pendant l'exécution) :
+```gdscript
+get_tree().get_first_node_in_group("dungeon_cinematic").play_cinematic()
+```
+
+Ou pour forcer l'ajout d'une clé sans tuer le boss :
+```gdscript
+GameManager.pending_cinematics.append("Clé du donjon")
+get_tree().reload_current_scene()
+```

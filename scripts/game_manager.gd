@@ -8,9 +8,10 @@ var fog_data: Dictionary = {}
 var time_of_day: float = 0.25
 var used_books: Array = []   # livres de recettes déjà lus
 
-## true = cinématique à déclencher au prochain chargement de world.tscn
-## (posé à true quand un boss avec triggers_world_cinematic=true est tué)
-var dungeon_key_pending: bool = false
+## Clés en attente de cinématique au prochain chargement de world.tscn.
+## Chaque entrée = nom de la clé (String) droppée par le boss.
+## Supporte plusieurs boss / donjons simultanément.
+var pending_cinematics: Array[String] = []
 
 ## Retourne true si ce livre a déjà été utilisé (recettes débloquées).
 func is_book_used(book_name: String) -> bool:
@@ -59,6 +60,7 @@ func save_game():
 		"time_of_day": time_of_day,
 		"used_books": used_books,
 		"active_talents": Stats.active_talents,
+		"pending_cinematics": pending_cinematics,
 	}
 	
 	var file = FileAccess.open("user://save.json", FileAccess.WRITE)
@@ -129,6 +131,14 @@ func load_game():
 	else:
 		Stats.active_talents = []   # compatibilité anciennes sauvegardes
 
+	if data.has("pending_cinematics"):
+		var raw = data["pending_cinematics"]
+		pending_cinematics = []
+		for v in raw:
+			pending_cinematics.append(str(v))
+	else:
+		pending_cinematics = []   # compatibilité anciennes sauvegardes
+	
 	return true
 
 func save_exists() -> bool:

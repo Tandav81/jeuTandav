@@ -21,6 +21,8 @@
 14. [Ajouter un consommable à la Hotbar](#14-ajouter-un-consommable-à-la-hotbar)
 15. [Ajouter un portail verrouillé](#15-ajouter-un-portail-verrouillé)
 16. [Configurer la cinématique de révélation](#16-configurer-la-cinématique-de-révélation)
+17. [Ajouter une barrière de salle de boss](#17-ajouter-une-barrière-de-salle-de-boss)
+18. [Ajouter de la musique d'ambiance](#18-ajouter-de-la-musique-dambiance)
 
 ---
 
@@ -589,7 +591,7 @@ L'item apparaîtra automatiquement dans la rotation du clic-droit dès qu'il ser
 
 **Script :** `scripts/locked_portal.gd`
 
-Un portail verrouillé bloque l'accès jusqu'à ce que le joueur possède un item-clé précis dans son inventaire. Il s'affiche en teinte bleue (verrouillé) et revient à blanc (ouvert) une fois la clé obtenue.
+Un portail verrouillé bloque l'accès jusqu'à ce que les conditions requises soient remplies. Il s'affiche en teinte bleue (verrouillé) et revient à blanc (ouvert).
 
 **Étape 1 — Créer le nœud dans l'éditeur Godot**
 
@@ -606,11 +608,15 @@ Dans la scène cible (ex. `world.tscn`) :
 | `target_scene` | `"res://scenes/secret_room.tscn"` | Scène de destination |
 | `target_spawn` | `Vector2(100, 100)` | Position de spawn dans la destination |
 | `portal_label` | `"🔒 Salle secrète"` | Texte affiché au-dessus |
-| `required_key` | `"Clé du donjon"` | Nom exact de l'item-clé dans l'inventaire |
+| `required_key` | `"Clé du donjon"` | Nom exact de l'item-clé requis (laisser vide = ignoré) |
+| `required_quest` | `"tuer_boss"` | ID de quête devant être `"completed"` (laisser vide = ignoré) |
+| `ambient_music` | *(AudioStream)* | Musique jouée à l'entrée via AudioManager (optionnel) |
 
-> Le `required_key` doit correspondre **exactement** au champ `name` du drop dans `unique_drops` du boss.
+> Les deux conditions (`required_key` et `required_quest`) doivent être remplies si les deux sont définies. Le `required_key` doit correspondre **exactement** à `cinematic_key` du boss et à `watched_key` du DungeonCinematic.
 
 Le portail s'ouvre automatiquement si le joueur a déjà la clé (ex. après rechargement d'une sauvegarde). Il peut aussi être ouvert manuellement via `open_portal()`.
+
+**Point minimap :** le portail est automatiquement visible en **bleu** sur la minimap (groupe `"locked_portal"`).
 
 ---
 
@@ -618,7 +624,7 @@ Le portail s'ouvre automatiquement si le joueur a déjà la clé (ex. après rec
 
 **Script :** `scripts/dungeon_cinematic.gd`
 
-Ce nœud doit être placé dans `world.tscn`. Il surveille `GameManager.dungeon_key_pending` et déclenche une cinématique (pan + zoom de la caméra) vers le portail verrouillé quand le joueur revient dans la scène après avoir tué le boss concerné.
+Ce nœud doit être placé dans `world.tscn`. Il surveille `GameManager.pending_cinematics` et déclenche une cinématique (pan + zoom de la caméra) vers le portail verrouillé correspondant quand le joueur revient dans la scène. Placer **un nœud par boss/donjon**, chacun avec son propre `watched_key`.
 
 **Étape 1 — Ajouter dans world.tscn**
 
@@ -627,25 +633,67 @@ Ce nœud doit être placé dans `world.tscn`. Il surveille `GameManager.dungeon_
 
 **Étape 2 — Configurer dans l'inspecteur**
 
+> Le `LockedPortal` est trouvé automatiquement par groupe (`"locked_portal"`) via son `required_key` — aucun NodePath à configurer.
+
 | Export | Valeur | Rôle |
 |---|---|---|
-| `locked_portal_path` | NodePath du LockedPortal | Cible de la cinématique (clic → sélectionner le nœud) |
+| `watched_key` | `"Clé du donjon"` | Clé à surveiller — doit correspondre à `cinematic_key` du boss et `required_key` du LockedPortal |
 | `cinematic_zoom` | `2.0` | Niveau de zoom à l'arrivée (×2 = zoom ×2) |
 | `pan_duration` | `1.5` | Durée du déplacement vers la cible (s) |
 | `hold_duration` | `2.0` | Pause sur la cible avant retour (s) |
 | `return_duration` | `1.2` | Durée du retour au joueur (s) |
+| `debug_mode` | `false` | Activer pour afficher les logs de debug dans la console Godot |
 
 **Étape 3 — Activer le déclencheur sur le boss**
 
-Dans l'inspecteur du boss (scène dans le donjon) : cocher `triggers_world_cinematic = true`.
+Dans l'inspecteur du boss (scène dans le donjon) :
+- `cinematic_key` → `"Clé du donjon"` (même valeur que `watched_key`)
+- `respawn_once` → ✅ cocher pour un boss à mort unique
 
 **Flow complet :**
-1. Boss tué (`triggers_world_cinematic = true`) → `GameManager.dungeon_key_pending = true`
+1. Boss tué (`cinematic_key = "Clé du donjon"`) → `"Clé du donjon"` ajoutée dans `GameManager.pending_cinematics`
 2. Joueur ressort du donjon → `world.tscn` se charge
-3. `DungeonCinematic._ready()` détecte le flag → cinématique automatique
-4. Caméra pan vers le `LockedPortal`, flash doré, portail ouvert, retour joueur
+3. `DungeonCinematic._ready()` trouve la clé dans `pending_cinematics` → cinématique automatique
+4. Caméra pan vers le `LockedPortal` dont `required_key = "Clé du donjon"`, flash doré, portail ouvert, retour joueur
+5. La cinématique est persistée dans la sauvegarde — elle se déclenche même si le jeu est fermé entre temps
 
-> Pour tester sans tuer le boss : appeler `$DungeonCinematic.play_cinematic()` depuis la console Godot.
+> Pour tester sans tuer le boss, appeler depuis la console Godot :
+> `get_tree().get_first_node_in_group("dungeon_cinematic").play_cinematic()`
+
+## 17. Ajouter une barrière de salle de boss
+
+**Script :** `scripts/boss_room_gate.gd`
+
+Bloque physiquement l'accès à la salle du boss jusqu'à ce qu'il soit tué.
+
+1. Dans la scène du donjon : créer un nœud `StaticBody2D` à l'entrée de la salle
+2. Ajouter un enfant `CollisionShape2D` couvrant le passage
+3. Ajouter un enfant `Sprite2D` (visuel de la barrière — grille, portcullis…) — optionnel
+4. Assigner `res://scripts/boss_room_gate.gd`
+5. Inspecteur : `boss_node_path` → sélectionner le nœud boss, `fade_duration` → `0.8`
+
+La barrière s'efface en fondu à la mort du boss (`boss_died`).
+
+## 18. Ajouter de la musique d'ambiance
+
+**Script :** `scripts/audio_manager.gd` (Autoload `AudioManager`)
+
+> ⚠️ L'autoload doit être enregistré dans **Project → Project Settings → Autoload** avec le nom `AudioManager`.
+
+Pour jouer une musique sur un portail (déclenché à l'entrée dans la scène de destination) :
+1. Dans l'inspecteur du portail (`portal.tscn` ou `locked_portal.gd`)
+2. Export `ambient_music` → glisser-déposer le fichier `.ogg` ou `.wav`
+
+La musique se fond enchaîne automatiquement. Pour l'appeler depuis du code :
+```gdscript
+AudioManager.play_ambient(preload("res://assets/music/donjon.ogg"))
+AudioManager.stop_ambient()
+```
+
+Pour ajouter un item-clé à la rangée HUD : ajouter son nom dans `KEY_ITEMS` dans `hud.gd` :
+```gdscript
+const KEY_ITEMS: Array[String] = ["Clé du donjon", "Clé de la cité"]
+```
 
 ---
 
@@ -673,5 +721,8 @@ Dans l'inspecteur du boss (scène dans le donjon) : cocher `triggers_world_cinem
 | Équipement | `scripts/stats.gd` + `item_data.gd` (apparaît automatiquement dans le panneau G) |
 | Consommable hotbar | `scripts/hotbar.gd` (`CONSUMABLES` + `HEAL_VALUES`) |
 | Portail verrouillé | Nœud `Area2D` + `scripts/locked_portal.gd` (voir §15) |
-| Cinématique révélation | Nœud `Node` + `scripts/dungeon_cinematic.gd` dans `world.tscn` + boss `triggers_world_cinematic=true` (voir §16) |
-| Boss avec cinématique | Inspecteur Godot (`is_boss`, `unique_drops`, `triggers_world_cinematic`) |
+| Cinématique révélation | Nœud `Node` + `scripts/dungeon_cinematic.gd` dans `world.tscn` + boss `cinematic_key` (voir §16) |
+| Boss avec cinématique | Inspecteur Godot (`is_boss`, `unique_drops`, `cinematic_key`, `respawn_once`) |
+| Barrière salle de boss | Nœud `StaticBody2D` + `scripts/boss_room_gate.gd` (voir §17) |
+| Musique d'ambiance | Autoload `AudioManager` + export `ambient_music` sur portail (voir §18) |
+| Item-clé dans HUD | `hud.gd` → `KEY_ITEMS` array (voir §18) |

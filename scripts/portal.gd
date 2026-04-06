@@ -8,12 +8,15 @@ extends Area2D
 @export var target_scene: String = ""
 @export var target_spawn: Vector2 = Vector2.ZERO
 @export var portal_label: String = ""  # texte affiché au-dessus (ex: "Entrée de la grotte")
+## Stream audio joué dans la scène de destination (optionnel).
+@export var ambient_music: AudioStream = null
 
 var _used: bool = false
 
 @onready var _label: Label = $Label
 
 func _ready():
+	add_to_group("portal")   # utilisé par la minimap
 	body_entered.connect(_on_body_entered)
 	_label.text = portal_label
 	_label.visible = portal_label != ""
@@ -25,10 +28,10 @@ func _on_body_entered(body: Node2D) -> void:
 		push_warning("Portal : target_scene non défini !")
 		return
 	_used = true
-	
+	if ambient_music:
+		AudioManager.play_ambient(ambient_music)
 	var fog = get_tree().get_first_node_in_group("fog")
 	if fog:
 		GameManager.fog_data[GameManager.current_scene] = fog.get_save_data()
-		
 	GameManager.current_scene = target_scene
 	SceneTransition.fade_out_to(target_scene, target_spawn)

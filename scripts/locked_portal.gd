@@ -10,8 +10,13 @@ extends Area2D
 @export var target_scene: String = ""
 @export var target_spawn: Vector2 = Vector2.ZERO
 @export var portal_label: String = "Entrée verrouillée"
-## Nom exact de l'item-clé requis (ex: "Clé du donjon"). Laisser vide = toujours ouvert.
+## Nom exact de l'item-clé requis (ex: "Clé du donjon"). Laisser vide = ignoré.
 @export var required_key: String = ""
+## ID de quête dont la complétion est requise. Laisser vide = ignoré.
+## Les deux conditions (clé ET quête) doivent être remplies si les deux sont définis.
+@export var required_quest: String = ""
+## Stream audio joué quand le joueur entre dans cette zone (optionnel).
+@export var ambient_music: AudioStream = null
 
 var _used: bool = false
 var _is_open: bool = false
@@ -29,10 +34,9 @@ func _ready():
 	_check_open_state()
 
 func _check_open_state() -> void:
-	if required_key == "" or Inventory.has_item(required_key):
-		_set_open(true)
-	else:
-		_set_open(false)
+	var key_ok   = required_key   == "" or Inventory.has_item(required_key)
+	var quest_ok = required_quest == "" or QuestManager.get_quest_state(required_quest) == "completed"
+	_set_open(key_ok and quest_ok)
 
 ## Appelé par DungeonCinematic quand la cinématique se termine
 func open_portal() -> void:
@@ -59,6 +63,8 @@ func _on_body_entered(body: Node2D) -> void:
 		push_warning("LockedPortal : target_scene non défini !")
 		return
 	_used = true
+	if ambient_music:
+		AudioManager.play_ambient(ambient_music)
 	var fog = get_tree().get_first_node_in_group("fog")
 	if fog:
 		GameManager.fog_data[GameManager.current_scene] = fog.get_save_data()

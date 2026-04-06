@@ -68,6 +68,10 @@ const MINIMAP_DISPLAY_SIZE: int = 120
 
 # ── Icônes de talents actifs (rangée sous les barres) ───────────────────────
 var _talent_icons_row: HBoxContainer = null
+var _key_icons_row:    HBoxContainer = null
+
+## Items affichés comme "clés" dans la rangée HUD. Ajouter tout nouvel item-clé ici.
+const KEY_ITEMS: Array[String] = ["Clé du donjon"]
 
 # Couleur et abréviation par talent_id
 const TALENT_ICON_DEFS: Dictionary = {
@@ -129,6 +133,8 @@ func _ready():
 	call_deferred("_build_minimap")
 	# ── Icônes talents actifs (sous les barres) ──────────────────
 	call_deferred("_build_talent_icons")
+	# ── Icônes clés collectées (sous les talents) ─────────────────
+	call_deferred("_build_key_icons")
 	# ── Panneau équipement visuel (touche E) ─────────────────────
 	call_deferred("_build_equipment_panel")
 	# ── Hotbar consommables (touches 1–4) ────────────────────────
@@ -495,6 +501,7 @@ func _on_inventory_changed():
 	if panneau_perso.visible:
 		_refresh_equipement()
 	_refresh_tool_display()
+	_refresh_key_icons()
 	# Panneau équipement visuel : toujours synchronisé si ouvert
 	if _equip_panel and _equip_panel.visible:
 		_equip_panel._refresh()
@@ -1652,6 +1659,55 @@ func _refresh_talent_icons() -> void:
 		_talent_icons_row.add_child(icon)
 
 # ============================================================
+#  ICÔNES DE CLÉS COLLECTÉES
+# ============================================================
+
+func _build_key_icons() -> void:
+	_key_icons_row = HBoxContainer.new()
+	_key_icons_row.name = "KeyIconsRow"
+	_key_icons_row.z_index = -1
+	_key_icons_row.set_anchor(SIDE_LEFT,   0.0)
+	_key_icons_row.set_anchor(SIDE_RIGHT,  0.0)
+	_key_icons_row.set_anchor(SIDE_TOP,    0.0)
+	_key_icons_row.set_anchor(SIDE_BOTTOM, 0.0)
+	_key_icons_row.offset_left   = 10
+	_key_icons_row.offset_top    = 122
+	_key_icons_row.offset_right  = 300
+	_key_icons_row.offset_bottom = 148   # hauteur 26px
+	_key_icons_row.add_theme_constant_override("separation", 3)
+	add_child(_key_icons_row)
+	_refresh_key_icons()
+
+func _refresh_key_icons() -> void:
+	if not _key_icons_row:
+		return
+	for child in _key_icons_row.get_children():
+		child.queue_free()
+	for item_name in KEY_ITEMS:
+		if not Inventory.has_item(item_name):
+			continue
+		var icon = PanelContainer.new()
+		icon.custom_minimum_size = Vector2(24, 24)
+		icon.tooltip_text = item_name
+		var style = StyleBoxFlat.new()
+		style.bg_color = Color("#b7950b")   # dorée
+		style.corner_radius_top_left     = 4
+		style.corner_radius_top_right    = 4
+		style.corner_radius_bottom_left  = 4
+		style.corner_radius_bottom_right = 4
+		style.border_color = Color(1, 1, 1, 0.4)
+		style.set_border_width_all(1)
+		icon.add_theme_stylebox_override("panel", style)
+		var lbl = Label.new()
+		lbl.text = "🗝"
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+		lbl.add_theme_font_size_override("font_size", 11)
+		lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		icon.add_child(lbl)
+		_key_icons_row.add_child(icon)
+
+# ============================================================
 #  MINIMAP
 # ============================================================
 
@@ -1744,4 +1800,24 @@ func _update_minimap() -> void:
 		if alpha < 0.5 and px >= 0 and px < img_w and py >= 0 and py < img_h:
 			_minimap_image.set_pixel(px, py, color_enemy)
 
+	# Points portails libres (jaune) et portails verrouillés (bleu)
+	for portal in get_tree().get_nodes_in_group("portal"):
+		if not is_instance_valid(portal):
+			continue
+		var local = portal.global_position - fog.map_origin
+		var px = int(local.x / fog.tile_size * img_w / map_w)
+		var py = int(local.y / fog.tile_size * img_h / map_h)
+		if px >= 0 and px < img_w and py >= 0 and py < img_h:
+			_minimap_image.set_pixel(px, py, Color(1.0, 1.0, 0.0))
+
+	for portal in get_tree().get_nodes_in_group("locked_portal"):
+		if not is_instance_valid(portal):
+			continue
+		var local = portal.global_position - fog.map_origin
+		var px = int(local.x / fog.tile_size * img_w / map_w)
+		var py = int(local.y / fog.tile_size * img_h / map_h)
+		if px >= 0 and px < img_w and py >= 0 and py < img_h:
+			_minimap_image.set_pixel(px, py, Color(0.3, 0.5, 1.0))
+
 	_minimap_texture.update(_minimap_image)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
